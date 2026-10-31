@@ -67,11 +67,18 @@ Download the latest ready-to-run macOS package:
 
 ## Support the Project
 
-[![Trakteer](https://shields.io)](https://trakteer.id/mrbvrz)
-[![Buy Me A Coffee](https://shields.io)](https://buymeacoffee.com/mrbvrz)
+<p align="left">
+  <a href="https://trakteer.id/mrbvrz" target="_blank">
+    <img src="https://edge-cdn.trakteer.id/images/embed/trbtn-red-1.png" height="42" style="border: 0px; height: 42px;" alt="Trakteer Saya" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://www.buymeacoffee.com/mrbvrz" target="_blank">
+    <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=mrbvrz&button_colour=FFDD00&font_colour=000000&font_family=Poppins&outline_colour=000000&coffee_colour=ffffff" height="42" style="border: 0px; height: 42px;" alt="Buy Me A Coffee" />
+  </a>
+</p>
 
 - 🇮🇩 **Trakteer**: [https://trakteer.id/mrbvrz](https://trakteer.id/mrbvrz)
-- ☕ **Buy Me A Coffee**: [https://buymeacoffee.com/mrbvrz](https://buymeacoffee.com/mrbvrz)
+- ☕ **Buy Me A Coffee**: [https://www.buymeacoffee.com/mrbvrz](https://www.buymeacoffee.com/mrbvrz)
 
 ---
 

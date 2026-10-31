@@ -93,20 +93,20 @@ The schedule subsystem (`src/core/schedules/`) enables users to register recurri
 
 ```typescript
 export interface ShowSchedule {
-  id: string; // Unique UUID or seed identifier
-  stationId: string; // Reference to user's saved Station
-  stationName: string; // Cached station display name
-  showName: string; // Name of the broadcast (e.g. "Sarapan Seru")
-  host?: string; // Optional host / DJ names
-  daysOfWeek: number[]; // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
-  startTime: string; // "HH:mm" in 24h format (e.g. "06:00")
-  endTime: string; // "HH:mm" in 24h format (e.g. "10:00")
-  autoPlay: boolean; // Trigger automatic station playback on start
-  reminderMinutes: number; // 0 = At start, 5 = 5m before, 10 = 10m before
-  enabled: boolean; // Master toggle switch
-  notes?: string; // User notes or program synopsis
-  createdAt: string; // ISO 8601 timestamp
-  updatedAt: string; // ISO 8601 timestamp
+    id: string; // Unique UUID or seed identifier
+    stationId: string; // Reference to user's saved Station
+    stationName: string; // Cached station display name
+    showName: string; // Name of the broadcast (e.g. "Sarapan Seru")
+    host?: string; // Optional host / DJ names
+    daysOfWeek: number[]; // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+    startTime: string; // "HH:mm" in 24h format (e.g. "06:00")
+    endTime: string; // "HH:mm" in 24h format (e.g. "10:00")
+    autoPlay: boolean; // Trigger automatic station playback on start
+    reminderMinutes: number; // 0 = At start, 5 = 5m before, 10 = 10m before
+    enabled: boolean; // Master toggle switch
+    notes?: string; // User notes or program synopsis
+    createdAt: string; // ISO 8601 timestamp
+    updatedAt: string; // ISO 8601 timestamp
 }
 ```
 
@@ -114,8 +114,8 @@ export interface ShowSchedule {
 
 - **Polling Frequency**: A dedicated background timer checks registered schedules every **20 seconds**.
 - **Deduplication Matrix**: Prevents duplicate triggers within the active minute using composite daily keys:
-  - `${schedule.id}_${YYYY-MM-DD}_remind` for advance alert triggers.
-  - `${schedule.id}_${YYYY-MM-DD}_start` for on-air alerts and autoplay tuning.
+    - `${schedule.id}_${YYYY-MM-DD}_remind` for advance alert triggers.
+    - `${schedule.id}_${YYYY-MM-DD}_start` for on-air alerts and autoplay tuning.
 - **Autoplay Action**: Dispatches directly to `PlayerController.play(station)` without interrupting existing audio if the station is already actively streaming.
 
 ---
@@ -157,13 +157,13 @@ All application state is stored locally without external database daemons using 
 Squelch abstracts operating-system-specific integrations behind strict TypeScript contracts:
 
 - `ITrayAdapter`:
-  - `createTray(options)`: Handles platform status icon rendering, right-click context menus, and click handlers.
-  - `updateStatus(state)`: Updates tray icon state (`playing`, `buffering`, `error`, `idle`).
+    - `createTray(options)`: Handles platform status icon rendering, right-click context menus, and click handlers.
+    - `updateStatus(state)`: Updates tray icon state (`playing`, `buffering`, `error`, `idle`).
 - `ISystemIntegrationAdapter`:
-  - `getAppDataPath()`: Resolves `%APPDATA%`, `~/Library/Application Support/`, or `~/.config/`.
-  - `showNotification(title, body)`: Triggers native OS notifications.
-  - `bindPowerEvents(callbacks)`: Listens for system sleep/wake and power state transitions.
-  - `registerGlobalShortcuts(shortcuts, handlers)`: Binds global media keys and user-defined accelerator combos.
+    - `getAppDataPath()`: Resolves `%APPDATA%`, `~/Library/Application Support/`, or `~/.config/`.
+    - `showNotification(title, body)`: Triggers native OS notifications.
+    - `bindPowerEvents(callbacks)`: Listens for system sleep/wake and power state transitions.
+    - `registerGlobalShortcuts(shortcuts, handlers)`: Binds global media keys and user-defined accelerator combos.
 
 ### macOS Signed Distance Field (SDF) Waveform Engine
 

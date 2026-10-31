@@ -44,34 +44,65 @@
 
 ---
 
+## Download
+
+### macOS
+
+Download the latest ready-to-run macOS package:
+
+- 🍏 **[Download Squelch for macOS (.dmg)](https://github.com/mrbvrz/squelch/releases/download/v0.1.0/Squelch-0.1.0-arm64.dmg)**
+- 📦 **[Download Squelch for macOS (.zip)](https://github.com/mrbvrz/squelch/releases/download/v0.1.0/Squelch-0.1.0-arm64-mac.zip)**
+- 🚀 **[View All Release Assets](https://github.com/mrbvrz/squelch/releases/tag/v0.1.0)**
+
+> [!NOTE]
+> Open the `.dmg`, drag **Squelch.app** into your `/Applications` folder, and launch. The animated waveform radio icon appears directly in your system menu bar!
+
+### Windows & Linux
+
+> [!NOTE]
+> **Windows (x64) and Linux (AppImage / .deb) support is Coming Soon!**  
+> Squelch's domain core and audio engine are 100% OS-agnostic. Native Windows system tray and Linux MPRIS/AppIndicator adapters are currently in active staging.
+
+---
+
+## Support the Project
+
+[![Trakteer](https://shields.io)](https://trakteer.id/mrbvrz)
+[![Buy Me A Coffee](https://shields.io)](https://buymeacoffee.com/mrbvrz)
+
+- 🇮🇩 **Trakteer**: [https://trakteer.id/mrbvrz](https://trakteer.id/mrbvrz)
+- ☕ **Buy Me A Coffee**: [https://buymeacoffee.com/mrbvrz](https://buymeacoffee.com/mrbvrz)
+
+---
+
 ## Key Highlights
 
 - **macOS HUD Glass Bento Popover**
-  - Native macOS HUD vibrancy window (`vibrancy: 'hud'`) with frosted Bento cards (`backdrop-filter: blur(24px) saturate(180%)`).
-  - Pre-rendered 12-frame pure white Signed Distance Field (SDF) capsule waveform animation in the menu bar with zero CPU overhead.
-  - Quick two-click playback, live audio signal spectrum bars, sleep timer presets (`15m`, `30m`, `60m`), and category filtering directly from the menu bar.
+    - Native macOS HUD vibrancy window (`vibrancy: 'hud'`) with frosted Bento cards (`backdrop-filter: blur(24px) saturate(180%)`).
+    - Pre-rendered 12-frame pure white Signed Distance Field (SDF) capsule waveform animation in the menu bar with zero CPU overhead.
+    - Quick two-click playback, live audio signal spectrum bars, sleep timer presets (`15m`, `30m`, `60m`), and category filtering directly from the menu bar.
 - **Show Schedules & Automated Autoplay**
-  - Configure broadcast programs (e.g. _Sarapan Seru_ on Jak 101 FM, Monday–Friday 06:00–10:00).
-  - Background scheduler engine with daily slot deduplication and native desktop notifications.
-  - Optional _Autoplay_ switch to automatically tune in and stream when your show begins.
-  - Live on-air pulsating badge (`🟢 On Air Now`) indicating active broadcasts.
+    - Configure broadcast programs (e.g. _Sarapan Seru_ on Jak 101 FM, Monday–Friday 06:00–10:00).
+    - Background scheduler engine with daily slot deduplication and native desktop notifications.
+    - Optional _Autoplay_ switch to automatically tune in and stream when your show begins.
+    - Live on-air pulsating badge (`🟢 On Air Now`) indicating active broadcasts.
 - **Resilient Audio Engine & ICY Metadata Proxy**
-  - Headless worker combining HTML5 Audio with `hls.js` supporting **MP3**, **AAC / HE-AAC**, **OGG / Opus**, and **HLS** (`.m3u8`).
-  - Local in-process loopback proxy server (`127.0.0.1`) requesting `Icy-MetaData: 1`, parsing metadata blocks cleanly, and emitting real-time `StreamTitle` updates without audio glitching.
-  - Exponential backoff reconnect with random jitter on network dropouts, plus auto pause/resume on system sleep/wake and audio device disconnection.
+    - Headless worker combining HTML5 Audio with `hls.js` supporting **MP3**, **AAC / HE-AAC**, **OGG / Opus**, and **HLS** (`.m3u8`).
+    - Local in-process loopback proxy server (`127.0.0.1`) requesting `Icy-MetaData: 1`, parsing metadata blocks cleanly, and emitting real-time `StreamTitle` updates without audio glitching.
+    - Exponential backoff reconnect with random jitter on network dropouts, plus auto pause/resume on system sleep/wake and audio device disconnection.
 - **Unified Sidebar & Instant Keyboard Navigation**
-  - Integrated mini player deck docked right below the search bar on the left sidebar.
-  - Global `⌘F` (macOS) / `Ctrl+F` (Windows/Linux) search shortcut with key badge and auto-focus.
+    - Integrated mini player deck docked right below the search bar on the left sidebar.
+    - Global `⌘F` (macOS) / `Ctrl+F` (Windows/Linux) search shortcut with key badge and auto-focus.
 - **Open Public Radio Directory**
-  - Search global stations powered by the `radio-browser.info` directory with automatic multi-mirror failover (`de1`, `fi1`, `at1`).
-  - Country selection dropdown with emoji flags and inline audio stream previewing.
+    - Search global stations powered by the `radio-browser.info` directory with automatic multi-mirror failover (`de1`, `fi1`, `at1`).
+    - Country selection dropdown with emoji flags and inline audio stream previewing.
 - **Listening Analytics**
-  - Weekly, Monthly, and Yearly listening duration tracking with interactive bar charts.
+    - Weekly, Monthly, and Yearly listening duration tracking with interactive bar charts.
 - **Personalization & Custom Themes**
-  - System, Light, and Dark window themes with visual preview cards.
-  - 8 native macOS accent color palettes and adjustable frosted glass opacity.
-  - Custom system font selector with automatic local font discovery.
-  - Atomic JSON data backup and restore.
+    - System, Light, and Dark window themes with visual preview cards.
+    - 8 native macOS accent color palettes and adjustable frosted glass opacity.
+    - Custom system font selector with automatic local font discovery.
+    - Atomic JSON data backup and restore.
 
 ---
 

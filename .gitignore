@@ -4,6 +4,7 @@ node_modules/
 # Production and distribution builds
 dist/
 dist-ui/
+release/
 
 # Logs and runtime
 *.log

@@ -11,28 +11,28 @@ export type { LocaleCode, LocaleMetadata, TranslationDictionary };
  * 2. Add the locale metadata (with flag emoji) to `SUPPORTED_LOCALES` and register it in `TRANSLATIONS` below.
  */
 export const SUPPORTED_LOCALES: LocaleMetadata[] = [
-  {
-    code: 'id',
-    flag: '🇮🇩',
-    nativeName: 'Bahasa Indonesia',
-    englishName: 'Indonesian'
-  },
-  {
-    code: 'en',
-    flag: '🇺🇸',
-    nativeName: 'English',
-    englishName: 'English'
-  }
+    {
+        code: 'id',
+        flag: '🇮🇩',
+        nativeName: 'Bahasa Indonesia',
+        englishName: 'Indonesian'
+    },
+    {
+        code: 'en',
+        flag: '🇺🇸',
+        nativeName: 'English',
+        englishName: 'English'
+    }
 ];
 
 export const TRANSLATIONS: Record<LocaleCode, TranslationDictionary> = {
-  id: idLocale,
-  en: enLocale
+    id: idLocale,
+    en: enLocale
 };
 
 export function getTranslations(code?: string): TranslationDictionary {
-  if (code && code in TRANSLATIONS) {
-    return TRANSLATIONS[code as LocaleCode];
-  }
-  return TRANSLATIONS.id;
+    if (code && code in TRANSLATIONS) {
+        return TRANSLATIONS[code as LocaleCode];
+    }
+    return TRANSLATIONS.id;
 }

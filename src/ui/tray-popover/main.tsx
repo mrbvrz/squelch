@@ -4,7 +4,7 @@ import { TrayPopoverApp } from './TrayPopoverApp';
 import '../app/styles.css';
 
 ReactDOM.createRoot(document.getElementById('tray-root') as HTMLElement).render(
-  <React.StrictMode>
-    <TrayPopoverApp />
-  </React.StrictMode>
+    <React.StrictMode>
+        <TrayPopoverApp />
+    </React.StrictMode>
 );

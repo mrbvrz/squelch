@@ -1,72 +1,120 @@
 # Squelch
 
-Lightweight, cross-platform menu bar internet radio player (macOS first, architected for Windows and Linux) featuring a **macOS HUD Glass Bento UI**, real-time ICY metadata extraction, HLS (`.m3u8`) + Icecast/Shoutcast (`MP3`, `AAC/HE-AAC`, `OGG/Opus`) playback, and 28 verified Indonesian radio stations out of the box.
+<p align="center">
+  <img src="resources/icons/app-icon.png" width="96" height="96" alt="Squelch App Icon" />
+</p>
 
-Repository: [http://github.com/mrbvrz/squelch](http://github.com/mrbvrz/squelch)
+<p align="center">
+  <strong>Modern, lightweight, cross-platform menu bar internet radio player.</strong><br />
+  Featuring a native macOS HUD Glass Bento interface, real-time ICY metadata extraction, broadcast show schedules with autoplay, and public directory discovery.
+</p>
+
+<p align="center">
+  <a href="https://github.com/mrbvrz/squelch/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" />
+  </a>
+  <a href="https://github.com/mrbvrz/squelch/releases">
+    <img src="https://img.shields.io/badge/Version-0.1.0-emerald.svg" alt="Version 0.1.0" />
+  </a>
+  <a href="https://github.com/mrbvrz/squelch">
+    <img src="https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" alt="Platform" />
+  </a>
+</p>
 
 ---
 
-## Key Features
+## Interface Showcase
 
-- **Animated Menu Bar Waveform Icon**
-  - Crisp, anti-aliased pure white 5-bar capsule waveform icon (`18x18` `@1x` and `36x36` `@2x` Retina rendered via Signed Distance Fields).
-  - Pre-rendered 12-frame smooth animation in memory (`0%` CPU overhead) when streaming (`playing`) or connecting (`buffering`), without cluttering the menu bar with text.
-- **Unified macOS Glass Bento Interface**
-  - Both the **Menu Bar Tray Popover** and the **Management Window** share the same native macOS HUD vibrancy (`vibrancy: 'hud'`) and frosted Bento glass cards (`backdrop-filter: blur(24px) saturate(180%)`).
-  - Instant 2-click playback, live signal spectrum indicator, sleep timer (`15m`, `30m`, `60m`), category filter pills, and station search directly from the menu bar.
+<p align="center">
+  <img src="docs/screenshots/squelch-main-window.png" width="92%" alt="Squelch Main Management Window" />
+</p>
+
+<table align="center" style="border: none;">
+  <tr>
+    <td align="center" width="50%" style="border: none;">
+      <strong>Menu Bar Tray Popover</strong><br /><br />
+      <img src="docs/screenshots/squelch-tray-popover.png" width="95%" alt="Squelch Menu Bar Tray Popover" />
+    </td>
+    <td align="center" width="50%" style="border: none;">
+      <strong>About Squelch</strong><br /><br />
+      <img src="docs/screenshots/squelch-about-window.png" width="95%" alt="Squelch About Window" />
+    </td>
+  </tr>
+</table>
+
+---
+
+## Key Highlights
+
+- **macOS HUD Glass Bento Popover**
+  - Native macOS HUD vibrancy window (`vibrancy: 'hud'`) with frosted Bento cards (`backdrop-filter: blur(24px) saturate(180%)`).
+  - Pre-rendered 12-frame pure white Signed Distance Field (SDF) capsule waveform animation in the menu bar with zero CPU overhead.
+  - Quick two-click playback, live audio signal spectrum bars, sleep timer presets (`15m`, `30m`, `60m`), and category filtering directly from the menu bar.
+- **Show Schedules & Automated Autoplay**
+  - Configure broadcast programs (e.g. _Sarapan Seru_ on Jak 101 FM, Monday–Friday 06:00–10:00).
+  - Background scheduler engine with daily slot deduplication and native desktop notifications.
+  - Optional _Autoplay_ switch to automatically tune in and stream when your show begins.
+  - Live on-air pulsating badge (`🟢 On Air Now`) indicating active broadcasts.
 - **Resilient Audio Engine & ICY Metadata Proxy**
-  - Headless audio worker combining native `HTMLAudioElement` + `hls.js` for `MP3`, `AAC/AAC+`, `OGG/Opus`, and `HLS (.m3u8)` streams.
-  - Local loopback `LocalIcyProxyServer` (`127.0.0.1`) requests `Icy-MetaData: 1`, strips `icy-metaint` blocks cleanly from the audio byte stream, and emits live `StreamTitle` updates without audio glitches.
-  - Automatic stream resolver for `.m3u`, `.pls`, and **Noice** catalog URLs (`https://open.noice.id/catalog/...`).
-  - Exponential backoff reconnect with random jitter on network drops, plus automatic pause/resume on macOS sleep/wake and audio output device removal.
-- **Station Management & Online Discovery**
-  - Add, edit, delete, reorder (drag & drop), and categorize stations with a built-in **Test Stream** validator (verifies HTTP status, `Content-Type`, codec, and initial audio buffer).
-  - **Online Discovery** powered by the `radio-browser.info` API (with automatic multi-mirror failover across `de1`, `fi1`, `at1`) for one-click preview and import.
-  - **Parallel Health Checker** (bounded concurrency) to detect and clean up offline streams.
-  - **Import / Export** in native `JSON`, `M3U`, and `PLS` formats with duplicate handling (`skip`, `overwrite`, `duplicate`).
-- **28 Verified Indonesian Radio Seed Stations**
-  - Ships with `resources/stations.seed.json` containing 28 verified active streams across Jakarta, Surabaya, Bandung, Yogyakarta, Solo, Bali, Medan, Makassar, and Pekanbaru (including Jak 101 FM, Gen 98.7 FM, Kis 95.1 FM, Most Radio 105.8 FM, Mustang 88 FM, Hot 93.2 FM, I-Radio, Hard Rock FM, Elshinta, Suara Surabaya, RRI Pro 3, Sindo Trijaya, and more).
+  - Headless worker combining HTML5 Audio with `hls.js` supporting **MP3**, **AAC / HE-AAC**, **OGG / Opus**, and **HLS** (`.m3u8`).
+  - Local in-process loopback proxy server (`127.0.0.1`) requesting `Icy-MetaData: 1`, parsing metadata blocks cleanly, and emitting real-time `StreamTitle` updates without audio glitching.
+  - Exponential backoff reconnect with random jitter on network dropouts, plus auto pause/resume on system sleep/wake and audio device disconnection.
+- **Unified Sidebar & Instant Keyboard Navigation**
+  - Integrated mini player deck docked right below the search bar on the left sidebar.
+  - Global `⌘F` (macOS) / `Ctrl+F` (Windows/Linux) search shortcut with key badge and auto-focus.
+- **Open Public Radio Directory**
+  - Search global stations powered by the `radio-browser.info` directory with automatic multi-mirror failover (`de1`, `fi1`, `at1`).
+  - Country selection dropdown with emoji flags and inline audio stream previewing.
+- **Listening Analytics**
+  - Weekly, Monthly, and Yearly listening duration tracking with interactive bar charts.
+- **Personalization & Custom Themes**
+  - System, Light, and Dark window themes with visual preview cards.
+  - 8 native macOS accent color palettes and adjustable frosted glass opacity.
+  - Custom system font selector with automatic local font discovery.
+  - Atomic JSON data backup and restore.
 
 ---
 
 <a id="arsitektur--spesifikasi-teknis"></a>
+<a id="architecture--technical-specifications"></a>
 
-## Arsitektur & Spesifikasi Teknis (Architecture)
+## Architecture & Technical Specifications
 
-Squelch strictly separates domain logic from OS-specific APIs and UI rendering:
+Squelch enforces strict domain boundaries: the core business logic is 100% operating-system and DOM agnostic.
 
 ```text
 squelch/
 ├── src/
-│   ├── core/                  # 100% OS-agnostic domain layer (zero Electron/DOM imports)
-│   │   ├── player/            # State machine, PlayerController, ICY proxy, stream tester, backoff
-│   │   ├── stations/          # Station repository, M3U/PLS/JSON parser, parallel health checker
+│   ├── core/                  # Pure OS-agnostic domain layer
+│   │   ├── player/            # State machine, PlayerController, ICY proxy, stream tester
+│   │   ├── schedules/         # Schedule models, repository, and background runner
+│   │   ├── stations/          # Station repository, playlist parser, health checker
 │   │   ├── discover/          # radio-browser.info client with mirror failover
-│   │   ├── settings/          # Settings & runtime state models and repository
-│   │   ├── storage/           # Atomic JSON store (.tmp + fsync + rename) & schema migrations
+│   │   ├── settings/          # User settings & runtime state models
+│   │   ├── stats/             # Listening tracker & duration analytics
+│   │   ├── storage/           # Atomic JSON store (.tmp + fsync + rename)
 │   │   ├── events/            # Strongly-typed EventBus
 │   │   └── diagnostics/       # Rotating file logger & diagnostics builder
-│   ├── platform/              # OS-specific adapters behind common interfaces (ITrayAdapter, ISystemIntegrationAdapter)
-│   │   ├── macos/             # macOS Menu Bar Tray, SDF icon generator, LSUIElement Dock manager, power monitor
-│   │   ├── windows/           # Windows system tray & auto-start adapter (Phase 2)
-│   │   └── linux/             # Linux AppIndicator & XDG autostart adapter (Phase 3)
-│   ├── main/                  # Electron main process composition root, WindowManager, typed IPC handlers
-│   └── ui/                    # React + Tailwind CSS renderer views
-│       ├── tray-popover/      # Menu bar Bento Glass popover (tray.html)
-│       ├── app/               # Manage Stations, Discover, Preferences & Diagnostics window (index.html)
-│       ├── audio-worker/      # Hidden headless audio transport & MediaSession bridge (audio.html)
-│       └── components/        # Shared 1.75px stroke SVG icons
-├── resources/
-│   ├── stations.seed.json     # 28 verified Indonesian radio stations
-│   ├── stations.seed-report.md# Verification report & rejected dead candidates
-│   └── icons/                 # Generated @1x and @2x tray icons
-├── scripts/
-│   ├── verify-seed.ts         # Automated stream verifier & seed generator
-│   └── generate-icons.ts      # SDF PNG tray icon generator
-└── tests/
-    ├── unit/                  # State machine, atomic storage, M3U/PLS parser unit tests
-    └── integration/           # Architectural boundary verification tests
+│   ├── platform/              # OS-specific adapters (ITrayAdapter, ISystemIntegration)
+│   │   ├── macos/             # macOS Tray, SDF waveform generator, power monitor
+│   │   ├── windows/           # Windows system tray adapter
+│   │   └── linux/             # Linux AppIndicator adapter
+│   ├── main/                  # Electron main process, WindowManager, typed IPC handlers
+│   └── ui/                    # React 18 + Tailwind CSS renderer views
+│       ├── tray-popover/      # Bento Glass popover (tray.html)
+│       ├── app/               # Full settings and management window (index.html)
+│       ├── audio-worker/      # Headless audio transport worker (audio.html)
+│       └── components/        # Shared Heroicons & UI primitives
+├── docs/                      # Screenshots and architectural diagrams
+├── resources/                 # 28 verified Indonesian radio stations seed
+├── tests/                     # Unit & architectural boundary test suites
+├── ARCHITECTURE.md            # Complete Technical Specifications & Architecture Document
+└── CHANGELOG.md               # Version Release History
 ```
+
+For detailed specifications on the ICY demuxing protocol, schedule runner algorithms, and storage guarantees, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+
+For the detailed version history and roadmap, see **[CHANGELOG.md](CHANGELOG.md)**.
 
 ---
 
@@ -76,24 +124,29 @@ squelch/
 
 - **Node.js** `>= 20.x`
 - **npm** `>= 10.x`
-- **macOS** `12+` (Apple Silicon or Intel) for Phase 1 native HUD vibrancy and menu bar integration
+- **macOS** `12+` (Apple Silicon or Intel), **Windows 10/11**, or **Linux**
 
 ### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/mrbvrz/squelch.git
+cd squelch
+
+# Install dependencies
 npm install
 ```
 
 ### Build & Run
 
 ```bash
-# Compile TypeScript main process + Vite UI bundles
+# Build TypeScript main process and Vite UI bundles
 npm run build
 
-# Launch Squelch in the macOS menu bar
+# Launch Squelch
 npm start
 
-# Or build and run in one command
+# Or run build and start in one command
 npm run dev
 ```
 
@@ -101,32 +154,41 @@ npm run dev
 
 ## Development Scripts
 
-| Command                | Description                                                                                        |
-| :--------------------- | :------------------------------------------------------------------------------------------------- |
-| `npm run build`        | Builds both the Electron main process (`dist/`) and Vite UI bundles (`dist-ui/`).                  |
-| `npm start`            | Starts the compiled Electron application.                                                          |
-| `npm run dev`          | Builds and launches the application.                                                               |
-| `npm test`             | Runs unit and architectural boundary tests via Vitest.                                             |
-| `npm run typecheck`    | Runs strict TypeScript checks across `tsconfig.main.json` and `tsconfig.ui.json`.                  |
-| `npm run format`       | Formats all TypeScript, React, CSS, HTML, JSON, and Markdown files with Prettier.                  |
-| `npm run format:check` | Verifies code formatting without modifying files.                                                  |
-| `npm run verify:seed`  | Re-verifies all candidate Indonesian radio streams and regenerates `resources/stations.seed.json`. |
-| `npm run dist:mac`     | Packages the macOS application bundle via `electron-builder`.                                      |
+| Command                | Description                                                          |
+| :--------------------- | :------------------------------------------------------------------- |
+| `npm run build`        | Compiles main process (`dist/`) and bundles Vite UI (`dist-ui/`).    |
+| `npm start`            | Starts the compiled Electron application.                            |
+| `npm run dev`          | Builds and launches Squelch in development mode.                     |
+| `npm test`             | Runs unit and architectural boundary tests with Vitest.              |
+| `npm run typecheck`    | Runs strict TypeScript verification across all configurations.       |
+| `npm run format`       | Formats all code, JSON, and Markdown files with Prettier.            |
+| `npm run format:check` | Checks code formatting without writing files.                        |
+| `npm run verify:seed`  | Tests candidate radio streams and regenerates verified seed catalog. |
+| `npm run dist:mac`     | Packages the macOS production application bundle.                    |
 
 ---
 
-## Local Data Storage
+## Data Storage
 
-All user data is persisted atomically (`write to .tmp` -> `fsync` -> `atomic rename`) in the standard OS application support directory:
+All user configuration, schedules, and listening statistics are stored atomically in the operating system's standard application support folder:
 
 - **macOS:** `~/Library/Application Support/Squelch/`
 - **Windows:** `%APPDATA%\Squelch\`
 - **Linux:** `~/.config/Squelch/`
 
-Files stored:
+Files persisted:
 
-- `stations.json` — User station list and categories (seeded from `resources/stations.seed.json` on first run)
-- `settings.json` — User preferences and global keyboard shortcuts
-- `state.json` — Last played station ID
-- `stats.json` — Weekly, monthly, and yearly listening duration statistics
-- `logs/squelch.log` — Rotating application log (`<= 1 MB`)
+- `stations.json` — Station library and category groups
+- `schedules.json` — Configured show schedules, alerts, and autoplay preferences
+- `settings.json` — User preferences, theme, font, and shortcuts
+- `stats.json` — Listening activity and duration history
+- `state.json` — Runtime playback state (last active station)
+- `logs/squelch.log` — Rotating log file (`<= 1 MB`)
+
+---
+
+## Author & License
+
+- **Author:** [mrbvrz](https://mrbvrz.web.id)
+- **Repository:** [https://github.com/mrbvrz/squelch](https://github.com/mrbvrz/squelch)
+- **License:** [MIT License](LICENSE)

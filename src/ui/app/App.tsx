@@ -71,7 +71,7 @@ import type {
 const GITHUB_REPO_URL = 'https://github.com/mrbvrz/squelch';
 const AUTHOR_WEBSITE_URL = 'https://mrbvrz.web.id';
 const SPEC_DOC_URL =
-  'https://github.com/mrbvrz/squelch#arsitektur--spesifikasi-teknis';
+  'https://github.com/mrbvrz/squelch/blob/main/ARCHITECTURE.md';
 const CHANGELOG_DOC_URL =
   'https://github.com/mrbvrz/squelch/blob/main/CHANGELOG.md';
 

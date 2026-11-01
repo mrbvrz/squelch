@@ -206,33 +206,238 @@ pub fn get_listening_stats(store: State<Arc<AppStore>>) -> Value {
     )
 }
 
+static CACHED_FONTS: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
+
 #[tauri::command]
 pub fn get_system_fonts() -> Vec<String> {
-    let mut fonts = vec![
-        "SF Pro Text".to_string(),
-        "SF Pro Display".to_string(),
-        "SF Pro Rounded".to_string(),
-        "SF Mono".to_string(),
-        "Helvetica Neue".to_string(),
-        "Avenir Next".to_string(),
-        "Avenir".to_string(),
-        "Menlo".to_string(),
-        "Monaco".to_string(),
-        "Geneva".to_string(),
-        "Optima".to_string(),
-        "Futura".to_string(),
-        "Gill Sans".to_string(),
-        "Georgia".to_string(),
-        "Palatino".to_string(),
-        "Segoe UI".to_string(),
-        "Inter".to_string(),
-        "Arial".to_string(),
-        "Verdana".to_string(),
-        "Trebuchet MS".to_string(),
-        "Courier New".to_string(),
-    ];
-    fonts.sort();
-    fonts
+    CACHED_FONTS
+        .get_or_init(|| {
+            #[cfg(target_os = "macos")]
+            {
+                if let Ok(output) = std::process::Command::new("osascript")
+                    .args([
+                        "-l",
+                        "JavaScript",
+                        "-e",
+                        "ObjC.import('AppKit'); $.NSFontManager.sharedFontManager.availableFontFamilies.js.map(x => x.js).join('\\n')",
+                    ])
+                    .output()
+                {
+                    if output.status.success() {
+                        let text = String::from_utf8_lossy(&output.stdout);
+                        let mut list: Vec<String> = text
+                            .lines()
+                            .map(|s| s.trim().to_string())
+                            .filter(|s| !s.is_empty() && !s.starts_with('.'))
+                            .collect();
+                        list.sort();
+                        list.dedup();
+                        if !list.is_empty() {
+                            return list;
+                        }
+                    }
+                }
+            }
+
+            #[cfg(target_os = "linux")]
+            {
+                if let Ok(output) = std::process::Command::new("fc-list")
+                    .args([":", "family"])
+                    .output()
+                {
+                    if output.status.success() {
+                        let text = String::from_utf8_lossy(&output.stdout);
+                        let mut list: Vec<String> = text
+                            .lines()
+                            .flat_map(|line| line.split(','))
+                            .map(|s| s.trim().to_string())
+                            .filter(|s| !s.is_empty() && !s.starts_with('.'))
+                            .collect();
+                        list.sort();
+                        list.dedup();
+                        if !list.is_empty() {
+                            return list;
+                        }
+                    }
+                }
+            }
+
+            // Fallback default system fonts
+            let mut fonts = vec![
+                "SF Pro Text".to_string(),
+                "SF Pro Display".to_string(),
+                "SF Pro Rounded".to_string(),
+                "SF Mono".to_string(),
+                "Helvetica Neue".to_string(),
+                "Avenir Next".to_string(),
+                "Avenir".to_string(),
+                "Menlo".to_string(),
+                "Monaco".to_string(),
+                "Geneva".to_string(),
+                "Optima".to_string(),
+                "Futura".to_string(),
+                "Gill Sans".to_string(),
+                "Georgia".to_string(),
+                "Palatino".to_string(),
+                "Segoe UI".to_string(),
+                "Inter".to_string(),
+                "Arial".to_string(),
+                "Verdana".to_string(),
+                "Trebuchet MS".to_string(),
+                "Courier New".to_string(),
+            ];
+            fonts.sort();
+            fonts
+        })
+        .clone()
+}
+
+#[tauri::command]
+pub async fn test_stream_url(url: String) -> serde_json::Value {
+    let start = std::time::Instant::now();
+    let client = match reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(8))
+        .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Squelch/0.1.0")
+        .build()
+    {
+        Ok(c) => c,
+        Err(e) => {
+            return serde_json::json!({
+                "ok": false,
+                "resolvedUrl": url,
+                "streamType": "mp3",
+                "contentType": "",
+                "latencyMs": 0,
+                "errorReason": e.to_string()
+            });
+        }
+    };
+
+    match client.get(&url).header("Icy-MetaData", "1").send().await {
+        Ok(res) => {
+            let status = res.status();
+            let latency = start.elapsed().as_millis() as u64;
+            let final_url = res.url().to_string();
+            let headers = res.headers().clone();
+            let content_type = headers
+                .get("content-type")
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("")
+                .to_string();
+            let icy_name = headers
+                .get("icy-name")
+                .and_then(|v| v.to_str().ok())
+                .map(|s| s.to_string());
+            let bitrate = headers
+                .get("icy-br")
+                .and_then(|v| v.to_str().ok())
+                .map(|s| s.to_string());
+
+            let is_hls = final_url.contains(".m3u8")
+                || content_type.contains("application/vnd.apple.mpegurl")
+                || content_type.contains("application/x-mpegurl");
+            let stream_type = if is_hls { "hls" } else { "mp3" };
+
+            serde_json::json!({
+                "ok": status.is_success(),
+                "resolvedUrl": final_url,
+                "streamType": stream_type,
+                "contentType": content_type,
+                "icyName": icy_name,
+                "bitrate": bitrate,
+                "latencyMs": latency,
+                "errorReason": if status.is_success() { None } else { Some(format!("HTTP {}", status)) }
+            })
+        }
+        Err(err) => serde_json::json!({
+            "ok": false,
+            "resolvedUrl": url,
+            "streamType": "mp3",
+            "contentType": "",
+            "latencyMs": start.elapsed().as_millis() as u64,
+            "errorReason": err.to_string()
+        }),
+    }
+}
+
+#[tauri::command]
+pub fn reorder_stations(
+    store: State<Arc<AppStore>>,
+    ordered_ids: Vec<String>,
+) -> Result<(), String> {
+    let mut data = get_stations_data(store.clone());
+    if let Some(stations) = data.get_mut("stations").and_then(|v| v.as_array_mut()) {
+        let mut by_id: std::collections::HashMap<String, serde_json::Value> =
+            std::collections::HashMap::new();
+        for s in stations.drain(..) {
+            if let Some(id) = s.get("id").and_then(|v| v.as_str()) {
+                by_id.insert(id.to_string(), s);
+            }
+        }
+        for id in &ordered_ids {
+            if let Some(s) = by_id.remove(id) {
+                stations.push(s);
+            }
+        }
+        for (_, s) in by_id {
+            stations.push(s);
+        }
+    }
+    store.write_json("stations.json", &data)
+}
+
+#[tauri::command]
+pub fn rename_group(
+    store: State<Arc<AppStore>>,
+    old_name: String,
+    new_name: String,
+) -> Result<serde_json::Value, String> {
+    let mut data = get_stations_data(store.clone());
+    let trimmed = new_name.trim().to_string();
+    if !trimmed.is_empty() {
+        if let Some(groups) = data.get_mut("groups").and_then(|v| v.as_array_mut()) {
+            for g in groups.iter_mut() {
+                if g.as_str() == Some(&old_name) {
+                    *g = serde_json::json!(trimmed);
+                }
+            }
+        }
+        if let Some(stations) = data.get_mut("stations").and_then(|v| v.as_array_mut()) {
+            for s in stations.iter_mut() {
+                if s.get("group").and_then(|v| v.as_str()) == Some(&old_name) {
+                    if let Some(obj) = s.as_object_mut() {
+                        obj.insert("group".to_string(), serde_json::json!(trimmed));
+                    }
+                }
+            }
+        }
+        store.write_json("stations.json", &data)?;
+    }
+    Ok(data)
+}
+
+#[tauri::command]
+pub fn delete_group(
+    store: State<Arc<AppStore>>,
+    group_name: String,
+    move_to_group: Option<String>,
+) -> Result<serde_json::Value, String> {
+    let mut data = get_stations_data(store.clone());
+    let fallback = move_to_group.unwrap_or_else(|| "Umum".to_string());
+    if let Some(groups) = data.get_mut("groups").and_then(|v| v.as_array_mut()) {
+        groups.retain(|g| g.as_str() != Some(&group_name));
+    }
+    if let Some(stations) = data.get_mut("stations").and_then(|v| v.as_array_mut()) {
+        for s in stations.iter_mut() {
+            if s.get("group").and_then(|v| v.as_str()) == Some(&group_name) {
+                if let Some(obj) = s.as_object_mut() {
+                    obj.insert("group".to_string(), serde_json::json!(fallback));
+                }
+            }
+        }
+    }
+    store.write_json("stations.json", &data)?;
+    Ok(data)
 }
 
 #[tauri::command]

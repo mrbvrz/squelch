@@ -63,6 +63,7 @@ import {
 } from '../components/Icons';
 import { StationAvatar } from '../components/StationAvatar';
 import { SquircleAppIcon } from '../components/SquircleAppIcon';
+import { SearchableFontPicker } from '../components/SearchableFontPicker';
 import type {
     NewShowScheduleInput,
     ShowSchedule
@@ -2973,30 +2974,21 @@ export const App: React.FC = () => {
                                                 {t.prefFontFamilyDesc}
                                             </div>
                                         </div>
-                                        <select
+                                        <SearchableFontPicker
                                             value={
                                                 settings.fontFamily ?? 'system'
                                             }
-                                            aria-label={t.prefFontFamilyLabel}
-                                            onChange={(e) =>
-                                                void api.updateSettings({
-                                                    fontFamily: e.target.value
-                                                })
+                                            fonts={systemFonts}
+                                            defaultLabel={
+                                                t.prefFontSystemDefault
                                             }
-                                            className="mac-input px-3 py-1.5 rounded-[7px] text-[12px] w-60 cursor-pointer"
-                                        >
-                                            <option value="system">
-                                                {t.prefFontSystemDefault}
-                                            </option>
-                                            {systemFonts.map((fontName) => (
-                                                <option
-                                                    key={fontName}
-                                                    value={fontName}
-                                                >
-                                                    {fontName}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            ariaLabel={t.prefFontFamilyLabel}
+                                            onChange={(selectedFont) => {
+                                                void api.updateSettings({
+                                                    fontFamily: selectedFont
+                                                });
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             </div>

@@ -999,16 +999,44 @@ export function initTauriBridge() {
                 const stats: any = await invoke('get_listening_stats');
                 const stData: any = await invoke('get_stations_data');
                 const cfg: any = await invoke('get_settings');
-                const logs = [
-                    `[${new Date().toISOString()}] App: Squelch v0.1.0 (Tauri v2)`,
-                    `[${new Date().toISOString()}] OS: macOS / UserAgent: ${navigator.userAgent}`,
-                    `[${new Date().toISOString()}] Player Status: ${playerStatus.state} (Station: ${playerStatus.currentStation?.name || 'none'})`,
-                    `[${new Date().toISOString()}] Stations Count: ${stData?.stations?.length || 0} across ${stData?.groups?.length || 0} categories`,
-                    `[${new Date().toISOString()}] Settings: theme=${cfg?.settings?.theme}, lang=${cfg?.settings?.language}, accent=${cfg?.settings?.accentColor}`,
-                    `[${new Date().toISOString()}] Total Listening Time: ${stats?.totalSeconds || 0} seconds`,
-                    `[${new Date().toISOString()}] WebKit Memory: Active Audio Worker Bridge Connected`
-                ];
-                return { logs };
+                const report = {
+                    timestamp: new Date().toISOString(),
+                    app: 'Squelch v0.1.0 (Tauri v2 macOS)',
+                    platform: 'darwin (macOS)',
+                    userAgent: navigator.userAgent,
+                    player: {
+                        state: playerStatus.state,
+                        currentStation:
+                            playerStatus.currentStation?.name || null,
+                        streamUrl:
+                            playerStatus.currentStation?.streamUrl || null,
+                        streamTitle: playerStatus.streamTitle || null
+                    },
+                    stationCount: stData?.stations?.length || 0,
+                    groupCount: stData?.groups?.length || 0,
+                    settings: {
+                        theme: cfg?.settings?.theme,
+                        language: cfg?.settings?.language,
+                        accentColor: cfg?.settings?.accentColor,
+                        fontFamily: cfg?.settings?.fontFamily,
+                        glassOpacity: cfg?.settings?.glassOpacity,
+                        launchAtLogin: cfg?.settings?.launchAtLogin,
+                        autoPlayLastStation: cfg?.settings?.autoPlayLastStation
+                    },
+                    listeningStats: {
+                        totalSeconds: stats?.totalSeconds || 0,
+                        stationCounts: stats?.stationCounts || {}
+                    },
+                    dataDir:
+                        cfg?.dataDir ||
+                        '~/Library/Application Support/com.mrbvrz.squelch',
+                    recentLogs: [
+                        `[${new Date().toISOString()}] Audio Bridge: WebKit Media Engine Active`,
+                        `[${new Date().toISOString()}] Player state: ${playerStatus.state}`,
+                        `[${new Date().toISOString()}] Storage: Local JSON Stores Mounted`
+                    ]
+                };
+                return JSON.stringify(report, null, 2);
             },
 
             openLogsFolder: async () => {

@@ -651,7 +651,13 @@ export const App: React.FC = () => {
             return () => clearInterval(interval);
         }
         if (activeTab === 'preferences') {
-            void api.getDiagnostics().then(setDiagnosticsText);
+            void api.getDiagnostics().then((res) => {
+                const text =
+                    typeof res === 'string'
+                        ? res
+                        : JSON.stringify(res, null, 2);
+                setDiagnosticsText(text);
+            });
         }
     }, [activeTab]);
 
@@ -3612,8 +3618,17 @@ export const App: React.FC = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => {
+                                                    const textToCopy =
+                                                        typeof diagnosticsText ===
+                                                        'string'
+                                                            ? diagnosticsText
+                                                            : JSON.stringify(
+                                                                  diagnosticsText,
+                                                                  null,
+                                                                  2
+                                                              );
                                                     void navigator.clipboard.writeText(
-                                                        diagnosticsText
+                                                        textToCopy
                                                     );
                                                     setCopiedDiag(true);
                                                     setTimeout(
@@ -3641,9 +3656,28 @@ export const App: React.FC = () => {
                                     <div className="px-4 py-2.5 flex items-center justify-between">
                                         <button
                                             type="button"
-                                            onClick={() =>
-                                                setShowDiagReport((v) => !v)
-                                            }
+                                            onClick={() => {
+                                                const next = !showDiagReport;
+                                                setShowDiagReport(next);
+                                                if (next) {
+                                                    void api
+                                                        .getDiagnostics()
+                                                        .then((res) => {
+                                                            const text =
+                                                                typeof res ===
+                                                                'string'
+                                                                    ? res
+                                                                    : JSON.stringify(
+                                                                          res,
+                                                                          null,
+                                                                          2
+                                                                      );
+                                                            setDiagnosticsText(
+                                                                text
+                                                            );
+                                                        });
+                                                }
+                                            }}
                                             className="text-[12px] font-medium text-accent flex items-center gap-1.5 cursor-pointer hover:underline"
                                         >
                                             {showDiagReport ? (
@@ -3661,8 +3695,15 @@ export const App: React.FC = () => {
 
                                     {showDiagReport && (
                                         <div className="px-4 pb-4 animate-collapse-enter">
-                                            <pre className="p-3.5 rounded-[8px] bg-black/25 border mac-divider text-[11px] font-mono overflow-x-auto tabular-nums max-h-64">
-                                                {diagnosticsText}
+                                            <pre className="p-3.5 rounded-[8px] bg-black/25 border mac-divider text-[11px] font-mono overflow-x-auto tabular-nums max-h-64 whitespace-pre-wrap select-text">
+                                                {typeof diagnosticsText ===
+                                                'string'
+                                                    ? diagnosticsText
+                                                    : JSON.stringify(
+                                                          diagnosticsText,
+                                                          null,
+                                                          2
+                                                      )}
                                             </pre>
                                         </div>
                                     )}

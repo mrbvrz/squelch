@@ -20,10 +20,19 @@ pub fn send_notification(app: AppHandle, title: String, body: String) -> Result<
     #[cfg(target_os = "macos")]
     {
         use std::process::Command;
+        let safe_body = body
+            .replace('\\', "\\\\")
+            .replace('\"', "\\\"")
+            .replace('$', "\\$")
+            .replace('`', "\\`");
+        let safe_title = title
+            .replace('\\', "\\\\")
+            .replace('\"', "\\\"")
+            .replace('$', "\\$")
+            .replace('`', "\\`");
         let script = format!(
             "display notification \"{}\" with title \"{}\" sound name \"default\"",
-            body.replace('\\', "\\\\").replace('\"', "\\\""),
-            title.replace('\\', "\\\\").replace('\"', "\\\"")
+            safe_body, safe_title
         );
         let _ = Command::new("osascript").arg("-e").arg(&script).spawn();
     }
@@ -576,19 +585,26 @@ pub fn quit_app(app: AppHandle) {
 
 #[tauri::command]
 pub fn open_external(url: String) -> Result<(), String> {
+    let trimmed = url.trim();
+    if !trimmed.starts_with("https://")
+        && !trimmed.starts_with("http://")
+        && !trimmed.starts_with("mailto:")
+    {
+        return Err("Blocked unsafe URL scheme".to_string());
+    }
     #[cfg(target_os = "macos")]
     {
-        let _ = std::process::Command::new("open").arg(&url).spawn();
+        let _ = std::process::Command::new("open").arg(trimmed).spawn();
     }
     #[cfg(target_os = "windows")]
     {
         let _ = std::process::Command::new("cmd")
-            .args(["/c", "start", &url])
+            .args(["/c", "start", trimmed])
             .spawn();
     }
     #[cfg(target_os = "linux")]
     {
-        let _ = std::process::Command::new("xdg-open").arg(&url).spawn();
+        let _ = std::process::Command::new("xdg-open").arg(trimmed).spawn();
     }
     Ok(())
 }

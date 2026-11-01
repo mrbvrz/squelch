@@ -1,4 +1,7 @@
 import Hls from 'hls.js';
+import { initTauriBridge } from '../bridge/tauri-bridge';
+
+initTauriBridge();
 
 interface SquelchAudioBridge {
     onCommand: (

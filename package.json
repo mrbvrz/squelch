@@ -51,6 +51,11 @@
         }
     },
     "scripts": {
+        "dev:ui": "vite",
+        "tauri": "tauri",
+        "tauri:dev": "tauri dev",
+        "tauri:build": "npm run build:ui && tauri build --bundles app",
+        "tauri:dist": "npm run build:ui && tauri build --bundles app && cd src-tauri/target/release/bundle/macos && codesign --force --deep --sign - Squelch.app && hdiutil create -volname Squelch -srcfolder Squelch.app -ov -format UDZO Squelch-0.1.0-tauri-arm64.dmg && zip -r -9 Squelch-0.1.0-tauri-arm64.zip Squelch.app",
         "build:main": "tsc -p tsconfig.main.json",
         "build:ui": "vite build",
         "build": "npm run build:main && npm run build:ui",
@@ -70,9 +75,11 @@
     },
     "dependencies": {
         "@heroicons/react": "^2.2.0",
+        "@tauri-apps/api": "^2.12.4",
         "hls.js": "^1.5.17"
     },
     "devDependencies": {
+        "@tauri-apps/cli": "^2.12.4",
         "@types/node": "^22.9.0",
         "@types/react": "^18.3.12",
         "@types/react-dom": "^18.3.1",

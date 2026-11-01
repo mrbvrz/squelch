@@ -233,5 +233,60 @@ export const idLocale: TranslationDictionary = {
     importBtn: 'Impor Daftar',
     sleepCountdownTitle: 'Sleep Timer Aktif',
     sleepCountdownDesc: 'Siaran berhenti otomatis dalam {sec} detik',
-    sleepCancelBtn: 'Batalkan Sleep'
+    sleepCancelBtn: 'Batalkan Sleep',
+
+    // Onboarding Intro Wizard
+    introWelcomeTitle: 'Selamat Datang di Squelch',
+    introWelcomeSubtitle:
+        'Pemutar radio internet modern, super ringan, dan elegan langsung di menu bar macOS Anda.',
+    introWelcomeFeature1Title: 'Ribuan Stasiun Radio Global & Lokal',
+    introWelcomeFeature1Desc:
+        'Akses ke lebih dari 30.000 stasiun radio dari Indonesia dan seluruh penjuru dunia secara instan.',
+    introWelcomeFeature2Title: 'Minimalis & Menyatu dengan macOS',
+    introWelcomeFeature2Desc:
+        'Desain glassmorphism native yang rapi, hemat memori, dan selalu siap tanpa membebani layar Anda.',
+    introWelcomeFeature3Title: 'Jadwal Acara & Statistik Aktivitas',
+    introWelcomeFeature3Desc:
+        'Pengingat siaran favorit otomatis dan pencatatan riwayat durasi mendengarkan yang lengkap.',
+
+    introPermsTitle: 'Izin & Akses Sistem',
+    introPermsSubtitle:
+        'Atur preferensi integrasi sistem macOS agar pengalaman mendengarkan Anda maksimal.',
+    introPermNotifyTitle: 'Notifikasi Lagu & Acara',
+    introPermNotifyDesc:
+        'Menampilkan judul lagu, nama artis saat berganti, serta pengingat jadwal siaran favorit Anda.',
+    introPermNotifyBtn: 'Izinkan Notifikasi',
+    introPermNotifyGranted: 'Notifikasi Aktif',
+    introPermStorageTitle: 'Penyimpanan Data Lokal',
+    introPermStorageDesc:
+        'Menyimpan stasiun favorit, riwayat, dan preferensi Anda secara aman di Application Support lokal.',
+    introPermStorageActive: 'Tersimpan Aman di Lokal',
+    introPermAutostartTitle: 'Buka Otomatis Saat Login',
+    introPermAutostartDesc:
+        'Menjalankan Squelch di menu bar setiap kali komputer dinyalakan agar radio selalu siap sedia.',
+    introPermAutoplayTitle: 'Putar Otomatis Stasiun Terakhir',
+    introPermAutoplayDesc:
+        'Melanjutkan pemutaran stasiun radio terakhir secara otomatis saat aplikasi dibuka.',
+
+    introCustomTitle: 'Personalisasi & Tampilan',
+    introCustomSubtitle:
+        'Sesuaikan bahasa, tema warna, dan aksen yang sesuai dengan selera Anda.',
+    introLanguageLabel: 'Pilihan Bahasa',
+    introThemeLabel: 'Mode Tema Tampilan',
+    introAccentLabel: 'Warna Aksen macOS',
+
+    introReadyTitle: 'Semuanya Siap!',
+    introReadySubtitle:
+        'Squelch telah dikonfigurasi dan siap menemani hari Anda dengan alunan musik terbaik.',
+    introReadyTip1:
+        'Klik ikon radio di menu bar atas untuk memutar, menjeda, atau mengganti stasiun dengan cepat.',
+    introReadyTip2:
+        'Gunakan shortcut ⌘ + Shift + P kapan saja untuk putar/jeda siaran secara instan.',
+    introReadyTip3:
+        'Anda dapat mengubah pengaturan ini kapan saja melalui menu Pengaturan.',
+    introStartBtn: 'Mulai Dengarkan Radio',
+    introNextBtn: 'Lanjutkan',
+    introBackBtn: 'Kembali',
+    introSkipBtn: 'Lewati',
+    introReopenBtn: 'Buka Panduan Awal (Intro)'
 };

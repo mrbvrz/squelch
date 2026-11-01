@@ -23,6 +23,7 @@ export interface AppSettings {
     networkTimeoutMs: number;
     userAgent: string;
     shortcuts: GlobalShortcutsConfig;
+    hasCompletedOnboarding?: boolean;
 }
 
 export interface AppRuntimeState {
@@ -33,6 +34,7 @@ export interface AppRuntimeState {
 export function createDefaultSettings(): AppSettings {
     return {
         schemaVersion: 1,
+        hasCompletedOnboarding: false,
         launchAtLogin: false,
         autoPlayLastStation: false,
         autoReconnect: true,

@@ -234,5 +234,60 @@ export const enLocale: TranslationDictionary = {
     importBtn: 'Import Playlist',
     sleepCountdownTitle: 'Sleep Timer Active',
     sleepCountdownDesc: 'Playback stops automatically in {sec}s',
-    sleepCancelBtn: 'Cancel Sleep'
+    sleepCancelBtn: 'Cancel Sleep',
+
+    // Onboarding Intro Wizard
+    introWelcomeTitle: 'Welcome to Squelch',
+    introWelcomeSubtitle:
+        'A modern, lightweight, and elegant internet radio player living right in your macOS menu bar.',
+    introWelcomeFeature1Title: 'Thousands of Global & Local Stations',
+    introWelcomeFeature1Desc:
+        'Instant access to over 30,000 radio stations from Indonesia and around the globe.',
+    introWelcomeFeature2Title: 'Minimalist & Native to macOS',
+    introWelcomeFeature2Desc:
+        'Clean native glassmorphism design that uses almost no memory and stays out of your way.',
+    introWelcomeFeature3Title: 'Show Schedules & Listening Stats',
+    introWelcomeFeature3Desc:
+        'Automatic show reminders and comprehensive listening history insights.',
+
+    introPermsTitle: 'Permissions & System Access',
+    introPermsSubtitle:
+        'Set up your macOS system integration preferences for the smoothest experience.',
+    introPermNotifyTitle: 'Song & Show Notifications',
+    introPermNotifyDesc:
+        'Receive alerts when a new song starts playing and get reminded before your favorite shows air.',
+    introPermNotifyBtn: 'Allow Notifications',
+    introPermNotifyGranted: 'Notifications Enabled',
+    introPermStorageTitle: 'Local Data Storage',
+    introPermStorageDesc:
+        'Your custom stations, favorites, and settings are saved securely in local Application Support.',
+    introPermStorageActive: 'Stored Safely on Device',
+    introPermAutostartTitle: 'Launch at Login',
+    introPermAutostartDesc:
+        'Start Squelch minimized in your menu bar whenever you log into macOS.',
+    introPermAutoplayTitle: 'Auto-play Last Station',
+    introPermAutoplayDesc:
+        'Resume playing your last listened radio station automatically when Squelch starts.',
+
+    introCustomTitle: 'Personalization & Theme',
+    introCustomSubtitle:
+        'Tune the language, appearance theme, and accent color to match your desktop setup.',
+    introLanguageLabel: 'Preferred Language',
+    introThemeLabel: 'Appearance Theme',
+    introAccentLabel: 'macOS Accent Color',
+
+    introReadyTitle: "You're All Set!",
+    introReadySubtitle:
+        'Squelch is fully configured and ready to bring music and talk radio to your workday.',
+    introReadyTip1:
+        'Click the radio icon in your top macOS menu bar anytime to play, pause, or switch stations.',
+    introReadyTip2:
+        'Use the global shortcut ⌘ + Shift + P to toggle radio playback from anywhere.',
+    introReadyTip3:
+        'You can customize all these options later in Squelch Preferences.',
+    introStartBtn: 'Start Listening',
+    introNextBtn: 'Continue',
+    introBackBtn: 'Back',
+    introSkipBtn: 'Skip',
+    introReopenBtn: 'Open Welcome Intro'
 };

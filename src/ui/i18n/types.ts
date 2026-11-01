@@ -226,4 +226,42 @@ export interface TranslationDictionary {
     sleepCountdownTitle: string;
     sleepCountdownDesc: string;
     sleepCancelBtn: string;
+
+    // Onboarding Intro Wizard
+    introWelcomeTitle: string;
+    introWelcomeSubtitle: string;
+    introWelcomeFeature1Title: string;
+    introWelcomeFeature1Desc: string;
+    introWelcomeFeature2Title: string;
+    introWelcomeFeature2Desc: string;
+    introWelcomeFeature3Title: string;
+    introWelcomeFeature3Desc: string;
+    introPermsTitle: string;
+    introPermsSubtitle: string;
+    introPermNotifyTitle: string;
+    introPermNotifyDesc: string;
+    introPermNotifyBtn: string;
+    introPermNotifyGranted: string;
+    introPermStorageTitle: string;
+    introPermStorageDesc: string;
+    introPermStorageActive: string;
+    introPermAutostartTitle: string;
+    introPermAutostartDesc: string;
+    introPermAutoplayTitle: string;
+    introPermAutoplayDesc: string;
+    introCustomTitle: string;
+    introCustomSubtitle: string;
+    introLanguageLabel: string;
+    introThemeLabel: string;
+    introAccentLabel: string;
+    introReadyTitle: string;
+    introReadySubtitle: string;
+    introReadyTip1: string;
+    introReadyTip2: string;
+    introReadyTip3: string;
+    introStartBtn: string;
+    introNextBtn: string;
+    introBackBtn: string;
+    introSkipBtn: string;
+    introReopenBtn: string;
 }

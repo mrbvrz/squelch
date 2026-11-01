@@ -64,6 +64,7 @@ import {
 import { StationAvatar } from '../components/StationAvatar';
 import { SquircleAppIcon } from '../components/SquircleAppIcon';
 import { SearchableFontPicker } from '../components/SearchableFontPicker';
+import { OnboardingModal } from '../components/OnboardingModal';
 import type {
     NewShowScheduleInput,
     ShowSchedule
@@ -462,6 +463,7 @@ export const App: React.FC = () => {
         useState<boolean>(false);
     const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
     const [isQuitConfirmOpen, setIsQuitConfirmOpen] = useState<boolean>(false);
+    const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
 
     // Show Schedules & Reminders State
     const [schedules, setSchedules] = useState<ShowSchedule[]>([]);
@@ -640,6 +642,13 @@ export const App: React.FC = () => {
             void api.getDiagnostics().then(setDiagnosticsText);
         }
     }, [activeTab]);
+
+    // Automatically trigger onboarding wizard on first launch
+    useEffect(() => {
+        if (settings && settings.hasCompletedOnboarding === false) {
+            setIsOnboardingOpen(true);
+        }
+    }, [settings?.hasCompletedOnboarding]);
 
     // Direct Keyboard Shortcut Recorder Listener
     useEffect(() => {
@@ -3165,6 +3174,29 @@ export const App: React.FC = () => {
                                             }
                                         />
                                     </div>
+
+                                    <div className="px-4 py-3 flex items-center justify-between">
+                                        <div>
+                                            <div className="text-[13px] font-medium">
+                                                {t.introReopenBtn}
+                                            </div>
+                                            <div className="text-[12px] text-secondary mt-0.5">
+                                                {lang === 'id'
+                                                    ? 'Tampilkan kembali panduan langkah awal dan integrasi sistem.'
+                                                    : 'Re-open the initial setup guide and system integration.'}
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setIsOnboardingOpen(true)
+                                            }
+                                            className="mac-glass-pill px-3 py-1.5 rounded-[7px] font-medium flex items-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition"
+                                        >
+                                            <IconCompass size={14} />
+                                            <span>{t.introReopenBtn}</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -4111,6 +4143,19 @@ export const App: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* ONBOARDING INTRO WIZARD */}
+            {settings && (
+                <OnboardingModal
+                    isOpen={isOnboardingOpen}
+                    onClose={() => setIsOnboardingOpen(false)}
+                    settings={settings}
+                    onUpdateSettings={api.updateSettings}
+                    appIconDataUrl={appIconDataUrl}
+                    t={t}
+                    lang={lang}
+                />
             )}
 
             {/* ADD / EDIT SCHEDULE MODAL */}

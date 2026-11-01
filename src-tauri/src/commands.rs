@@ -130,7 +130,8 @@ pub fn get_settings(store: State<Arc<AppStore>>) -> Value {
                 "playPause": "CommandOrControl+Shift+P",
                 "nextStation": "CommandOrControl+Shift+Right",
                 "prevStation": "CommandOrControl+Shift+Left"
-            }
+            },
+            "hasCompletedOnboarding": false
         }),
     );
     let data_dir = store.data_dir.to_string_lossy().to_string();
@@ -179,7 +180,8 @@ pub fn reset_settings(store: State<Arc<AppStore>>) -> Result<Value, String> {
             "playPause": "CommandOrControl+Shift+P",
             "nextStation": "CommandOrControl+Shift+Right",
             "prevStation": "CommandOrControl+Shift+Left"
-        }
+        },
+        "hasCompletedOnboarding": false
     });
     store.write_json("settings.json", &default_val)?;
     Ok(json!({

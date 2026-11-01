@@ -44,18 +44,41 @@
 
 ---
 
-## Download
+## Download & Installation
 
-### macOS
+### macOS (Apple Silicon & Intel)
 
-Download the latest ready-to-run macOS package:
+#### Option 1: 1-Line Terminal Install (Recommended — Fast & Hassle-Free)
+
+Run this single command in your Terminal. It downloads the latest release, installs it directly to `/Applications`, configures Gatekeeper permissions automatically, and launches Squelch:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mrbvrz/squelch/main/install.sh | bash
+```
+
+#### Option 2: Manual Download (.dmg or .zip)
+
+Download the ready-to-run package from GitHub Releases:
 
 - 🍏 **[Download Squelch for macOS (.dmg)](https://github.com/mrbvrz/squelch/releases/download/v0.1.0/Squelch-0.1.0-arm64.dmg)**
 - 📦 **[Download Squelch for macOS (.zip)](https://github.com/mrbvrz/squelch/releases/download/v0.1.0/Squelch-0.1.0-arm64-mac.zip)**
 - 🚀 **[View All Release Assets](https://github.com/mrbvrz/squelch/releases/tag/v0.1.0)**
 
-> [!NOTE]
-> Open the `.dmg`, drag **Squelch.app** into your `/Applications` folder, and launch. The animated waveform radio icon appears directly in your system menu bar!
+> [!TIP]
+> **First-time launch on macOS:**
+> Because Squelch is an independent open-source app distributed outside the paid Apple Developer Program, macOS Gatekeeper may display a prompt on the first launch.
+>
+> To open without issues:
+>
+> 1. Drag **Squelch.app** into `/Applications`.
+> 2. **Right-Click** (or **Control-Click**) `Squelch.app` in `/Applications` and select **Open**.
+> 3. Click **Open** on the confirmation dialog. (You only need to do this once).
+>
+> Alternatively, run this in Terminal after dragging to `/Applications`:
+>
+> ```bash
+> xattr -cr /Applications/Squelch.app
+> ```
 
 ### Windows & Linux
 

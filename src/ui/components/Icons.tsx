@@ -83,6 +83,7 @@ export const IconChevronRight = wrapHeroicon(ChevronRightIcon);
 export const IconChevronDown = wrapHeroicon(ChevronDownIcon);
 export const IconChevronUp = wrapHeroicon(ChevronUpIcon);
 export const IconBackup = wrapHeroicon(ArrowDownTrayIcon);
+export const IconArrowDownTray = wrapHeroicon(ArrowDownTrayIcon);
 export const IconRestore = wrapHeroicon(ArrowUpTrayIcon);
 export const IconKey = wrapHeroicon(KeyIcon);
 export const IconWarning = wrapHeroicon(ExclamationTriangleIcon);
@@ -90,6 +91,7 @@ export const IconExternalLink = wrapHeroicon(ArrowTopRightOnSquareIcon);
 export const IconCheck = wrapHeroicon(CheckIcon);
 export const IconCalendar = wrapHeroicon(CalendarDaysIcon);
 export const IconBell = wrapHeroicon(BellAlertIcon);
+export const IconSparkles = wrapHeroicon(BoltIcon);
 
 export const IconGitHub: React.FC<IconProps> = ({
     size = 15,

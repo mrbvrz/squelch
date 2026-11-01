@@ -577,6 +577,10 @@ export function initTauriBridge() {
                 await invoke('quit_app');
             },
 
+            checkForUpdates: async () => {
+                return await invoke('check_for_updates');
+            },
+
             getAppIconDataUrl: async () => null,
 
             openAboutWindow: async () => {

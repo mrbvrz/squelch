@@ -65,6 +65,7 @@ import { StationAvatar } from '../components/StationAvatar';
 import { SquircleAppIcon } from '../components/SquircleAppIcon';
 import { SearchableFontPicker } from '../components/SearchableFontPicker';
 import { OnboardingModal } from '../components/OnboardingModal';
+import { UpdateModal, type UpdateCheckResult } from '../components/UpdateModal';
 import type {
     NewShowScheduleInput,
     ShowSchedule
@@ -160,6 +161,7 @@ interface SquelchWindowApi {
     getListeningStats: () => Promise<ListeningStatsSummary>;
     getDiagnostics: () => Promise<string>;
     openLogsFolder: () => Promise<boolean>;
+    checkForUpdates: () => Promise<UpdateCheckResult>;
     onStateChanged: (cb: (data: unknown) => void) => () => void;
 }
 
@@ -464,6 +466,14 @@ export const App: React.FC = () => {
     const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
     const [isQuitConfirmOpen, setIsQuitConfirmOpen] = useState<boolean>(false);
     const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
+    const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(
+        null
+    );
+    const [isCheckingUpdate, setIsCheckingUpdate] = useState<boolean>(false);
+    const [updateCheckError, setUpdateCheckError] = useState<string | null>(
+        null
+    );
+    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
 
     // Show Schedules & Reminders State
     const [schedules, setSchedules] = useState<ShowSchedule[]>([]);
@@ -649,6 +659,35 @@ export const App: React.FC = () => {
             setIsOnboardingOpen(true);
         }
     }, [settings?.hasCompletedOnboarding]);
+
+    const handleCheckForUpdates = async (manual = true) => {
+        setIsCheckingUpdate(true);
+        setUpdateCheckError(null);
+        try {
+            const res = await api.checkForUpdates();
+            setUpdateInfo(res);
+            if (res.hasUpdate) {
+                setIsUpdateModalOpen(true);
+            }
+        } catch (err: any) {
+            console.error('Update check failed:', err);
+            if (manual) {
+                setUpdateCheckError(err?.message || String(err));
+            }
+        } finally {
+            setIsCheckingUpdate(false);
+        }
+    };
+
+    // Auto-check for updates quietly 3s after startup
+    useEffect(() => {
+        if (settings && settings.autoCheckUpdates !== false) {
+            const timer = setTimeout(() => {
+                void handleCheckForUpdates(false);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [settings?.autoCheckUpdates]);
 
     // Direct Keyboard Shortcut Recorder Listener
     useEffect(() => {
@@ -1489,6 +1528,26 @@ export const App: React.FC = () => {
                         <h1 className="text-[17px] font-bold tracking-tight">
                             {currentHeadingTitle}
                         </h1>
+                    </div>
+
+                    <div
+                        style={
+                            {
+                                WebkitAppRegion: 'no-drag'
+                            } as React.CSSProperties
+                        }
+                        className="flex items-center gap-2"
+                    >
+                        {updateInfo?.hasUpdate && (
+                            <button
+                                type="button"
+                                onClick={() => setIsUpdateModalOpen(true)}
+                                className="px-2.5 py-1 rounded-full bg-accent/15 text-accent border border-accent/30 text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer hover:bg-accent/25 transition shadow-xs"
+                            >
+                                <span className="text-[12px]">✨</span>
+                                <span>Update v{updateInfo.latestVersion}</span>
+                            </button>
+                        )}
                     </div>
                 </header>
 
@@ -3394,6 +3453,134 @@ export const App: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* Group: Application Updates */}
+                            <div>
+                                <h2 className="text-[13px] font-bold mb-2 px-1 flex items-center gap-1.5">
+                                    <IconSparkles
+                                        size={14}
+                                        className="text-accent"
+                                    />
+                                    <span>{t.updatesSectionTitle}</span>
+                                </h2>
+                                <div className="mac-settings-card mac-inset-list">
+                                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <div className="text-[13px] font-semibold text-foreground">
+                                                    Squelch
+                                                </div>
+                                                <span className="px-2 py-0.5 rounded-[5px] bg-accent/15 text-accent text-[11px] font-mono font-bold tabular-nums">
+                                                    v
+                                                    {updateInfo?.currentVersion ||
+                                                        '0.1.0'}
+                                                </span>
+                                                {updateInfo?.hasUpdate ? (
+                                                    <span className="px-2 py-0.5 rounded-full bg-[#FF9F0A]/15 text-[#FF9F0A] text-[11px] font-medium flex items-center gap-1">
+                                                        <span>🎉</span>
+                                                        <span>
+                                                            {t.updatesAvailable}
+                                                            : v
+                                                            {
+                                                                updateInfo.latestVersion
+                                                            }
+                                                        </span>
+                                                    </span>
+                                                ) : updateInfo &&
+                                                  !isCheckingUpdate ? (
+                                                    <span className="px-2 py-0.5 rounded-full bg-[#30D158]/15 text-[#30D158] text-[11px] font-medium flex items-center gap-1">
+                                                        <IconCheck size={12} />
+                                                        <span>
+                                                            {t.updatesUpToDate}
+                                                        </span>
+                                                    </span>
+                                                ) : null}
+                                            </div>
+                                            <div className="text-[12px] text-secondary mt-1">
+                                                {updateCheckError ? (
+                                                    <span className="text-[#FF453A]">
+                                                        {t.updatesError}:{' '}
+                                                        {updateCheckError}
+                                                    </span>
+                                                ) : (
+                                                    t.updatesSectionDesc
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {updateInfo?.hasUpdate && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setIsUpdateModalOpen(
+                                                            true
+                                                        )
+                                                    }
+                                                    className="bg-accent hover:opacity-90 text-white px-3.5 py-1.5 rounded-[7px] text-[12px] font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                                                >
+                                                    <IconArrowDownTray
+                                                        size={13}
+                                                    />
+                                                    <span>
+                                                        {t.updatesDownloadDmg}
+                                                    </span>
+                                                </button>
+                                            )}
+
+                                            <button
+                                                type="button"
+                                                disabled={isCheckingUpdate}
+                                                onClick={() =>
+                                                    void handleCheckForUpdates(
+                                                        true
+                                                    )
+                                                }
+                                                className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:bg-black/5 dark:hover:bg-white/10 transition"
+                                            >
+                                                {isCheckingUpdate ? (
+                                                    <>
+                                                        <IconSpinner
+                                                            size={13}
+                                                            className="animate-spin text-accent"
+                                                        />
+                                                        <span>
+                                                            {t.updatesChecking}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <IconRestore
+                                                            size={13}
+                                                        />
+                                                        <span>
+                                                            {t.updatesCheckBtn}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-4 py-3 flex items-center justify-between">
+                                        <span className="text-[13px] font-medium">
+                                            {t.updatesAutoCheck}
+                                        </span>
+                                        <MacToggle
+                                            checked={
+                                                settings.autoCheckUpdates !==
+                                                false
+                                            }
+                                            label={t.updatesAutoCheck}
+                                            onChange={(next) =>
+                                                void api.updateSettings({
+                                                    autoCheckUpdates: next
+                                                })
+                                            }
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Group 6: Diagnostics & System Logs (Default Info Only, Expandable Report) */}
                             <div>
                                 <h2 className="text-[13px] font-bold mb-2 px-1">
@@ -4157,6 +4344,16 @@ export const App: React.FC = () => {
                     lang={lang}
                 />
             )}
+
+            {/* APP UPDATE MODAL */}
+            <UpdateModal
+                isOpen={isUpdateModalOpen}
+                onClose={() => setIsUpdateModalOpen(false)}
+                updateInfo={updateInfo}
+                appIconDataUrl={appIconDataUrl}
+                onOpenExternalUrl={(url) => void api.openExternalUrl(url)}
+                t={t}
+            />
 
             {/* ADD / EDIT SCHEDULE MODAL */}
             {isScheduleModalOpen && (

@@ -289,5 +289,24 @@ export const enLocale: TranslationDictionary = {
     introNextBtn: 'Continue',
     introBackBtn: 'Back',
     introSkipBtn: 'Skip',
-    introReopenBtn: 'Open Welcome Intro'
+    introReopenBtn: 'Open Welcome Intro',
+
+    // App Updates
+    updatesSectionTitle: 'Application Updates',
+    updatesSectionDesc:
+        'Check for the latest version of Squelch and download new releases directly from GitHub.',
+    updatesCurrentVersion: 'Installed Version',
+    updatesCheckBtn: 'Check for Updates',
+    updatesChecking: 'Checking GitHub…',
+    updatesUpToDate: 'Squelch is up to date',
+    updatesAvailable: 'Update Available',
+    updatesAutoCheck: 'Check for updates automatically on launch',
+    updatesModalTitle: 'New Version Available: {ver}',
+    updatesModalSubtitle:
+        'A new version of Squelch is ready to download with performance improvements and new features.',
+    updatesDownloadDmg: 'Download Update (.dmg)',
+    updatesViewNotes: 'View Release Notes on GitHub',
+    updatesDismiss: 'Later',
+    updatesChangelogLabel: 'Release Notes',
+    updatesError: 'Failed to check for updates'
 };

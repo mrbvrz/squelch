@@ -131,7 +131,8 @@ pub fn get_settings(store: State<Arc<AppStore>>) -> Value {
                 "nextStation": "CommandOrControl+Shift+Right",
                 "prevStation": "CommandOrControl+Shift+Left"
             },
-            "hasCompletedOnboarding": false
+            "hasCompletedOnboarding": false,
+            "autoCheckUpdates": true
         }),
     );
     let data_dir = store.data_dir.to_string_lossy().to_string();
@@ -181,7 +182,8 @@ pub fn reset_settings(store: State<Arc<AppStore>>) -> Result<Value, String> {
             "nextStation": "CommandOrControl+Shift+Right",
             "prevStation": "CommandOrControl+Shift+Left"
         },
-        "hasCompletedOnboarding": false
+        "hasCompletedOnboarding": false,
+        "autoCheckUpdates": true
     });
     store.write_json("settings.json", &default_val)?;
     Ok(json!({
@@ -541,4 +543,131 @@ pub fn open_external(url: String) -> Result<(), String> {
         let _ = std::process::Command::new("xdg-open").arg(&url).spawn();
     }
     Ok(())
+}
+
+fn parse_version(v: &str) -> (u64, u64, u64) {
+    let clean = v.trim().trim_start_matches(|c| c == 'v' || c == 'V');
+    let parts: Vec<u64> = clean
+        .split('.')
+        .filter_map(|p| p.split('-').next().and_then(|s| s.parse().ok()))
+        .collect();
+    (
+        parts.get(0).copied().unwrap_or(0),
+        parts.get(1).copied().unwrap_or(0),
+        parts.get(2).copied().unwrap_or(0),
+    )
+}
+
+fn is_version_newer(current: &str, remote: &str) -> bool {
+    let c = parse_version(current);
+    let r = parse_version(remote);
+    r > c
+}
+
+#[tauri::command]
+pub async fn check_for_updates() -> Result<Value, String> {
+    let current_version = env!("CARGO_PKG_VERSION");
+    let url = "https://api.github.com/repos/mrbvrz/squelch/releases/latest";
+
+    let client = reqwest::Client::builder()
+        .user_agent(format!("Squelch/{}", current_version))
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+    let res = client
+        .get(url)
+        .header("Accept", "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| format!("Network error checking for updates: {}", e))?;
+
+    if !res.status().is_success() {
+        return Err(format!("GitHub API returned status: {}", res.status()));
+    }
+
+    let text = res
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read release response: {}", e))?;
+
+    let release: Value = serde_json::from_str(&text)
+        .map_err(|e| format!("Failed to parse release JSON: {}", e))?;
+
+    let remote_tag = release
+        .get("tag_name")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+
+    let clean_remote = remote_tag.trim_start_matches(|c| c == 'v' || c == 'V');
+    let has_update = is_version_newer(current_version, clean_remote);
+
+    let release_name = release
+        .get("name")
+        .and_then(|v| v.as_str())
+        .unwrap_or(&remote_tag)
+        .to_string();
+
+    let release_notes = release
+        .get("body")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+
+    let published_at = release
+        .get("published_at")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+
+    let html_url = release
+        .get("html_url")
+        .and_then(|v| v.as_str())
+        .unwrap_or("https://github.com/mrbvrz/squelch/releases")
+        .to_string();
+
+    let mut dmg_url: Option<String> = None;
+    let mut zip_url: Option<String> = None;
+    let mut assets_list: Vec<Value> = Vec::new();
+
+    if let Some(assets) = release.get("assets").and_then(|v| v.as_array()) {
+        for asset in assets {
+            let name = asset.get("name").and_then(|v| v.as_str()).unwrap_or("");
+            let download_url = asset
+                .get("browser_download_url")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let size = asset.get("size").and_then(|v| v.as_u64()).unwrap_or(0);
+
+            if name.ends_with(".dmg") && dmg_url.is_none() {
+                dmg_url = Some(download_url.to_string());
+            }
+            if name.ends_with(".zip") && zip_url.is_none() {
+                zip_url = Some(download_url.to_string());
+            }
+
+            assets_list.push(json!({
+                "name": name,
+                "downloadUrl": download_url,
+                "size": size
+            }));
+        }
+    }
+
+    let primary_download_url = dmg_url
+        .or(zip_url)
+        .unwrap_or_else(|| html_url.clone());
+
+    Ok(json!({
+        "hasUpdate": has_update,
+        "currentVersion": current_version,
+        "latestVersion": clean_remote,
+        "releaseName": release_name,
+        "releaseNotes": release_notes,
+        "publishedAt": published_at,
+        "releaseUrl": html_url,
+        "downloadUrl": primary_download_url,
+        "assets": assets_list
+    }))
 }

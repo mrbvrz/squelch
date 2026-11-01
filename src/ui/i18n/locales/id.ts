@@ -288,5 +288,24 @@ export const idLocale: TranslationDictionary = {
     introNextBtn: 'Lanjutkan',
     introBackBtn: 'Kembali',
     introSkipBtn: 'Lewati',
-    introReopenBtn: 'Buka Panduan Awal (Intro)'
+    introReopenBtn: 'Buka Panduan Awal (Intro)',
+
+    // App Updates
+    updatesSectionTitle: 'Pembaruan Aplikasi',
+    updatesSectionDesc:
+        'Periksa versi terbaru Squelch dan unduh rilis terbaru langsung dari GitHub.',
+    updatesCurrentVersion: 'Versi Terpasang',
+    updatesCheckBtn: 'Periksa Pembaruan',
+    updatesChecking: 'Memeriksa GitHub…',
+    updatesUpToDate: 'Squelch sudah versi terbaru',
+    updatesAvailable: 'Pembaruan Tersedia',
+    updatesAutoCheck: 'Periksa pembaruan otomatis saat aplikasi dibuka',
+    updatesModalTitle: 'Pembaruan Baru Tersedia: {ver}',
+    updatesModalSubtitle:
+        'Versi baru Squelch siap diunduh dengan peningkatan performa dan fitur terbaru.',
+    updatesDownloadDmg: 'Unduh Pembaruan (.dmg)',
+    updatesViewNotes: 'Lihat Catatan Rilis di GitHub',
+    updatesDismiss: 'Nanti Saja',
+    updatesChangelogLabel: 'Catatan Perubahan (Changelog)',
+    updatesError: 'Gagal memeriksa pembaruan'
 };

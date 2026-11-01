@@ -24,6 +24,7 @@ export interface AppSettings {
     userAgent: string;
     shortcuts: GlobalShortcutsConfig;
     hasCompletedOnboarding?: boolean;
+    autoCheckUpdates?: boolean;
 }
 
 export interface AppRuntimeState {
@@ -35,6 +36,7 @@ export function createDefaultSettings(): AppSettings {
     return {
         schemaVersion: 1,
         hasCompletedOnboarding: false,
+        autoCheckUpdates: true,
         launchAtLogin: false,
         autoPlayLastStation: false,
         autoReconnect: true,

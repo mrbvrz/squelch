@@ -264,4 +264,21 @@ export interface TranslationDictionary {
     introBackBtn: string;
     introSkipBtn: string;
     introReopenBtn: string;
+
+    // App Updates
+    updatesSectionTitle: string;
+    updatesSectionDesc: string;
+    updatesCurrentVersion: string;
+    updatesCheckBtn: string;
+    updatesChecking: string;
+    updatesUpToDate: string;
+    updatesAvailable: string;
+    updatesAutoCheck: string;
+    updatesModalTitle: string;
+    updatesModalSubtitle: string;
+    updatesDownloadDmg: string;
+    updatesViewNotes: string;
+    updatesDismiss: string;
+    updatesChangelogLabel: string;
+    updatesError: string;
 }

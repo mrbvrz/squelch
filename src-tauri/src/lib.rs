@@ -284,7 +284,8 @@ pub fn run() {
             commands::toggle_tray_popover,
             commands::quit_app,
             commands::open_external,
-            commands::start_window_drag
+            commands::start_window_drag,
+            commands::check_for_updates
         ])
         .run(tauri::generate_context!())
         .expect("error while building tauri application");

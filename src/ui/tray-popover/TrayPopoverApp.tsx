@@ -12,7 +12,6 @@ import {
 } from '../utils/appearance';
 import {
     IconCompass,
-    IconFolder,
     IconPause,
     IconPlay,
     IconPlus,
@@ -42,6 +41,7 @@ interface SquelchTrayPopoverApi {
         tab: 'stations' | 'discover' | 'stats' | 'preferences' | 'about'
     ) => Promise<boolean>;
     quitApp: () => Promise<boolean>;
+    requestQuitConfirm: () => Promise<void>;
     getStationsData: () => Promise<StationsDataSchema>;
     resolveStationLogo: (logoUrl: string) => Promise<string | null>;
     getSettings: () => Promise<{
@@ -578,7 +578,10 @@ export const TrayPopoverApp: React.FC = () => {
                     </button>
                     <button
                         type="button"
-                        onClick={() => void api.quitApp()}
+                        onClick={async () => {
+                            await api.openWindowTab('stations');
+                            await api.requestQuitConfirm();
+                        }}
                         className="flex items-center gap-1.5 text-[#FF453A] hover:opacity-80 transition font-medium cursor-pointer"
                     >
                         <IconPower size={13} />
@@ -586,45 +589,29 @@ export const TrayPopoverApp: React.FC = () => {
                     </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-2 text-left tabular-nums text-secondary">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                        <IconRadioTower
-                            size={12}
-                            className="text-muted shrink-0"
-                        />
-                        <div className="truncate">
-                            <span className="text-[12px] font-bold text-foreground mr-1">
-                                {stations.length}
-                            </span>
-                            <span className="text-[10px] text-secondary truncate">
-                                {t.trayStatStations}
-                            </span>
+                <div className="grid grid-cols-3 gap-2 pt-2 text-center tabular-nums text-secondary">
+                    <div>
+                        <div className="text-[13px] font-bold text-foreground">
+                            {stations.length}
+                        </div>
+                        <div className="text-[10px] text-secondary truncate">
+                            {t.trayStatStations}
                         </div>
                     </div>
-                    <div className="flex items-center gap-1.5 min-w-0">
-                        <IconStar
-                            size={12}
-                            filled
-                            className="text-[#FF9F0A] shrink-0"
-                        />
-                        <div className="truncate">
-                            <span className="text-[12px] font-bold text-foreground mr-1">
-                                {favCount}
-                            </span>
-                            <span className="text-[10px] text-secondary truncate">
-                                {t.trayStatFavorites}
-                            </span>
+                    <div>
+                        <div className="text-[13px] font-bold text-foreground">
+                            {favCount}
+                        </div>
+                        <div className="text-[10px] text-secondary truncate">
+                            {t.trayStatFavorites}
                         </div>
                     </div>
-                    <div className="flex items-center gap-1.5 min-w-0">
-                        <IconFolder size={12} className="text-muted shrink-0" />
-                        <div className="truncate">
-                            <span className="text-[12px] font-bold text-foreground mr-1">
-                                {groups.length}
-                            </span>
-                            <span className="text-[10px] text-secondary truncate">
-                                {t.trayStatCategories}
-                            </span>
+                    <div>
+                        <div className="text-[13px] font-bold text-foreground">
+                            {groups.length}
+                        </div>
+                        <div className="text-[10px] text-secondary truncate">
+                            {t.trayStatCategories}
                         </div>
                     </div>
                 </div>

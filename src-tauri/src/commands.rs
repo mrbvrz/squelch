@@ -4,14 +4,51 @@ use std::sync::Arc;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_notification::NotificationExt;
 
+use tauri::Emitter;
+
 #[tauri::command]
 pub fn send_notification(app: AppHandle, title: String, body: String) -> Result<(), String> {
-    app.notification()
+    // 1. Try standard Tauri notification plugin
+    let _ = app
+        .notification()
         .builder()
-        .title(title)
-        .body(body)
-        .show()
-        .map_err(|e| e.to_string())
+        .title(&title)
+        .body(&body)
+        .show();
+
+    // 2. On macOS, ensure native Notification Center banner is shown via AppleScript
+    #[cfg(target_os = "macos")]
+    {
+        use std::process::Command;
+        let script = format!(
+            "display notification \"{}\" with title \"{}\" sound name \"default\"",
+            body.replace('\\', "\\\\").replace('\"', "\\\""),
+            title.replace('\\', "\\\\").replace('\"', "\\\"")
+        );
+        let _ = Command::new("osascript").arg("-e").arg(&script).spawn();
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_player_status(store: State<Arc<AppStore>>) -> Value {
+    store.player_state.lock().unwrap().clone()
+}
+
+#[tauri::command]
+pub fn update_player_status(
+    app: AppHandle,
+    store: State<Arc<AppStore>>,
+    status: Value,
+) -> Result<(), String> {
+    {
+        let mut st = store.player_state.lock().unwrap();
+        *st = status.clone();
+    }
+    let _ = app.emit("squelch:player-sync", &status);
+    let _ = app.emit("ui:state-changed", &status);
+    Ok(())
 }
 
 #[tauri::command]

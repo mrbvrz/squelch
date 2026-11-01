@@ -165,6 +165,7 @@ interface SquelchWindowApi {
     openLogsFolder: () => Promise<boolean>;
     checkForUpdates: () => Promise<UpdateCheckResult>;
     sendNotification: (title: string, body: string) => Promise<boolean>;
+    requestQuitConfirm?: () => Promise<void>;
     onStateChanged: (cb: (data: unknown) => void) => () => void;
 }
 
@@ -612,6 +613,10 @@ export const App: React.FC = () => {
             setIsAboutModalOpen(true);
         };
 
+        const handleCustomConfirmQuit = () => {
+            setIsQuitConfirmOpen(true);
+        };
+
         const handleCustomNavigate = (e: Event) => {
             const customEvent = e as CustomEvent<string>;
             if (customEvent.detail) {
@@ -620,19 +625,45 @@ export const App: React.FC = () => {
             }
         };
 
+        let unlistenAbout: (() => void) | null = null;
+        let unlistenQuit: (() => void) | null = null;
+        if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+            import('@tauri-apps/api/event')
+                .then(({ listen }) => {
+                    listen('squelch:open-about', () => {
+                        setIsAboutModalOpen(true);
+                    }).then((u) => {
+                        unlistenAbout = u;
+                    });
+                    listen('squelch:confirm-quit', () => {
+                        setIsQuitConfirmOpen(true);
+                    }).then((u) => {
+                        unlistenQuit = u;
+                    });
+                })
+                .catch(() => {});
+        }
+
         window.addEventListener('hashchange', handleHashChange);
         window.addEventListener('squelch:open-about', handleCustomOpenAbout);
+        window.addEventListener('squelch:confirm-quit', handleCustomConfirmQuit);
         window.addEventListener('squelch:navigate', handleCustomNavigate);
         handleHashChange();
 
         return () => {
             unbindScrollbars();
             unsub();
+            if (unlistenAbout) unlistenAbout();
+            if (unlistenQuit) unlistenQuit();
             window.removeEventListener('keydown', handleGlobalKeyDown);
             window.removeEventListener('hashchange', handleHashChange);
             window.removeEventListener(
                 'squelch:open-about',
                 handleCustomOpenAbout
+            );
+            window.removeEventListener(
+                'squelch:confirm-quit',
+                handleCustomConfirmQuit
             );
             window.removeEventListener(
                 'squelch:navigate',
@@ -985,7 +1016,15 @@ export const App: React.FC = () => {
                 tag: discTag,
                 limit: 40
             });
-            setDiscResults(results);
+            const seen = new Set<string>();
+            const deduplicated = results.filter((st) => {
+                const url = (st.streamUrl || '').trim().toLowerCase();
+                const key = url || st.id;
+                if (!key || seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+            setDiscResults(deduplicated);
         } catch (err) {
             setDiscError(
                 err instanceof Error
@@ -1253,11 +1292,11 @@ export const App: React.FC = () => {
                         className="fixed top-0 left-0 w-60 h-10 z-10"
                     />
 
-                    {/* 1. Pill Search Bar with ⌘F / Ctrl+F Shortcut */}
+                    {/* 1. Search Bar styled like Tray Popover with smaller ⌘F / Ctrl+F Shortcut */}
                     <div className="relative flex items-center mb-3 px-0.5">
                         <IconSearch
-                            size={14}
-                            className="absolute left-3.5 text-secondary pointer-events-none"
+                            size={13}
+                            className="absolute left-2.5 text-secondary pointer-events-none"
                         />
                         <input
                             ref={searchInputRef}
@@ -1271,13 +1310,13 @@ export const App: React.FC = () => {
                             }}
                             placeholder={t.searchPlaceholder}
                             aria-label={t.searchPlaceholder}
-                            className="mac-search-pill w-full pl-8 pr-16 py-1 rounded-full text-[12px]"
+                            className="mac-input w-full pl-7 pr-14 py-1.5 rounded-[7px] text-[12px]"
                         />
                         <div className="absolute right-2 flex items-center gap-1 pointer-events-none select-none">
-                            <kbd className="px-1.5 py-0.5 rounded-[4px] bg-white/10 dark:bg-white/10 border border-black/5 dark:border-white/10 text-secondary text-[10px] font-mono leading-none shadow-2xs">
+                            <kbd className="px-1 py-0.5 rounded-[3px] bg-white/10 dark:bg-white/10 border border-black/5 dark:border-white/10 text-secondary text-[9px] font-mono leading-none shadow-2xs">
                                 {isMac ? '⌘' : 'Ctrl'}
                             </kbd>
-                            <kbd className="px-1.5 py-0.5 rounded-[4px] bg-white/10 dark:bg-white/10 border border-black/5 dark:border-white/10 text-secondary text-[10px] font-mono leading-none shadow-2xs">
+                            <kbd className="px-1 py-0.5 rounded-[3px] bg-white/10 dark:bg-white/10 border border-black/5 dark:border-white/10 text-secondary text-[9px] font-mono leading-none shadow-2xs">
                                 F
                             </kbd>
                         </div>
@@ -2378,14 +2417,14 @@ export const App: React.FC = () => {
                                 <div className="mx-4 border-t mac-divider" />
 
                                 {/* Inline Filter & Search Row: Country Dropdown (Global first + All Countries with Flag), Name, Tag, and Search Button */}
-                                <div className="px-4 py-3 flex flex-wrap sm:flex-nowrap items-center gap-2 text-xs">
+                                <div className="px-4 py-3 flex flex-wrap items-center gap-2 text-xs">
                                     <select
                                         value={discCountry}
                                         aria-label="Country Filter"
                                         onChange={(e) =>
                                             setDiscCountry(e.target.value)
                                         }
-                                        className="mac-input px-2.5 h-8 rounded-[7px] text-xs w-52 shrink-0 cursor-pointer"
+                                        className="mac-input px-2.5 h-8 rounded-[7px] text-xs w-36 sm:w-40 shrink-0 cursor-pointer"
                                     >
                                         <option value="">
                                             🌐 {t.discoverGlobalFilter}
@@ -2406,7 +2445,7 @@ export const App: React.FC = () => {
                                         }
                                         placeholder={t.discoverName}
                                         aria-label={t.discoverName}
-                                        className="mac-input px-3 h-8 text-xs rounded-[7px] flex-1 min-w-[140px]"
+                                        className="mac-input px-3 h-8 text-xs rounded-[7px] flex-1 min-w-[110px]"
                                     />
 
                                     <input
@@ -2417,7 +2456,7 @@ export const App: React.FC = () => {
                                         }
                                         placeholder={t.discoverTag}
                                         aria-label={t.discoverTag}
-                                        className="mac-input px-3 h-8 text-xs rounded-[7px] w-32 shrink-0"
+                                        className="mac-input px-3 h-8 text-xs rounded-[7px] w-24 sm:w-28 shrink-0"
                                     />
 
                                     <button
@@ -2797,7 +2836,15 @@ export const App: React.FC = () => {
                                                     );
                                                 const resolvedName =
                                                     stationObj?.name ??
-                                                    st.stationId;
+                                                    st.stationName ??
+                                                    (st.stationId.startsWith(
+                                                        'station-'
+                                                    )
+                                                        ? 'Radio Station'
+                                                        : st.stationId);
+                                                const resolvedLogo =
+                                                    stationObj?.logoUrl ??
+                                                    st.logoUrl;
                                                 const active = isPlayingStation(
                                                     st.stationId
                                                 );
@@ -2818,7 +2865,7 @@ export const App: React.FC = () => {
 
                                                             <StationAvatar
                                                                 logoUrl={
-                                                                    stationObj?.logoUrl
+                                                                    resolvedLogo
                                                                 }
                                                                 size="sm"
                                                                 accentFallback

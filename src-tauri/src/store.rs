@@ -8,6 +8,7 @@ pub struct AppStore {
     pub data_dir: PathBuf,
     pub proxy_port: Mutex<u16>,
     pub tray_state: Mutex<String>,
+    pub player_state: Mutex<Value>,
 }
 
 impl AppStore {
@@ -22,6 +23,17 @@ impl AppStore {
             data_dir,
             proxy_port: Mutex::new(proxy_port),
             tray_state: Mutex::new("idle".to_string()),
+            player_state: Mutex::new(serde_json::json!({
+                "state": "idle",
+                "currentStation": null,
+                "volume": 80,
+                "isMuted": false,
+                "metadata": null,
+                "streamTitle": null,
+                "sleepTimerMinutes": null,
+                "sleepTimerRemainingSec": null,
+                "error": null
+            })),
         }
     }
 

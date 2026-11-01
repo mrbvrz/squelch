@@ -23,11 +23,17 @@ let playerStatus: PlayerStatus = {
 
 let sleepInterval: any = null;
 
+function syncPlayerStatusToRust() {
+    void invoke('update_player_status', { status: playerStatus }).catch(() => {});
+}
+
 interface ListeningStatsSchema {
     schemaVersion: number;
     dailySeconds: Record<string, number>;
     monthlySeconds: Record<string, number>;
     stationSeconds: Record<string, number>;
+    stationNames?: Record<string, string>;
+    stationLogos?: Record<string, string>;
     totalSeconds: number;
 }
 
@@ -41,6 +47,8 @@ interface StatSeriesPoint {
 
 interface StationStatPoint {
     stationId: string;
+    stationName?: string;
+    logoUrl?: string;
     seconds: number;
 }
 
@@ -62,6 +70,8 @@ let statsData: ListeningStatsSchema = {
     dailySeconds: {},
     monthlySeconds: {},
     stationSeconds: {},
+    stationNames: {},
+    stationLogos: {},
     totalSeconds: 0
 };
 let isStatsLoaded = false;
@@ -142,6 +152,8 @@ function recordListeningTick(now = new Date()): void {
     const dayKey = formatDateKey(now);
     const monthKey = formatMonthKey(now);
     const stationId = playerStatus.currentStation?.id;
+    const stationName = playerStatus.currentStation?.name;
+    const logoUrl = playerStatus.currentStation?.logoUrl;
 
     statsData.dailySeconds[dayKey] =
         (statsData.dailySeconds[dayKey] ?? 0) + elapsedSec;
@@ -150,6 +162,14 @@ function recordListeningTick(now = new Date()): void {
     if (stationId) {
         statsData.stationSeconds[stationId] =
             (statsData.stationSeconds[stationId] ?? 0) + elapsedSec;
+        if (!statsData.stationNames) statsData.stationNames = {};
+        if (stationName) {
+            statsData.stationNames[stationId] = stationName;
+        }
+        if (!statsData.stationLogos) statsData.stationLogos = {};
+        if (logoUrl) {
+            statsData.stationLogos[stationId] = logoUrl;
+        }
     }
     statsData.totalSeconds = (statsData.totalSeconds ?? 0) + elapsedSec;
     statsDirty = true;
@@ -253,7 +273,12 @@ function buildListeningStatsSummary(
     }
 
     const topStations: StationStatPoint[] = Object.entries(data.stationSeconds)
-        .map(([stationId, seconds]) => ({ stationId, seconds }))
+        .map(([stationId, seconds]) => ({
+            stationId,
+            stationName: data.stationNames?.[stationId],
+            logoUrl: data.stationLogos?.[stationId],
+            seconds
+        }))
         .sort((a, b) => b.seconds - a.seconds)
         .slice(0, 6);
 
@@ -277,6 +302,25 @@ export function initTauriBridge() {
 
     void ensureStatsLoaded();
 
+    // Hydrate player status from Rust global store on startup
+    void invoke('get_player_status')
+        .then((status: any) => {
+            if (status && typeof status === 'object') {
+                playerStatus = { ...playerStatus, ...status };
+                emit('ui:state-changed', { ...playerStatus });
+            }
+        })
+        .catch(() => {});
+
+    // Listen to synchronized player state across all windows
+    listen('squelch:player-sync', (event) => {
+        const payload = event.payload as any;
+        if (payload && typeof payload === 'object') {
+            playerStatus = { ...playerStatus, ...payload };
+            emit('ui:state-changed', { ...playerStatus });
+        }
+    });
+
     setInterval(() => {
         recordListeningTick();
     }, 1000);
@@ -289,6 +333,7 @@ export function initTauriBridge() {
     // Listen to metadata from Rust ICY proxy
     listen<string>('squelch:metadata', (event) => {
         playerStatus.streamTitle = event.payload;
+        syncPlayerStatusToRust();
         emit('ui:state-changed', { ...playerStatus });
     });
 
@@ -304,6 +349,7 @@ export function initTauriBridge() {
                 void flushStatsToDisk();
             }
             playerStatus.state = payload.state;
+            syncPlayerStatusToRust();
             emit('ui:state-changed', { ...playerStatus });
         }
     });
@@ -409,6 +455,7 @@ export function initTauriBridge() {
                 lastTickTimeMs = Date.now();
                 void invoke('set_tray_state', { stateName: 'playing' });
                 emit('squelch:audio:state', { state: 'playing' });
+                syncPlayerStatusToRust();
                 emit('ui:state-changed', { ...playerStatus });
             },
             notifyBuffering: () => {
@@ -420,6 +467,7 @@ export function initTauriBridge() {
                 lastTickTimeMs = null;
                 void invoke('set_tray_state', { stateName: 'buffering' });
                 emit('squelch:audio:state', { state: 'buffering' });
+                syncPlayerStatusToRust();
                 emit('ui:state-changed', { ...playerStatus });
             },
             notifyError: (msg: string) => {
@@ -431,6 +479,7 @@ export function initTauriBridge() {
                 lastTickTimeMs = null;
                 void invoke('set_tray_state', { stateName: 'error' });
                 emit('squelch:audio:state', { state: 'error', message: msg });
+                syncPlayerStatusToRust();
                 emit('ui:state-changed', { ...playerStatus });
             },
             notifyDeviceRemoved: () => {},
@@ -442,7 +491,17 @@ export function initTauriBridge() {
     // Setup squelchUiBridge for Main and Tray windows
     if (!(window as any).squelchApi) {
         (window as any).squelchApi = {
-            getPlayerStatus: async () => ({ ...playerStatus }),
+            getPlayerStatus: async () => {
+                try {
+                    const remote: any = await invoke('get_player_status');
+                    if (remote && typeof remote === 'object') {
+                        playerStatus = { ...playerStatus, ...remote };
+                    }
+                } catch {
+                    // ignore
+                }
+                return { ...playerStatus };
+            },
 
             playStation: async (stationIdOrObj: string | any) => {
                 let station: any = null;
@@ -475,6 +534,7 @@ export function initTauriBridge() {
                 };
 
                 void invoke('set_tray_state', { stateName: 'buffering' });
+                syncPlayerStatusToRust();
 
                 await emit('squelch:audio:command', {
                     type: 'play',
@@ -502,10 +562,12 @@ export function initTauriBridge() {
                     void flushStatsToDisk();
                     playerStatus.state = 'paused';
                     void invoke('set_tray_state', { stateName: 'idle' });
+                    syncPlayerStatusToRust();
                     await emit('squelch:audio:command', { type: 'pause' });
                 } else if (playerStatus.currentStation) {
                     playerStatus.state = 'buffering';
                     void invoke('set_tray_state', { stateName: 'buffering' });
+                    syncPlayerStatusToRust();
                     await (window as any).squelchApi.playStation(
                         playerStatus.currentStation.id
                     );
@@ -524,6 +586,7 @@ export function initTauriBridge() {
                 playerStatus.currentStation = null;
                 playerStatus.streamTitle = null;
                 void invoke('set_tray_state', { stateName: 'idle' });
+                syncPlayerStatusToRust();
                 await emit('squelch:audio:command', { type: 'stop' });
                 await emit('ui:state-changed', { ...playerStatus });
                 return true;
@@ -534,27 +597,19 @@ export function initTauriBridge() {
                 body: string
             ): Promise<boolean> => {
                 try {
-                    if (
-                        'Notification' in window &&
-                        Notification.permission !== 'granted'
-                    ) {
-                        await Notification.requestPermission();
-                    }
                     await invoke('send_notification', { title, body });
                     return true;
                 } catch {
-                    try {
-                        if (
-                            'Notification' in window &&
-                            Notification.permission === 'granted'
-                        ) {
-                            new Notification(title, { body });
-                            return true;
-                        }
-                    } catch {
-                        // ignore fallback error
-                    }
                     return false;
+                }
+            },
+
+            requestQuitConfirm: async () => {
+                try {
+                    await invoke('open_window_tab', { tab: 'stations' });
+                    await emit('squelch:confirm-quit');
+                } catch {
+                    // ignore
                 }
             },
 
@@ -566,9 +621,11 @@ export function initTauriBridge() {
                 if (!minutes || minutes <= 0) {
                     playerStatus.sleepTimerMinutes = null;
                     playerStatus.sleepTimerRemainingSec = null;
+                    syncPlayerStatusToRust();
                 } else {
                     playerStatus.sleepTimerMinutes = minutes;
                     playerStatus.sleepTimerRemainingSec = minutes * 60;
+                    syncPlayerStatusToRust();
                     sleepInterval = setInterval(async () => {
                         if (
                             playerStatus.sleepTimerRemainingSec &&
@@ -633,10 +690,17 @@ export function initTauriBridge() {
                                     }
                                 })();
                             }
+                            if (
+                                playerStatus.sleepTimerRemainingSec % 5 === 0 ||
+                                playerStatus.sleepTimerRemainingSec <= 0
+                            ) {
+                                syncPlayerStatusToRust();
+                            }
                             await emit('ui:state-changed', { ...playerStatus });
                         }
                     }, 1000);
                 }
+                syncPlayerStatusToRust();
                 await emit('ui:state-changed', { ...playerStatus });
                 return true;
             },
@@ -932,13 +996,23 @@ export function initTauriBridge() {
                     if (query.countrycode)
                         params.set('countrycode', query.countrycode);
                     if (query.tag) params.set('tag', query.tag);
-                    params.set('limit', String(query.limit || 30));
+                    params.set('limit', String(query.limit || 40));
 
                     const res = await fetch(
                         `https://de1.api.radio-browser.info/json/stations/search?${params.toString()}`
                     );
                     const list: any[] = await res.json();
-                    return list.map((s) => ({
+                    const seen = new Set<string>();
+                    const deduplicated = [];
+                    for (const s of list) {
+                        const url = (s.url_resolved || s.url || '').trim().toLowerCase();
+                        const id = s.stationuuid;
+                        const key = url || id;
+                        if (!key || seen.has(key)) continue;
+                        seen.add(key);
+                        deduplicated.push(s);
+                    }
+                    return deduplicated.map((s) => ({
                         id: s.stationuuid,
                         name: s.name,
                         streamUrl: s.url_resolved || s.url,

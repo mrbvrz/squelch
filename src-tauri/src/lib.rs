@@ -167,15 +167,22 @@ pub fn run() {
                         }
                     }
                     "about_squelch" => {
+                        let _ = app.emit("squelch:open-about", ());
                         if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about'));");
+                            let _ = win.eval("window.location.hash = '#about'; window.dispatchEvent(new CustomEvent('squelch:open-about'));");
                             let _ = win.show();
                             let _ = win.unminimize();
                             let _ = win.set_focus();
                         }
                     }
                     "quit_squelch" => {
-                        app.exit(0);
+                        let _ = app.emit("squelch:confirm-quit", ());
+                        if let Some(win) = app.get_webview_window("main") {
+                            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));");
+                            let _ = win.show();
+                            let _ = win.unminimize();
+                            let _ = win.set_focus();
+                        }
                     }
                     _ => {}
                 })
@@ -278,7 +285,9 @@ pub fn run() {
             commands::open_external,
             commands::start_window_drag,
             commands::check_for_updates,
-            commands::send_notification
+            commands::send_notification,
+            commands::get_player_status,
+            commands::update_player_status
         ])
         .run(tauri::generate_context!())
         .expect("error while building tauri application");

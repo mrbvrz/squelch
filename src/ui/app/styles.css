@@ -48,8 +48,8 @@
         --surface-window: rgba(30, 30, 32, var(--glass-alpha, 0.9));
         --surface-sidebar: rgba(38, 38, 40, var(--glass-alpha, 0.9));
         --surface-module: rgba(255, 255, 255, 0.05);
-        --surface-modal: rgba(38, 39, 44, 0.98);
-        --surface-modal-input: rgba(255, 255, 255, 0.095);
+        --surface-modal: rgba(30, 30, 32, 0.98);
+        --surface-modal-input: rgba(255, 255, 255, 0.08);
         --surface-control: rgba(255, 255, 255, 0.075);
         --surface-control-hover: rgba(255, 255, 255, 0.12);
         --surface-active-row: rgba(255, 255, 255, 0.09);
@@ -75,8 +75,8 @@
     --surface-window: rgba(30, 30, 32, var(--glass-alpha, 0.9));
     --surface-sidebar: rgba(38, 38, 40, var(--glass-alpha, 0.9));
     --surface-module: rgba(255, 255, 255, 0.05);
-    --surface-modal: rgba(38, 39, 44, 0.98);
-    --surface-modal-input: rgba(255, 255, 255, 0.095);
+    --surface-modal: rgba(30, 30, 32, 0.98);
+    --surface-modal-input: rgba(255, 255, 255, 0.08);
     --surface-control: rgba(255, 255, 255, 0.075);
     --surface-control-hover: rgba(255, 255, 255, 0.12);
     --surface-active-row: rgba(255, 255, 255, 0.09);

@@ -20,6 +20,8 @@ export interface StatSeriesPoint {
 
 export interface StationStatPoint {
     stationId: string;
+    stationName?: string;
+    logoUrl?: string;
     seconds: number;
 }
 

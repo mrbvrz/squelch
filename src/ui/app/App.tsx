@@ -459,6 +459,8 @@ export const App: React.FC = () => {
     const [copiedDiag, setCopiedDiag] = useState<boolean>(false);
     const [isResetConfirmOpen, setIsResetConfirmOpen] =
         useState<boolean>(false);
+    const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
+    const [isQuitConfirmOpen, setIsQuitConfirmOpen] = useState<boolean>(false);
 
     // Show Schedules & Reminders State
     const [schedules, setSchedules] = useState<ShowSchedule[]>([]);
@@ -573,10 +575,53 @@ export const App: React.FC = () => {
         };
         window.addEventListener('keydown', handleGlobalKeyDown);
 
+        const handleHashChange = () => {
+            const hash = window.location.hash;
+            if (hash === '#about' || hash === '#about-window') {
+                setIsAboutModalOpen(true);
+            } else if (hash === '#preferences') {
+                setActiveTab('preferences');
+            } else if (hash === '#stations') {
+                setActiveTab('stations');
+            } else if (hash === '#discover') {
+                setActiveTab('discover');
+            } else if (hash === '#schedule') {
+                setActiveTab('schedule');
+            } else if (hash === '#stats') {
+                setActiveTab('stats');
+            }
+        };
+
+        const handleCustomOpenAbout = () => {
+            setIsAboutModalOpen(true);
+        };
+
+        const handleCustomNavigate = (e: Event) => {
+            const customEvent = e as CustomEvent<string>;
+            if (customEvent.detail) {
+                const targetTab = customEvent.detail as ActiveTab;
+                setActiveTab(targetTab);
+            }
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        window.addEventListener('squelch:open-about', handleCustomOpenAbout);
+        window.addEventListener('squelch:navigate', handleCustomNavigate);
+        handleHashChange();
+
         return () => {
             unbindScrollbars();
             unsub();
             window.removeEventListener('keydown', handleGlobalKeyDown);
+            window.removeEventListener('hashchange', handleHashChange);
+            window.removeEventListener(
+                'squelch:open-about',
+                handleCustomOpenAbout
+            );
+            window.removeEventListener(
+                'squelch:navigate',
+                handleCustomNavigate
+            );
         };
     }, []);
 
@@ -1335,7 +1380,7 @@ export const App: React.FC = () => {
                 <div className="pt-3 border-t mac-divider space-y-0.5">
                     <button
                         type="button"
-                        onClick={() => void api.openAboutWindow()}
+                        onClick={() => setIsAboutModalOpen(true)}
                         className="w-full px-2.5 py-1.5 rounded-[7px] text-[13px] flex items-center gap-2.5 mac-row text-secondary hover:text-current cursor-pointer"
                     >
                         <span className="w-5 h-5 rounded-[5px] bg-[#BF5AF2] text-white flex items-center justify-center shrink-0">
@@ -1346,7 +1391,13 @@ export const App: React.FC = () => {
 
                     <button
                         type="button"
-                        onClick={() => void api.quitApp()}
+                        onClick={() => {
+                            if (settings?.confirmBeforeQuit ?? true) {
+                                setIsQuitConfirmOpen(true);
+                            } else {
+                                void api.quitApp();
+                            }
+                        }}
                         className="w-full px-2.5 py-1.5 rounded-[7px] text-[13px] flex items-center gap-2.5 mac-row text-secondary hover:text-current cursor-pointer"
                     >
                         <span className="w-5 h-5 rounded-[5px] bg-[#FF453A] text-white flex items-center justify-center shrink-0">
@@ -3838,6 +3889,162 @@ export const App: React.FC = () => {
                                 className="bg-[#FF453A] hover:bg-[#D70015] text-white px-4 py-2 rounded-[7px] font-semibold shadow-sm cursor-pointer transition"
                             >
                                 {t.prefResetConfirmYes}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* QUIT CONFIRMATION MODAL */}
+            {isQuitConfirmOpen && (
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="quit-modal-title"
+                    onClick={() => setIsQuitConfirmOpen(false)}
+                    className="fixed inset-0 mac-modal-backdrop flex items-center justify-center p-4 z-50"
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="mac-modal-surface w-full max-w-md p-6 space-y-4 text-xs"
+                    >
+                        <div className="flex items-start gap-3.5">
+                            <div className="w-10 h-10 rounded-[9px] bg-[#FF453A]/20 text-[#FF453A] flex items-center justify-center shrink-0">
+                                <IconPower size={20} />
+                            </div>
+                            <div>
+                                <h3
+                                    id="quit-modal-title"
+                                    className="text-[15px] font-bold"
+                                >
+                                    {settings?.language === 'en'
+                                        ? 'Quit Squelch?'
+                                        : 'Keluar dari Squelch?'}
+                                </h3>
+                                <p className="text-[12px] text-secondary leading-relaxed mt-1">
+                                    {settings?.language === 'en'
+                                        ? 'Active radio playback in the menu bar will be stopped.'
+                                        : 'Pemutaran siaran radio di menu bar akan dihentikan.'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2.5 pt-3 border-t mac-divider">
+                            <button
+                                type="button"
+                                onClick={() => setIsQuitConfirmOpen(false)}
+                                className="mac-glass-pill px-4 py-2 rounded-[7px] font-medium cursor-pointer"
+                            >
+                                {t.cancelBtn}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsQuitConfirmOpen(false);
+                                    void api.quitApp();
+                                }}
+                                className="bg-[#FF453A] hover:bg-[#D70015] text-white px-4 py-2 rounded-[7px] font-semibold shadow-sm cursor-pointer transition"
+                            >
+                                {settings?.language === 'en'
+                                    ? 'Quit Squelch'
+                                    : 'Keluar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ABOUT SQUELCH MODAL */}
+            {isAboutModalOpen && (
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="about-modal-title"
+                    onClick={() => setIsAboutModalOpen(false)}
+                    className="fixed inset-0 mac-modal-backdrop flex items-center justify-center p-4 z-50"
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="mac-modal-surface w-full max-w-md p-6 space-y-4 text-xs relative flex flex-col items-center text-center"
+                    >
+                        <SquircleAppIcon dataUrl={appIconDataUrl} size={84} />
+                        <div>
+                            <div className="flex items-center justify-center gap-2">
+                                <h2
+                                    id="about-modal-title"
+                                    className="text-2xl font-bold tracking-tight"
+                                >
+                                    Squelch
+                                </h2>
+                                <span className="px-2 py-0.5 rounded-[6px] bg-accent/15 text-accent text-[11px] font-bold tabular-nums">
+                                    v0.1.0
+                                </span>
+                            </div>
+                            <div className="text-[13px] font-medium text-accent mt-0.5">
+                                {t.aboutTagline}
+                            </div>
+                            <p className="text-[12px] text-secondary leading-relaxed mt-2.5 max-w-sm">
+                                {t.aboutDescription}
+                            </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-center gap-2.5 mt-2">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    void api.openExternalUrl(GITHUB_REPO_URL)
+                                }
+                                className="mac-glass-pill px-4 py-2 rounded-[8px] text-[12px] font-medium flex items-center gap-2 cursor-pointer hover:bg-white/15 transition shadow-sm"
+                            >
+                                <IconGitHub size={15} />
+                                <span>GitHub</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    void api.openExternalUrl(AUTHOR_WEBSITE_URL)
+                                }
+                                className="bg-accent hover:opacity-90 text-white px-4 py-2 rounded-[8px] text-[12px] font-medium flex items-center gap-2 shadow-sm cursor-pointer transition"
+                            >
+                                <IconGlobe size={15} />
+                                <span>{t.aboutWebsiteBtn}</span>
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-center gap-3 mt-1 text-[11px] text-secondary">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    void api.openExternalUrl(SPEC_DOC_URL)
+                                }
+                                className="hover:text-accent hover:underline cursor-pointer flex items-center gap-1"
+                            >
+                                <span>{t.aboutSpecLink}</span>
+                                <IconExternalLink size={11} />
+                            </button>
+                            <span>·</span>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    void api.openExternalUrl(CHANGELOG_DOC_URL)
+                                }
+                                className="hover:text-accent hover:underline cursor-pointer flex items-center gap-1"
+                            >
+                                <span>{t.aboutChangelogLink}</span>
+                                <IconExternalLink size={11} />
+                            </button>
+                        </div>
+
+                        <div className="w-full flex justify-end pt-3 border-t mac-divider mt-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsAboutModalOpen(false)}
+                                className="mac-glass-pill px-4 py-2 rounded-[7px] font-medium cursor-pointer"
+                            >
+                                {settings?.language === 'en'
+                                    ? 'Close'
+                                    : 'Tutup'}
                             </button>
                         </div>
                     </div>

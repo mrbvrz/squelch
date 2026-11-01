@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { emit, listen } from '@tauri-apps/api/event';
+import { applyAppearanceVariables } from '../utils/appearance';
 
 interface PlayerStatus {
     state: 'idle' | 'buffering' | 'playing' | 'paused' | 'error';
@@ -38,6 +39,16 @@ export function initTauriBridge() {
         }
     });
 
+    // Listen to tray context menu actions
+    listen('squelch:action', async (event: any) => {
+        const action = event.payload?.action || event.payload;
+        if (action === 'toggle-play-pause') {
+            await (window as any).squelchApi?.togglePlayPause();
+        } else if (action === 'stop') {
+            await (window as any).squelchApi?.stopPlayback();
+        }
+    });
+
     // Setup squelchAudioBridge for audio.html worker
     if (!(window as any).squelchAudioBridge) {
         (window as any).squelchAudioBridge = {
@@ -48,16 +59,19 @@ export function initTauriBridge() {
             },
             notifyPlaying: () => {
                 playerStatus.state = 'playing';
+                void invoke('set_tray_state', { stateName: 'playing' });
                 emit('squelch:audio:state', { state: 'playing' });
                 emit('ui:state-changed', { ...playerStatus });
             },
             notifyBuffering: () => {
                 playerStatus.state = 'buffering';
+                void invoke('set_tray_state', { stateName: 'buffering' });
                 emit('squelch:audio:state', { state: 'buffering' });
                 emit('ui:state-changed', { ...playerStatus });
             },
             notifyError: (msg: string) => {
                 playerStatus.state = 'error';
+                void invoke('set_tray_state', { stateName: 'error' });
                 emit('squelch:audio:state', { state: 'error', message: msg });
                 emit('ui:state-changed', { ...playerStatus });
             },
@@ -89,6 +103,8 @@ export function initTauriBridge() {
                     streamTitle: null
                 };
 
+                void invoke('set_tray_state', { stateName: 'buffering' });
+
                 await emit('squelch:audio:command', {
                     type: 'play',
                     url:
@@ -108,9 +124,11 @@ export function initTauriBridge() {
             togglePlayPause: async () => {
                 if (playerStatus.state === 'playing') {
                     playerStatus.state = 'paused';
+                    void invoke('set_tray_state', { stateName: 'idle' });
                     await emit('squelch:audio:command', { type: 'pause' });
                 } else if (playerStatus.currentStation) {
                     playerStatus.state = 'buffering';
+                    void invoke('set_tray_state', { stateName: 'buffering' });
                     await (window as any).squelchApi.playStation(
                         playerStatus.currentStation.id
                     );
@@ -123,6 +141,7 @@ export function initTauriBridge() {
                 playerStatus.state = 'idle';
                 playerStatus.currentStation = null;
                 playerStatus.streamTitle = null;
+                void invoke('set_tray_state', { stateName: 'idle' });
                 await emit('squelch:audio:command', { type: 'stop' });
                 await emit('ui:state-changed', { ...playerStatus });
                 return true;
@@ -173,7 +192,8 @@ export function initTauriBridge() {
             getAppIconDataUrl: async () => null,
 
             openAboutWindow: async () => {
-                await invoke('open_about_window');
+                window.dispatchEvent(new CustomEvent('squelch:open-about'));
+                await emit('squelch:navigate', { action: 'about' });
             },
 
             openExternalUrl: async (url: string) => {
@@ -283,14 +303,27 @@ export function initTauriBridge() {
             },
 
             updateSettings: async (partial: any) => {
-                await invoke('update_settings', { partial });
+                const res: any = await invoke('update_settings', { partial });
+                if (res?.settings) {
+                    applyAppearanceVariables(res.settings);
+                }
+                await emit('ui:state-changed', { type: 'settings', ...res });
+                return res?.settings;
             },
 
             resetSettings: async () => {
-                await invoke('reset_settings');
+                const res: any = await invoke('reset_settings');
+                if (res?.settings) {
+                    applyAppearanceVariables(res.settings);
+                }
+                await emit('ui:state-changed', { type: 'settings', ...res });
+                return res?.settings;
             },
 
-            getSystemFonts: async () => [],
+            getSystemFonts: async () => {
+                return await invoke('get_system_fonts');
+            },
+
             backupAppData: async () => '',
             restoreAppData: async () => {},
 

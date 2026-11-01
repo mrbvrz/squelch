@@ -195,7 +195,7 @@ export const TrayPopoverApp: React.FC = () => {
     }, [playerState, t]);
 
     return (
-        <div className="mac-popover-shell animate-tab-enter w-screen h-screen p-3.5 flex flex-col justify-between overflow-hidden select-none">
+        <div className="mac-popover-shell animate-tab-enter w-full h-full p-3.5 flex flex-col justify-between overflow-hidden select-none">
             {/* 1. LIVE 1-MINUTE SLEEP COUNTDOWN NOTIFICATION BANNER */}
             {sleepRemainingSec !== null &&
                 sleepRemainingSec > 0 &&

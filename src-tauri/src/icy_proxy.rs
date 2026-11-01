@@ -1,9 +1,9 @@
 use axum::{
+    Router,
     extract::{Query, State},
-    http::{header, HeaderMap, HeaderValue, StatusCode},
+    http::{HeaderMap, HeaderValue, StatusCode, header},
     response::{IntoResponse, Response},
     routing::get,
-    Router,
 };
 use bytes::{Bytes, BytesMut};
 use futures_util::StreamExt;
@@ -183,7 +183,9 @@ pub async fn start_proxy_server(app_handle: AppHandle) -> u16 {
         .unwrap_or_default();
 
     let state = ProxyState { app_handle, client };
-    let app = Router::new().route("/proxy", get(handle_proxy)).with_state(state);
+    let app = Router::new()
+        .route("/proxy", get(handle_proxy))
+        .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
         .await

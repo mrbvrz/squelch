@@ -166,6 +166,10 @@ input[type='checkbox'] {
 .mac-popover-shell {
     background: var(--surface-popover);
     color: var(--ink-primary);
+    border-radius: 18px;
+    border: 1px solid var(--card-border);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
 }
 
 .mac-window-shell {

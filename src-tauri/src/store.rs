@@ -7,6 +7,7 @@ use tauri::{AppHandle, Manager};
 pub struct AppStore {
     pub data_dir: PathBuf,
     pub proxy_port: Mutex<u16>,
+    pub tray_state: Mutex<String>,
 }
 
 impl AppStore {
@@ -20,6 +21,7 @@ impl AppStore {
         Self {
             data_dir,
             proxy_port: Mutex::new(proxy_port),
+            tray_state: Mutex::new("idle".to_string()),
         }
     }
 

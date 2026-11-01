@@ -1,5 +1,5 @@
 use crate::store::AppStore;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::sync::Arc;
 use tauri::{AppHandle, Manager, State};
 
@@ -107,7 +107,8 @@ pub fn get_settings(store: State<Arc<AppStore>>) -> Value {
 pub fn update_settings(store: State<Arc<AppStore>>, partial: Value) -> Result<Value, String> {
     let current_res = get_settings(store.clone());
     let mut current_settings = current_res.get("settings").cloned().unwrap_or(json!({}));
-    if let (Some(cur_obj), Some(part_obj)) = (current_settings.as_object_mut(), partial.as_object()) {
+    if let (Some(cur_obj), Some(part_obj)) = (current_settings.as_object_mut(), partial.as_object())
+    {
         for (k, v) in part_obj {
             cur_obj.insert(k.clone(), v.clone());
         }
@@ -206,6 +207,40 @@ pub fn get_listening_stats(store: State<Arc<AppStore>>) -> Value {
 }
 
 #[tauri::command]
+pub fn get_system_fonts() -> Vec<String> {
+    let mut fonts = vec![
+        "SF Pro Text".to_string(),
+        "SF Pro Display".to_string(),
+        "SF Pro Rounded".to_string(),
+        "SF Mono".to_string(),
+        "Helvetica Neue".to_string(),
+        "Avenir Next".to_string(),
+        "Avenir".to_string(),
+        "Menlo".to_string(),
+        "Monaco".to_string(),
+        "Geneva".to_string(),
+        "Optima".to_string(),
+        "Futura".to_string(),
+        "Gill Sans".to_string(),
+        "Georgia".to_string(),
+        "Palatino".to_string(),
+        "Segoe UI".to_string(),
+        "Inter".to_string(),
+        "Arial".to_string(),
+        "Verdana".to_string(),
+        "Trebuchet MS".to_string(),
+        "Courier New".to_string(),
+    ];
+    fonts.sort();
+    fonts
+}
+
+#[tauri::command]
+pub fn set_tray_state(state_name: String, store: State<Arc<AppStore>>) {
+    *store.tray_state.lock().unwrap() = state_name;
+}
+
+#[tauri::command]
 pub fn open_window_tab(app: AppHandle, tab: String) -> Result<(), String> {
     if let Some(win) = app.get_webview_window("main") {
         let _ = win.eval(&format!("window.location.hash = '#{}';", tab));
@@ -253,7 +288,9 @@ pub fn open_external(url: String) -> Result<(), String> {
     }
     #[cfg(target_os = "windows")]
     {
-        let _ = std::process::Command::new("cmd").args(["/c", "start", &url]).spawn();
+        let _ = std::process::Command::new("cmd")
+            .args(["/c", "start", &url])
+            .spawn();
     }
     #[cfg(target_os = "linux")]
     {

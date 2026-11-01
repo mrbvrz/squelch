@@ -25,6 +25,7 @@ import {
     formatDurationCompact
 } from '../utils/appearance';
 import {
+    IconArrowDownTray,
     IconBackup,
     IconBell,
     IconCalendar,
@@ -53,6 +54,7 @@ import {
     IconRestore,
     IconSearch,
     IconSliders,
+    IconSparkles,
     IconSpinner,
     IconStar,
     IconStop,
@@ -597,8 +599,8 @@ export const App: React.FC = () => {
                 setActiveTab('stations');
             } else if (hash === '#discover') {
                 setActiveTab('discover');
-            } else if (hash === '#schedule') {
-                setActiveTab('schedule');
+            } else if (hash === '#schedule' || hash === '#schedules') {
+                setActiveTab('schedules');
             } else if (hash === '#stats') {
                 setActiveTab('stats');
             }

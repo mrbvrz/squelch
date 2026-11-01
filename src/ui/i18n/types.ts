@@ -7,6 +7,8 @@ export interface LocaleMetadata {
     englishName: string;
 }
 
+export type Translations = TranslationDictionary;
+
 export interface TranslationDictionary {
     // Navigation & Tabs
     tabStations: string;

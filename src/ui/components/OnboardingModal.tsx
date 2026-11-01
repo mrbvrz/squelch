@@ -501,16 +501,16 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                                         {ACCENT_SWATCHES.map((swatch) => {
                                             const selected =
                                                 (settings.accentColor ??
-                                                    '#0A84FF') === swatch.color;
+                                                    '#0A84FF') === swatch.hex;
                                             return (
                                                 <button
-                                                    key={swatch.color}
+                                                    key={swatch.hex}
                                                     type="button"
                                                     aria-label={swatch.name}
                                                     onClick={() =>
                                                         void onUpdateSettings({
                                                             accentColor:
-                                                                swatch.color
+                                                                swatch.hex
                                                         })
                                                     }
                                                     className={`w-6 h-6 rounded-full flex items-center justify-center transition-transform cursor-pointer ${
@@ -520,7 +520,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                                                     }`}
                                                     style={{
                                                         backgroundColor:
-                                                            swatch.color
+                                                            swatch.hex
                                                     }}
                                                 >
                                                     {selected && (

@@ -74,14 +74,6 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             {
                 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
-                if let Some(tray_win) = app.get_webview_window("tray") {
-                    let _ = apply_vibrancy(
-                        &tray_win,
-                        NSVisualEffectMaterial::HudWindow,
-                        None,
-                        Some(18.0),
-                    );
-                }
                 if let Some(main_win) = app.get_webview_window("main") {
                     let _ = apply_vibrancy(
                         &main_win,

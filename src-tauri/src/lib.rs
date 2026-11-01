@@ -277,7 +277,8 @@ pub fn run() {
             commands::quit_app,
             commands::open_external,
             commands::start_window_drag,
-            commands::check_for_updates
+            commands::check_for_updates,
+            commands::send_notification
         ])
         .run(tauri::generate_context!())
         .expect("error while building tauri application");

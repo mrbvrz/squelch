@@ -171,6 +171,16 @@ export const enLocale: TranslationDictionary = {
     prefRestoreBtn: 'Restore Backup…',
     prefBackupSuccess: 'Backup saved successfully.',
     prefRestoreSuccess: 'Backup data restored successfully.',
+    prefNotifSection: 'System Notifications',
+    prefNotifDesc:
+        'Native macOS system notifications when sleep timer is ending, station schedules trigger, and player updates.',
+    prefNotifStatusGranted: 'Notifications Active',
+    prefNotifStatusPrompt: 'Requires System Permission',
+    prefNotifTestBtn: 'Test System Notification',
+    prefNotifTestSuccess: 'Notification sent!',
+    sleepNotifTitle: 'Sleep Timer',
+    sleepNotif1Min: 'Radio playback will turn off in 1 minute.',
+    sleepNotifDone: 'Radio playback stopped by sleep timer.',
     prefDiagSection: 'Diagnostics & System Logs',
     prefDiagDesc:
         'Local storage directory information and application operational logs.',

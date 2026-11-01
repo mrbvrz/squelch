@@ -2,6 +2,17 @@ use crate::store::AppStore;
 use serde_json::{Value, json};
 use std::sync::Arc;
 use tauri::{AppHandle, Manager, State};
+use tauri_plugin_notification::NotificationExt;
+
+#[tauri::command]
+pub fn send_notification(app: AppHandle, title: String, body: String) -> Result<(), String> {
+    app.notification()
+        .builder()
+        .title(title)
+        .body(body)
+        .show()
+        .map_err(|e| e.to_string())
+}
 
 #[tauri::command]
 pub fn start_window_drag(window: tauri::WebviewWindow) -> Result<(), String> {

@@ -168,6 +168,15 @@ export interface TranslationDictionary {
     prefRestoreBtn: string;
     prefBackupSuccess: string;
     prefRestoreSuccess: string;
+    prefNotifSection: string;
+    prefNotifDesc: string;
+    prefNotifStatusGranted: string;
+    prefNotifStatusPrompt: string;
+    prefNotifTestBtn: string;
+    prefNotifTestSuccess: string;
+    sleepNotifTitle: string;
+    sleepNotif1Min: string;
+    sleepNotifDone: string;
     prefDiagSection: string;
     prefDiagDesc: string;
     prefDiagShowBtn: string;

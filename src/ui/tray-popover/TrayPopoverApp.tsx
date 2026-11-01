@@ -49,6 +49,7 @@ interface SquelchTrayPopoverApi {
         dataDir: string;
     }>;
     toggleFavorite: (stationId: string) => Promise<Station | undefined>;
+    sendNotification: (title: string, body: string) => Promise<boolean>;
     onStateChanged: (cb: (data: unknown) => void) => () => void;
 }
 

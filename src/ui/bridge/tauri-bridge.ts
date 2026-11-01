@@ -529,6 +529,35 @@ export function initTauriBridge() {
                 return true;
             },
 
+            sendNotification: async (
+                title: string,
+                body: string
+            ): Promise<boolean> => {
+                try {
+                    if (
+                        'Notification' in window &&
+                        Notification.permission !== 'granted'
+                    ) {
+                        await Notification.requestPermission();
+                    }
+                    await invoke('send_notification', { title, body });
+                    return true;
+                } catch {
+                    try {
+                        if (
+                            'Notification' in window &&
+                            Notification.permission === 'granted'
+                        ) {
+                            new Notification(title, { body });
+                            return true;
+                        }
+                    } catch {
+                        // ignore fallback error
+                    }
+                    return false;
+                }
+            },
+
             setSleepTimer: async (minutes: number | null) => {
                 if (sleepInterval) {
                     clearInterval(sleepInterval);
@@ -546,10 +575,63 @@ export function initTauriBridge() {
                             playerStatus.sleepTimerRemainingSec > 0
                         ) {
                             playerStatus.sleepTimerRemainingSec -= 1;
+
+                            // 1 minute remaining warning notification
+                            if (playerStatus.sleepTimerRemainingSec === 60) {
+                                void (async () => {
+                                    try {
+                                        const cfg: any = await invoke(
+                                            'get_settings'
+                                        ).catch(() => null);
+                                        const isEn =
+                                            cfg?.settings?.language === 'en';
+                                        const title = isEn
+                                            ? 'Sleep Timer'
+                                            : 'Pengatur Waktu Tidur';
+                                        const stName =
+                                            playerStatus.currentStation?.name;
+                                        const body = isEn
+                                            ? `Radio playback will stop in 1 minute${stName ? ` (${stName})` : ''}.`
+                                            : `Siaran radio akan dinonaktifkan dalam 1 menit${stName ? ` (${stName})` : ''}.`;
+                                        await (
+                                            window as any
+                                        ).squelchApi.sendNotification(
+                                            title,
+                                            body
+                                        );
+                                    } catch {
+                                        // ignore
+                                    }
+                                })();
+                            }
+
                             if (playerStatus.sleepTimerRemainingSec <= 0) {
                                 clearInterval(sleepInterval);
                                 sleepInterval = null;
                                 await (window as any).squelchApi.stopPlayback();
+                                void (async () => {
+                                    try {
+                                        const cfg: any = await invoke(
+                                            'get_settings'
+                                        ).catch(() => null);
+                                        const isEn =
+                                            cfg?.settings?.language === 'en';
+                                        const title = isEn
+                                            ? 'Sleep Timer'
+                                            : 'Pengatur Waktu Tidur';
+                                        const body = isEn
+                                            ? 'Radio playback has stopped.'
+                                            : 'Pemutaran radio telah dihentikan.';
+                                        await (
+                                            window as any
+                                        ).squelchApi.sendNotification(
+                                            title,
+                                            body
+                                        );
+                                    } catch {
+                                        // ignore
+                                    }
+                                })();
                             }
                             await emit('ui:state-changed', { ...playerStatus });
                         }

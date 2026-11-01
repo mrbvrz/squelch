@@ -170,6 +170,16 @@ export const idLocale: TranslationDictionary = {
     prefRestoreBtn: 'Pulihkan Cadangan…',
     prefBackupSuccess: 'Cadangan berhasil disimpan.',
     prefRestoreSuccess: 'Data cadangan berhasil dipulihkan.',
+    prefNotifSection: 'Notifikasi Sistem',
+    prefNotifDesc:
+        'Pemberitahuan sistem native macOS saat waktu tidur akan berakhir, jadwal rekaman aktif, dan pembaruan pemutar.',
+    prefNotifStatusGranted: 'Notifikasi Aktif',
+    prefNotifStatusPrompt: 'Perlu Izin Sistem',
+    prefNotifTestBtn: 'Uji Notifikasi Sistem',
+    prefNotifTestSuccess: 'Notifikasi terkirim!',
+    sleepNotifTitle: 'Pengatur Waktu Tidur',
+    sleepNotif1Min: 'Siaran radio akan dinonaktifkan dalam 1 menit.',
+    sleepNotifDone: 'Pemutaran radio telah dihentikan oleh pengatur waktu tidur.',
     prefDiagSection: 'Diagnostik & Log Sistem',
     prefDiagDesc:
         'Informasi direktori penyimpanan lokal dan catatan log operasional aplikasi.',

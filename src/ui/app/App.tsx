@@ -1161,6 +1161,7 @@ export const App: React.FC = () => {
                 <div>
                     {/* Drag Region for macOS Traffic Lights */}
                     <div
+                        data-tauri-drag-region
                         style={
                             { WebkitAppRegion: 'drag' } as React.CSSProperties
                         }
@@ -1413,6 +1414,7 @@ export const App: React.FC = () => {
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Top Bar with Elevated < | > Navigation Pill and Page Title (No Mini Player button) */}
                 <header
+                    data-tauri-drag-region
                     style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
                     className="h-11 pt-1.5 px-6 flex items-center justify-between shrink-0"
                 >

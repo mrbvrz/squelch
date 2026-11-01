@@ -22,7 +22,13 @@
         "minHeight": 560,
         "resizable": true,
         "transparent": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": {
+          "x": 18,
+          "y": 18
+        }
       },
       {
         "label": "tray",

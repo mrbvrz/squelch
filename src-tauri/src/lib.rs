@@ -58,6 +58,14 @@ pub fn run() {
                 }
             }
 
+            // Open devtools in debug mode
+            #[cfg(debug_assertions)]
+            {
+                if let Some(main_win) = app.get_webview_window("main") {
+                    main_win.open_devtools();
+                }
+            }
+
             // 4. Auto-hide tray popover when it loses focus
             if let Some(tray_win) = app.get_webview_window("tray") {
                 let tray_clone = tray_win.clone();

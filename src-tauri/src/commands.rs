@@ -13,8 +13,13 @@ pub fn get_stations_data(store: State<Arc<AppStore>>) -> Value {
     store.read_json(
         "stations.json",
         json!({
+            "schemaVersion": 1,
             "stations": [],
-            "groups": ["Favorit", "Musik", "Berita", "Talkshow"]
+            "groups": [
+                "Pop & Anak Muda",
+                "Nasional & Berita",
+                "Lainnya & Nostalgia"
+            ]
         }),
     )
 }
@@ -66,51 +71,83 @@ pub fn save_groups(store: State<Arc<AppStore>>, groups: Vec<String>) -> Result<(
 
 #[tauri::command]
 pub fn get_settings(store: State<Arc<AppStore>>) -> Value {
-    store.read_json(
+    let settings = store.read_json(
         "settings.json",
         json!({
-            "theme": "system",
-            "accentColor": "blue",
-            "systemFont": "system-ui",
-            "windowOpacity": 100,
+            "schemaVersion": 1,
+            "launchAtLogin": false,
+            "autoPlayLastStation": false,
+            "autoReconnect": true,
+            "maxReconnectAttempts": 8,
+            "notifyOnSongChange": true,
+            "showTitleInMenuBar": false,
+            "confirmBeforeQuit": true,
             "language": "id",
-            "confirmOnQuit": true,
+            "theme": "system",
+            "accentColor": "#0A84FF",
+            "fontFamily": "system",
+            "glassOpacity": 90,
+            "networkTimeoutMs": 12000,
+            "userAgent": "Squelch/0.1.0 (macOS; InternetRadio)",
             "shortcuts": {
-                "togglePlay": "Space",
-                "nextStation": "KeyN",
-                "prevStation": "KeyP"
+                "playPause": "CommandOrControl+Shift+P",
+                "nextStation": "CommandOrControl+Shift+Right",
+                "prevStation": "CommandOrControl+Shift+Left"
             }
         }),
-    )
+    );
+    let data_dir = store.data_dir.to_string_lossy().to_string();
+    json!({
+        "settings": settings,
+        "dataDir": data_dir
+    })
 }
 
 #[tauri::command]
-pub fn update_settings(store: State<Arc<AppStore>>, partial: Value) -> Result<(), String> {
-    let mut current = get_settings(store.clone());
-    if let (Some(cur_obj), Some(part_obj)) = (current.as_object_mut(), partial.as_object()) {
+pub fn update_settings(store: State<Arc<AppStore>>, partial: Value) -> Result<Value, String> {
+    let current_res = get_settings(store.clone());
+    let mut current_settings = current_res.get("settings").cloned().unwrap_or(json!({}));
+    if let (Some(cur_obj), Some(part_obj)) = (current_settings.as_object_mut(), partial.as_object()) {
         for (k, v) in part_obj {
             cur_obj.insert(k.clone(), v.clone());
         }
     }
-    store.write_json("settings.json", &current)
+    store.write_json("settings.json", &current_settings)?;
+    Ok(json!({
+        "settings": current_settings,
+        "dataDir": store.data_dir.to_string_lossy().to_string()
+    }))
 }
 
 #[tauri::command]
-pub fn reset_settings(store: State<Arc<AppStore>>) -> Result<(), String> {
+pub fn reset_settings(store: State<Arc<AppStore>>) -> Result<Value, String> {
     let default_val = json!({
-        "theme": "system",
-        "accentColor": "blue",
-        "systemFont": "system-ui",
-        "windowOpacity": 100,
+        "schemaVersion": 1,
+        "launchAtLogin": false,
+        "autoPlayLastStation": false,
+        "autoReconnect": true,
+        "maxReconnectAttempts": 8,
+        "notifyOnSongChange": true,
+        "showTitleInMenuBar": false,
+        "confirmBeforeQuit": true,
         "language": "id",
-        "confirmOnQuit": true,
+        "theme": "system",
+        "accentColor": "#0A84FF",
+        "fontFamily": "system",
+        "glassOpacity": 90,
+        "networkTimeoutMs": 12000,
+        "userAgent": "Squelch/0.1.0 (macOS; InternetRadio)",
         "shortcuts": {
-            "togglePlay": "Space",
-            "nextStation": "KeyN",
-            "prevStation": "KeyP"
+            "playPause": "CommandOrControl+Shift+P",
+            "nextStation": "CommandOrControl+Shift+Right",
+            "prevStation": "CommandOrControl+Shift+Left"
         }
     });
-    store.write_json("settings.json", &default_val)
+    store.write_json("settings.json", &default_val)?;
+    Ok(json!({
+        "settings": default_val,
+        "dataDir": store.data_dir.to_string_lossy().to_string()
+    }))
 }
 
 #[tauri::command]
@@ -154,9 +191,15 @@ pub fn get_listening_stats(store: State<Arc<AppStore>>) -> Value {
     store.read_json(
         "stats.json",
         json!({
-            "totalMinutes": 0,
-            "weeklyMinutes": [0, 0, 0, 0, 0, 0, 0],
-            "monthlyMinutes": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            "todaySeconds": 0,
+            "thisWeekSeconds": 0,
+            "thisMonthSeconds": 0,
+            "thisYearSeconds": 0,
+            "totalSeconds": 0,
+            "dailySeries": [],
+            "weeklySeries": [],
+            "monthlySeries": [],
+            "yearlySeries": [],
             "topStations": []
         }),
     )

@@ -5,7 +5,7 @@
   "identifier": "com.mrbvrz.squelch",
   "build": {
     "frontendDist": "../dist-ui",
-    "devUrl": "http://localhost:5173",
+    "devUrl": "http://localhost:1420",
     "beforeDevCommand": "npm run dev:ui",
     "beforeBuildCommand": "npm run build:ui"
   },

@@ -5,6 +5,10 @@ import * as path from 'path';
 export default defineConfig({
   plugins: [react()],
   base: './',
+  server: {
+    port: 1420,
+    strictPort: true
+  },
   build: {
     outDir: 'dist-ui',
     emptyOutDir: true,

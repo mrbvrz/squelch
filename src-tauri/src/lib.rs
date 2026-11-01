@@ -81,12 +81,16 @@ pub fn run() {
                 .build()?;
 
             // 6. Build System Tray Icon
-            let icon_image = app.default_window_icon().cloned().unwrap();
-            let _tray = TrayIconBuilder::new()
-                .icon(icon_image)
+            let mut tray_builder = TrayIconBuilder::new()
                 .tooltip("Squelch - Menu Bar Internet Radio")
                 .menu(&tray_menu)
-                .show_menu_on_left_click(false)
+                .show_menu_on_left_click(false);
+
+            if let Some(icon_image) = app.default_window_icon().cloned() {
+                tray_builder = tray_builder.icon(icon_image);
+            }
+
+            let _tray = tray_builder
                 .on_menu_event(move |app, event| match event.id().as_ref() {
                     "open_squelch" => {
                         if let Some(win) = app.get_webview_window("main") {

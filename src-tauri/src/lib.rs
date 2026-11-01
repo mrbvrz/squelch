@@ -272,6 +272,7 @@ pub fn run() {
             commands::save_schedule,
             commands::delete_schedule,
             commands::get_listening_stats,
+            commands::save_listening_stats,
             commands::get_system_fonts,
             commands::set_tray_state,
             commands::test_stream_url,

@@ -1,6 +1,9 @@
 import { invoke } from '@tauri-apps/api/core';
 import { emit, listen } from '@tauri-apps/api/event';
-import { applyAppearanceVariables } from '../utils/appearance';
+import {
+    applyAppearanceVariables,
+    countryCodeToFlag
+} from '../utils/appearance';
 
 interface PlayerStatus {
     state: 'idle' | 'buffering' | 'playing' | 'paused' | 'error';
@@ -20,9 +23,268 @@ let playerStatus: PlayerStatus = {
 
 let sleepInterval: any = null;
 
+interface ListeningStatsSchema {
+    schemaVersion: number;
+    dailySeconds: Record<string, number>;
+    monthlySeconds: Record<string, number>;
+    stationSeconds: Record<string, number>;
+    totalSeconds: number;
+}
+
+interface StatSeriesPoint {
+    key: string;
+    date?: string;
+    month?: string;
+    label: string;
+    seconds: number;
+}
+
+interface StationStatPoint {
+    stationId: string;
+    seconds: number;
+}
+
+interface ListeningStatsSummary {
+    todaySeconds: number;
+    thisWeekSeconds: number;
+    thisMonthSeconds: number;
+    thisYearSeconds: number;
+    totalSeconds: number;
+    dailySeries: StatSeriesPoint[];
+    weeklySeries: StatSeriesPoint[];
+    monthlySeries: StatSeriesPoint[];
+    yearlySeries: StatSeriesPoint[];
+    topStations: StationStatPoint[];
+}
+
+let statsData: ListeningStatsSchema = {
+    schemaVersion: 1,
+    dailySeconds: {},
+    monthlySeconds: {},
+    stationSeconds: {},
+    totalSeconds: 0
+};
+let isStatsLoaded = false;
+let statsDirty = false;
+let lastTickTimeMs: number | null = null;
+let statsSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function formatDateKey(d: Date): string {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function formatMonthKey(d: Date): string {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+}
+
+async function ensureStatsLoaded(): Promise<ListeningStatsSchema> {
+    if (!isStatsLoaded) {
+        try {
+            const raw: any = await invoke('get_listening_stats');
+            if (raw && typeof raw === 'object') {
+                statsData = {
+                    schemaVersion: 1,
+                    dailySeconds: raw.dailySeconds || {},
+                    monthlySeconds: raw.monthlySeconds || {},
+                    stationSeconds: raw.stationSeconds || {},
+                    totalSeconds:
+                        typeof raw.totalSeconds === 'number'
+                            ? raw.totalSeconds
+                            : 0
+                };
+            }
+        } catch (e) {
+            console.error('Failed to load listening stats:', e);
+        }
+        isStatsLoaded = true;
+    }
+    return statsData;
+}
+
+async function flushStatsToDisk(): Promise<void> {
+    if (!statsDirty) return;
+    try {
+        await invoke('save_listening_stats', { stats: statsData });
+        statsDirty = false;
+    } catch (e) {
+        console.error('Failed to save listening stats:', e);
+    }
+}
+
+function scheduleStatsSave(): void {
+    if (statsSaveTimeout) return;
+    statsSaveTimeout = setTimeout(() => {
+        statsSaveTimeout = null;
+        void flushStatsToDisk();
+    }, 5000);
+}
+
+function recordListeningTick(now = new Date()): void {
+    if (playerStatus.state !== 'playing') {
+        lastTickTimeMs = null;
+        return;
+    }
+    const nowMs = now.getTime();
+    if (lastTickTimeMs === null) {
+        lastTickTimeMs = nowMs;
+        return;
+    }
+    const elapsedSec = Math.floor((nowMs - lastTickTimeMs) / 1000);
+    if (elapsedSec < 1) return;
+
+    lastTickTimeMs += elapsedSec * 1000;
+
+    const dayKey = formatDateKey(now);
+    const monthKey = formatMonthKey(now);
+    const stationId = playerStatus.currentStation?.id;
+
+    statsData.dailySeconds[dayKey] =
+        (statsData.dailySeconds[dayKey] ?? 0) + elapsedSec;
+    statsData.monthlySeconds[monthKey] =
+        (statsData.monthlySeconds[monthKey] ?? 0) + elapsedSec;
+    if (stationId) {
+        statsData.stationSeconds[stationId] =
+            (statsData.stationSeconds[stationId] ?? 0) + elapsedSec;
+    }
+    statsData.totalSeconds = (statsData.totalSeconds ?? 0) + elapsedSec;
+    statsDirty = true;
+    scheduleStatsSave();
+}
+
+function buildListeningStatsSummary(
+    data: ListeningStatsSchema,
+    now = new Date()
+): ListeningStatsSummary {
+    const todayKey = formatDateKey(now);
+    const thisMonthKey = formatMonthKey(now);
+    const currentYearPrefix = `${now.getFullYear()}-`;
+
+    // 1. Weekly series (Last 7 days)
+    const weeklySeries: StatSeriesPoint[] = [];
+    let thisWeekSeconds = 0;
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() - i
+        );
+        const key = formatDateKey(d);
+        const dayLabel = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const sec = data.dailySeconds[key] ?? 0;
+        thisWeekSeconds += sec;
+        weeklySeries.push({ key, date: key, label: dayLabel, seconds: sec });
+    }
+
+    // 2. Daily series (Last 14 days)
+    const dailySeries: StatSeriesPoint[] = [];
+    for (let i = 13; i >= 0; i--) {
+        const d = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() - i
+        );
+        const key = formatDateKey(d);
+        const dayLabel = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+        dailySeries.push({
+            key,
+            date: key,
+            label: dayLabel,
+            seconds: data.dailySeconds[key] ?? 0
+        });
+    }
+
+    // 3. Monthly series (Last 30 days)
+    const monthlySeries: StatSeriesPoint[] = [];
+    for (let i = 29; i >= 0; i--) {
+        const d = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() - i
+        );
+        const key = formatDateKey(d);
+        const dayLabel = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+        monthlySeries.push({
+            key,
+            date: key,
+            month: formatMonthKey(d),
+            label: dayLabel,
+            seconds: data.dailySeconds[key] ?? 0
+        });
+    }
+
+    // 4. Yearly series (Last 12 months)
+    const monthNames = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'Mei',
+        'Jun',
+        'Jul',
+        'Agu',
+        'Sep',
+        'Okt',
+        'Nov',
+        'Des'
+    ];
+    const yearlySeries: StatSeriesPoint[] = [];
+    for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = formatMonthKey(d);
+        const label = `${monthNames[d.getMonth()]} ${String(d.getFullYear()).slice(-2)}`;
+        yearlySeries.push({
+            key,
+            month: key,
+            label,
+            seconds: data.monthlySeconds[key] ?? 0
+        });
+    }
+
+    let thisYearSeconds = 0;
+    for (const [mKey, sec] of Object.entries(data.monthlySeconds)) {
+        if (mKey.startsWith(currentYearPrefix)) {
+            thisYearSeconds += sec;
+        }
+    }
+
+    const topStations: StationStatPoint[] = Object.entries(data.stationSeconds)
+        .map(([stationId, seconds]) => ({ stationId, seconds }))
+        .sort((a, b) => b.seconds - a.seconds)
+        .slice(0, 6);
+
+    return {
+        todaySeconds: data.dailySeconds[todayKey] ?? 0,
+        thisWeekSeconds,
+        thisMonthSeconds: data.monthlySeconds[thisMonthKey] ?? 0,
+        thisYearSeconds,
+        totalSeconds: data.totalSeconds ?? 0,
+        dailySeries,
+        weeklySeries,
+        monthlySeries,
+        yearlySeries,
+        topStations
+    };
+}
+
 export function initTauriBridge() {
     if (typeof window === 'undefined') return;
     if (!('__TAURI_INTERNALS__' in window)) return;
+
+    void ensureStatsLoaded();
+
+    setInterval(() => {
+        recordListeningTick();
+    }, 1000);
+
+    window.addEventListener('beforeunload', () => {
+        recordListeningTick();
+        void flushStatsToDisk();
+    });
 
     // Listen to metadata from Rust ICY proxy
     listen<string>('squelch:metadata', (event) => {
@@ -34,6 +296,13 @@ export function initTauriBridge() {
     listen<string>('squelch:audio:state', (event) => {
         const payload = event.payload as any;
         if (payload?.state) {
+            if (payload.state === 'playing') {
+                lastTickTimeMs = Date.now();
+            } else if (playerStatus.state === 'playing') {
+                recordListeningTick();
+                lastTickTimeMs = null;
+                void flushStatsToDisk();
+            }
             playerStatus.state = payload.state;
             emit('ui:state-changed', { ...playerStatus });
         }
@@ -137,18 +406,29 @@ export function initTauriBridge() {
             },
             notifyPlaying: () => {
                 playerStatus.state = 'playing';
+                lastTickTimeMs = Date.now();
                 void invoke('set_tray_state', { stateName: 'playing' });
                 emit('squelch:audio:state', { state: 'playing' });
                 emit('ui:state-changed', { ...playerStatus });
             },
             notifyBuffering: () => {
+                if (playerStatus.state === 'playing') {
+                    recordListeningTick();
+                    void flushStatsToDisk();
+                }
                 playerStatus.state = 'buffering';
+                lastTickTimeMs = null;
                 void invoke('set_tray_state', { stateName: 'buffering' });
                 emit('squelch:audio:state', { state: 'buffering' });
                 emit('ui:state-changed', { ...playerStatus });
             },
             notifyError: (msg: string) => {
+                if (playerStatus.state === 'playing') {
+                    recordListeningTick();
+                    void flushStatsToDisk();
+                }
                 playerStatus.state = 'error';
+                lastTickTimeMs = null;
                 void invoke('set_tray_state', { stateName: 'error' });
                 emit('squelch:audio:state', { state: 'error', message: msg });
                 emit('ui:state-changed', { ...playerStatus });
@@ -164,12 +444,25 @@ export function initTauriBridge() {
         (window as any).squelchApi = {
             getPlayerStatus: async () => ({ ...playerStatus }),
 
-            playStation: async (stationId: string) => {
-                const data: any = await invoke('get_stations_data');
-                const station = (data?.stations || []).find(
-                    (s: any) => s.id === stationId
-                );
-                if (!station) return false;
+            playStation: async (stationIdOrObj: string | any) => {
+                let station: any = null;
+                if (typeof stationIdOrObj === 'string') {
+                    const data: any = await invoke('get_stations_data');
+                    station = (data?.stations || []).find(
+                        (s: any) => s.id === stationIdOrObj
+                    );
+                } else if (
+                    stationIdOrObj &&
+                    typeof stationIdOrObj === 'object'
+                ) {
+                    station = stationIdOrObj;
+                }
+                if (!station || !station.streamUrl) return false;
+
+                if (playerStatus.state === 'playing') {
+                    recordListeningTick();
+                    void flushStatsToDisk();
+                }
 
                 const port: number = await invoke('get_proxy_port');
                 const proxyUrl = `http://127.0.0.1:${port}/proxy?url=${encodeURIComponent(station.streamUrl)}`;
@@ -186,10 +479,13 @@ export function initTauriBridge() {
                 await emit('squelch:audio:command', {
                     type: 'play',
                     url:
-                        station.streamType === 'hls'
+                        station.streamType === 'hls' ||
+                        station.streamUrl.includes('.m3u8')
                             ? station.streamUrl
                             : proxyUrl,
-                    isHls: station.streamType === 'hls',
+                    isHls:
+                        station.streamType === 'hls' ||
+                        station.streamUrl.includes('.m3u8'),
                     stationName: station.name,
                     streamTitle: null,
                     logoUrl: station.logoUrl
@@ -201,6 +497,9 @@ export function initTauriBridge() {
 
             togglePlayPause: async () => {
                 if (playerStatus.state === 'playing') {
+                    recordListeningTick();
+                    lastTickTimeMs = null;
+                    void flushStatsToDisk();
                     playerStatus.state = 'paused';
                     void invoke('set_tray_state', { stateName: 'idle' });
                     await emit('squelch:audio:command', { type: 'pause' });
@@ -216,6 +515,11 @@ export function initTauriBridge() {
             },
 
             stopPlayback: async () => {
+                if (playerStatus.state === 'playing') {
+                    recordListeningTick();
+                    lastTickTimeMs = null;
+                    void flushStatsToDisk();
+                }
                 playerStatus.state = 'idle';
                 playerStatus.currentStation = null;
                 playerStatus.streamTitle = null;
@@ -264,6 +568,8 @@ export function initTauriBridge() {
             },
 
             quitApp: async () => {
+                recordListeningTick();
+                await flushStatsToDisk();
                 await invoke('quit_app');
             },
 
@@ -521,7 +827,7 @@ export function initTauriBridge() {
                             code: c.iso_3166_1,
                             name: c.name,
                             stationCount: c.stationcount,
-                            flag: '🌐'
+                            flag: countryCodeToFlag(c.iso_3166_1)
                         }))
                         .sort((a, b) => b.stationCount - a.stationCount);
                 } catch {
@@ -675,7 +981,10 @@ export function initTauriBridge() {
             },
 
             getListeningStats: async () => {
-                return await invoke('get_listening_stats');
+                await ensureStatsLoaded();
+                recordListeningTick();
+                void flushStatsToDisk();
+                return buildListeningStatsSummary(statsData);
             },
 
             getDiagnostics: async () => {

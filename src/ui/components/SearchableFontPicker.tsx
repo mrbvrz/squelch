@@ -110,10 +110,10 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
                 <div
                     role="listbox"
                     aria-label={ariaLabel}
-                    className="absolute right-0 top-full mt-1.5 w-72 z-50 mac-modal-surface rounded-xl shadow-2xl border border-white/10 p-2 text-xs flex flex-col gap-1.5 backdrop-blur-xl animate-scale-enter"
+                    className="absolute right-0 top-full mt-1.5 w-72 z-50 mac-modal-surface rounded-xl shadow-2xl p-2 text-xs flex flex-col gap-1.5 backdrop-blur-xl animate-scale-enter"
                 >
                     {/* Search Input Box */}
-                    <div className="relative flex items-center px-2 py-1 rounded-[7px] bg-white/5 border border-white/10 focus-within:border-accent/60 transition">
+                    <div className="relative flex items-center px-2 py-1 rounded-[7px] mac-input focus-within:border-accent/60 transition">
                         <span className="text-secondary shrink-0 mr-1.5">
                             <IconSearch size={13} />
                         </span>
@@ -123,13 +123,13 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder={placeholder}
-                            className="w-full bg-transparent border-0 p-0 text-[11px] focus:outline-none placeholder:text-secondary/60"
+                            className="w-full bg-transparent border-0 p-0 text-[11px] text-foreground focus:outline-none placeholder:text-secondary/60"
                         />
                         {searchQuery && (
                             <button
                                 type="button"
                                 onClick={() => setSearchQuery('')}
-                                className="text-secondary hover:text-current ml-1 shrink-0 p-0.5 rounded cursor-pointer"
+                                className="text-secondary hover:text-foreground ml-1 shrink-0 p-0.5 rounded cursor-pointer"
                                 aria-label="Clear search"
                             >
                                 <IconClose size={11} />
@@ -166,7 +166,7 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
                                 className={`w-full px-2.5 py-1.5 rounded-[6px] text-left flex items-center justify-between cursor-pointer transition ${
                                     isSystemSelected
                                         ? 'bg-accent text-white font-semibold'
-                                        : 'mac-row hover:bg-white/10 text-secondary hover:text-current'
+                                        : 'mac-row text-foreground hover:bg-black/5 dark:hover:bg-white/10'
                                 }`}
                             >
                                 <span className="truncate text-[12px]">
@@ -189,7 +189,7 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
                                     className={`w-full px-2.5 py-1.5 rounded-[6px] text-left flex items-center justify-between cursor-pointer transition ${
                                         isSelected
                                             ? 'bg-accent text-white font-semibold'
-                                            : 'mac-row hover:bg-white/10 text-secondary hover:text-current'
+                                            : 'mac-row text-foreground hover:bg-black/5 dark:hover:bg-white/10'
                                     }`}
                                 >
                                     <span

@@ -10,7 +10,7 @@ pub fn get_proxy_port(store: State<Arc<AppStore>>) -> u16 {
 
 #[tauri::command]
 pub fn get_stations_data(store: State<Arc<AppStore>>) -> Value {
-    store.read_json(
+    let mut data = store.read_json(
         "stations.json",
         json!({
             "schemaVersion": 1,
@@ -21,22 +21,54 @@ pub fn get_stations_data(store: State<Arc<AppStore>>) -> Value {
                 "Lainnya & Nostalgia"
             ]
         }),
-    )
+    );
+
+    // Ensure every station has a unique non-empty ID
+    let mut needs_save = false;
+    if let Some(stations) = data.get_mut("stations").and_then(|v| v.as_array_mut()) {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis();
+        for (idx, s) in stations.iter_mut().enumerate() {
+            let has_valid_id = s.get("id").and_then(|v| v.as_str()).map(|id| !id.trim().is_empty()).unwrap_or(false);
+            if !has_valid_id {
+                if let Some(obj) = s.as_object_mut() {
+                    obj.insert("id".to_string(), json!(format!("station-{}-{}", now, idx)));
+                    needs_save = true;
+                }
+            }
+        }
+    }
+    if needs_save {
+        let _ = store.write_json("stations.json", &data);
+    }
+
+    data
 }
 
 #[tauri::command]
-pub fn save_station(store: State<Arc<AppStore>>, station: Value) -> Result<(), String> {
+pub fn save_station(store: State<Arc<AppStore>>, mut station: Value) -> Result<(), String> {
     let mut data = get_stations_data(store.clone());
     let stations = data
         .get_mut("stations")
         .and_then(|v| v.as_array_mut())
         .ok_or("Invalid stations data")?;
 
-    let id = station
-        .get("id")
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
+    let id = match station.get("id").and_then(|v| v.as_str()) {
+        Some(s) if !s.trim().is_empty() => s.to_string(),
+        _ => {
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis();
+            let new_id = format!("station-{}", now);
+            if let Some(obj) = station.as_object_mut() {
+                obj.insert("id".to_string(), json!(new_id));
+            }
+            new_id
+        }
+    };
 
     if let Some(pos) = stations
         .iter()
@@ -192,18 +224,18 @@ pub fn get_listening_stats(store: State<Arc<AppStore>>) -> Value {
     store.read_json(
         "stats.json",
         json!({
-            "todaySeconds": 0,
-            "thisWeekSeconds": 0,
-            "thisMonthSeconds": 0,
-            "thisYearSeconds": 0,
-            "totalSeconds": 0,
-            "dailySeries": [],
-            "weeklySeries": [],
-            "monthlySeries": [],
-            "yearlySeries": [],
-            "topStations": []
+            "schemaVersion": 1,
+            "dailySeconds": {},
+            "monthlySeconds": {},
+            "stationSeconds": {},
+            "totalSeconds": 0
         }),
     )
+}
+
+#[tauri::command]
+pub fn save_listening_stats(store: State<Arc<AppStore>>, stats: Value) -> Result<(), String> {
+    store.write_json("stats.json", &stats)
 }
 
 static CACHED_FONTS: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();

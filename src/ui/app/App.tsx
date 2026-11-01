@@ -64,6 +64,7 @@ import {
 import { StationAvatar } from '../components/StationAvatar';
 import { SquircleAppIcon } from '../components/SquircleAppIcon';
 import { SearchableFontPicker } from '../components/SearchableFontPicker';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import type {
     NewShowScheduleInput,
     ShowSchedule
@@ -485,7 +486,6 @@ export const App: React.FC = () => {
     const isMac =
         typeof navigator !== 'undefined' &&
         /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
-    const searchShortcutLabel = isMac ? '⌘F' : 'Ctrl+F';
 
     const lang = settings?.language ?? 'id';
     const t = getTranslations(lang);
@@ -632,6 +632,10 @@ export const App: React.FC = () => {
         }
         if (activeTab === 'stats') {
             void api.getListeningStats().then(setStatsSummary);
+            const interval = setInterval(() => {
+                void api.getListeningStats().then(setStatsSummary);
+            }, 3000);
+            return () => clearInterval(interval);
         }
         if (activeTab === 'preferences') {
             void api.getDiagnostics().then(setDiagnosticsText);
@@ -1066,8 +1070,36 @@ export const App: React.FC = () => {
         await refreshAll();
     };
 
-    const isPlayingStation = (stationId: string) =>
-        currentStation?.id === stationId && (isPlaying || isBusy);
+    const isPlayingStation = (stationId?: string) => {
+        if (!stationId || !currentStation) return false;
+        return (
+            (currentStation.id === stationId ||
+                (Boolean(currentStation.streamUrl) &&
+                    stations.find((s) => s.id === stationId)?.streamUrl ===
+                        currentStation.streamUrl)) &&
+            (isPlaying || isBusy)
+        );
+    };
+
+    const handleWindowDragMouseDown = (e: React.MouseEvent) => {
+        if (
+            e.button === 0 &&
+            !(e.target as HTMLElement).closest(
+                'button, input, a, select, textarea, [role="button"], kbd'
+            )
+        ) {
+            if (
+                typeof window !== 'undefined' &&
+                '__TAURI_INTERNALS__' in window
+            ) {
+                try {
+                    void getCurrentWindow().startDragging();
+                } catch {
+                    // Fallback
+                }
+            }
+        }
+    };
 
     const isStandaloneAbout =
         typeof window !== 'undefined' &&
@@ -1077,6 +1109,7 @@ export const App: React.FC = () => {
         return (
             <div className="mac-window-shell flex flex-col h-screen select-none overflow-hidden p-6">
                 <div
+                    onMouseDown={handleWindowDragMouseDown}
                     style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
                     className="h-8 w-full shrink-0 -mt-2 -mx-2"
                 />
@@ -1162,6 +1195,7 @@ export const App: React.FC = () => {
                     {/* Drag Region for macOS Traffic Lights */}
                     <div
                         data-tauri-drag-region
+                        onMouseDown={handleWindowDragMouseDown}
                         style={
                             { WebkitAppRegion: 'drag' } as React.CSSProperties
                         }
@@ -1186,11 +1220,16 @@ export const App: React.FC = () => {
                             }}
                             placeholder={t.searchPlaceholder}
                             aria-label={t.searchPlaceholder}
-                            className="mac-search-pill w-full pl-8 pr-11 py-1 rounded-full text-[12px]"
+                            className="mac-search-pill w-full pl-8 pr-16 py-1 rounded-full text-[12px]"
                         />
-                        <kbd className="absolute right-2 px-1.5 py-0.5 rounded-[4px] bg-white/10 text-secondary text-[10px] font-mono pointer-events-none">
-                            {searchShortcutLabel}
-                        </kbd>
+                        <div className="absolute right-2 flex items-center gap-1 pointer-events-none select-none">
+                            <kbd className="px-1.5 py-0.5 rounded-[4px] bg-white/10 dark:bg-white/10 border border-black/5 dark:border-white/10 text-secondary text-[10px] font-mono leading-none shadow-2xs">
+                                {isMac ? '⌘' : 'Ctrl'}
+                            </kbd>
+                            <kbd className="px-1.5 py-0.5 rounded-[4px] bg-white/10 dark:bg-white/10 border border-black/5 dark:border-white/10 text-secondary text-[10px] font-mono leading-none shadow-2xs">
+                                F
+                            </kbd>
+                        </div>
                     </div>
 
                     {/* 2. Mini Player Deck directly underneath Search */}
@@ -1415,8 +1454,9 @@ export const App: React.FC = () => {
                 {/* Top Bar with Elevated < | > Navigation Pill and Page Title (No Mini Player button) */}
                 <header
                     data-tauri-drag-region
+                    onMouseDown={handleWindowDragMouseDown}
                     style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
-                    className="h-11 pt-1.5 px-6 flex items-center justify-between shrink-0"
+                    className="h-11 pt-1.5 px-6 flex items-center justify-between shrink-0 cursor-default"
                 >
                     <div
                         style={
@@ -2274,14 +2314,14 @@ export const App: React.FC = () => {
                                         onChange={(e) =>
                                             setDiscCountry(e.target.value)
                                         }
-                                        className="mac-input px-2.5 py-1.5 rounded-[7px] text-xs w-48 shrink-0 cursor-pointer"
+                                        className="mac-input px-2.5 h-8 rounded-[7px] text-xs w-52 shrink-0 cursor-pointer"
                                     >
                                         <option value="">
                                             🌐 {t.discoverGlobalFilter}
                                         </option>
                                         {discCountries.map((c) => (
                                             <option key={c.code} value={c.code}>
-                                                {c.flag} {c.name} (
+                                                {c.flag || '🌐'} {c.name} (
                                                 {c.stationCount})
                                             </option>
                                         ))}
@@ -2295,7 +2335,7 @@ export const App: React.FC = () => {
                                         }
                                         placeholder={t.discoverName}
                                         aria-label={t.discoverName}
-                                        className="mac-input px-3 py-1.5 text-xs rounded-[7px] flex-1 min-w-[140px]"
+                                        className="mac-input px-3 h-8 text-xs rounded-[7px] flex-1 min-w-[140px]"
                                     />
 
                                     <input
@@ -2306,13 +2346,13 @@ export const App: React.FC = () => {
                                         }
                                         placeholder={t.discoverTag}
                                         aria-label={t.discoverTag}
-                                        className="mac-input px-3 py-1.5 text-xs rounded-[7px] w-32 shrink-0"
+                                        className="mac-input px-3 h-8 text-xs rounded-[7px] w-32 shrink-0"
                                     />
 
                                     <button
                                         type="submit"
                                         disabled={isSearchingOnline}
-                                        className="bg-accent hover:opacity-90 disabled:opacity-60 text-white px-3.5 py-1.5 rounded-[7px] text-xs font-medium shadow-sm cursor-pointer transition shrink-0 flex items-center gap-1.5"
+                                        className="bg-accent hover:opacity-90 disabled:opacity-60 text-white px-3.5 h-8 rounded-[7px] text-xs font-medium shadow-sm cursor-pointer transition shrink-0 flex items-center gap-1.5"
                                     >
                                         {isSearchingOnline ? (
                                             <IconSpinner
@@ -2349,6 +2389,12 @@ export const App: React.FC = () => {
                                                 s.streamUrl.toLowerCase() ===
                                                 item.streamUrl.toLowerCase()
                                         );
+                                        const isItemPlaying =
+                                            (currentStation?.streamUrl ===
+                                                item.streamUrl ||
+                                                currentStation?.id ===
+                                                    item.id) &&
+                                            (isPlaying || isBusy);
                                         return (
                                             <div
                                                 key={item.id}
@@ -2389,20 +2435,56 @@ export const App: React.FC = () => {
                                                     <button
                                                         type="button"
                                                         title={
-                                                            t.discoverPreviewBtn
+                                                            isItemPlaying
+                                                                ? t.stop
+                                                                : t.discoverPreviewBtn
                                                         }
                                                         aria-label={
-                                                            t.discoverPreviewBtn
+                                                            isItemPlaying
+                                                                ? t.stop
+                                                                : t.discoverPreviewBtn
                                                         }
-                                                        onClick={() =>
-                                                            void handleAddFromDiscover(
-                                                                item,
-                                                                true
-                                                            )
-                                                        }
-                                                        className="mac-glass-pill w-7 h-7 rounded-[7px] flex items-center justify-center cursor-pointer hover:bg-white/15 transition"
+                                                        onClick={() => {
+                                                            if (isItemPlaying) {
+                                                                void api.stopPlayback();
+                                                            } else {
+                                                                void (
+                                                                    api as any
+                                                                ).playStation({
+                                                                    id:
+                                                                        item.id ||
+                                                                        `preview-${Date.now()}`,
+                                                                    name: item.name,
+                                                                    streamUrl:
+                                                                        item.streamUrl,
+                                                                    streamType:
+                                                                        item.streamType,
+                                                                    logoUrl:
+                                                                        item.logoUrl,
+                                                                    genre: item.genre,
+                                                                    city: item.city,
+                                                                    country:
+                                                                        item.country,
+                                                                    tags: item.tags,
+                                                                    group: 'Discover'
+                                                                });
+                                                            }
+                                                        }}
+                                                        className={`w-7 h-7 rounded-[7px] flex items-center justify-center cursor-pointer transition ${
+                                                            isItemPlaying
+                                                                ? 'bg-[#30D158] text-white shadow-sm'
+                                                                : 'mac-glass-pill hover:bg-white/15'
+                                                        }`}
                                                     >
-                                                        <IconPlay size={12} />
+                                                        {isItemPlaying ? (
+                                                            <IconStop
+                                                                size={12}
+                                                            />
+                                                        ) : (
+                                                            <IconPlay
+                                                                size={12}
+                                                            />
+                                                        )}
                                                     </button>
                                                     {alreadyAdded ? (
                                                         <button
@@ -2780,7 +2862,7 @@ export const App: React.FC = () => {
                             className="max-w-3xl space-y-6 text-xs animate-tab-enter"
                         >
                             {/* Group 1: Appearance & Personalization */}
-                            <div>
+                            <div className="relative z-30">
                                 <h2 className="text-[13px] font-bold mb-2 px-1 flex items-center gap-1.5">
                                     <IconSwatch
                                         size={14}
@@ -2967,7 +3049,7 @@ export const App: React.FC = () => {
                                     </div>
 
                                     {/* System Font Picker */}
-                                    <div className="px-4 py-3.5 flex items-center justify-between gap-4">
+                                    <div className="px-4 py-3.5 flex items-center justify-between gap-4 relative z-40">
                                         <div>
                                             <div className="text-[13px] font-medium">
                                                 {t.prefFontFamilyLabel}
@@ -2996,7 +3078,7 @@ export const App: React.FC = () => {
                             </div>
 
                             {/* Group 2: General & Language (Dropdown with Flag) */}
-                            <div>
+                            <div className="relative z-20">
                                 <h2 className="text-[13px] font-bold mb-2 px-1">
                                     {t.prefGeneral}
                                 </h2>
@@ -3097,7 +3179,7 @@ export const App: React.FC = () => {
                             </div>
 
                             {/* Group 3: Audio & Network */}
-                            <div>
+                            <div className="relative z-10">
                                 <h2 className="text-[13px] font-bold mb-2 px-1">
                                     {t.prefAudioNet}
                                 </h2>
@@ -3900,34 +3982,30 @@ export const App: React.FC = () => {
                 >
                     <div
                         onClick={(e) => e.stopPropagation()}
-                        className="mac-modal-surface w-full max-w-md p-6 space-y-4 text-xs"
+                        className="mac-modal-surface w-full max-w-[340px] p-6 space-y-4 text-xs flex flex-col items-center text-center shadow-2xl"
                     >
-                        <div className="flex items-start gap-3.5">
-                            <div className="w-10 h-10 rounded-[9px] bg-[#FF453A]/20 text-[#FF453A] flex items-center justify-center shrink-0">
-                                <IconPower size={20} />
-                            </div>
-                            <div>
-                                <h3
-                                    id="quit-modal-title"
-                                    className="text-[15px] font-bold"
-                                >
-                                    {settings?.language === 'en'
-                                        ? 'Quit Squelch?'
-                                        : 'Keluar dari Squelch?'}
-                                </h3>
-                                <p className="text-[12px] text-secondary leading-relaxed mt-1">
-                                    {settings?.language === 'en'
-                                        ? 'Active radio playback in the menu bar will be stopped.'
-                                        : 'Pemutaran siaran radio di menu bar akan dihentikan.'}
-                                </p>
-                            </div>
+                        <SquircleAppIcon dataUrl={appIconDataUrl} size={54} />
+                        <div>
+                            <h3
+                                id="quit-modal-title"
+                                className="text-[15px] font-bold text-foreground"
+                            >
+                                {settings?.language === 'en'
+                                    ? 'Quit Squelch?'
+                                    : 'Keluar dari Squelch?'}
+                            </h3>
+                            <p className="text-[12px] text-secondary leading-normal mt-1.5 max-w-[260px] mx-auto">
+                                {settings?.language === 'en'
+                                    ? 'Active radio playback in the menu bar will be stopped.'
+                                    : 'Pemutaran siaran radio di menu bar akan dihentikan.'}
+                            </p>
                         </div>
 
-                        <div className="flex justify-end gap-2.5 pt-3 border-t mac-divider">
+                        <div className="w-full flex items-center justify-center gap-2.5 pt-2">
                             <button
                                 type="button"
                                 onClick={() => setIsQuitConfirmOpen(false)}
-                                className="mac-glass-pill px-4 py-2 rounded-[7px] font-medium cursor-pointer"
+                                className="mac-glass-pill flex-1 py-1.5 px-3 rounded-[7px] text-[12px] font-medium cursor-pointer transition hover:bg-black/5 dark:hover:bg-white/10"
                             >
                                 {t.cancelBtn}
                             </button>
@@ -3937,10 +4015,10 @@ export const App: React.FC = () => {
                                     setIsQuitConfirmOpen(false);
                                     void api.quitApp();
                                 }}
-                                className="bg-[#FF453A] hover:bg-[#D70015] text-white px-4 py-2 rounded-[7px] font-semibold shadow-sm cursor-pointer transition"
+                                className="flex-1 bg-[#FF453A] hover:bg-[#D70015] text-white py-1.5 px-3 rounded-[7px] text-[12px] font-medium shadow-sm cursor-pointer transition"
                             >
                                 {settings?.language === 'en'
-                                    ? 'Quit Squelch'
+                                    ? 'Quit'
                                     : 'Keluar'}
                             </button>
                         </div>
@@ -3959,38 +4037,38 @@ export const App: React.FC = () => {
                 >
                     <div
                         onClick={(e) => e.stopPropagation()}
-                        className="mac-modal-surface w-full max-w-md p-6 space-y-4 text-xs relative flex flex-col items-center text-center"
+                        className="mac-modal-surface w-full max-w-[360px] p-6 space-y-4 text-xs relative flex flex-col items-center text-center shadow-2xl"
                     >
-                        <SquircleAppIcon dataUrl={appIconDataUrl} size={84} />
+                        <SquircleAppIcon dataUrl={appIconDataUrl} size={76} />
                         <div>
                             <div className="flex items-center justify-center gap-2">
                                 <h2
                                     id="about-modal-title"
-                                    className="text-2xl font-bold tracking-tight"
+                                    className="text-[18px] font-bold tracking-tight text-foreground"
                                 >
                                     Squelch
                                 </h2>
-                                <span className="px-2 py-0.5 rounded-[6px] bg-accent/15 text-accent text-[11px] font-bold tabular-nums">
+                                <span className="px-2 py-0.5 rounded-[5px] bg-accent/15 text-accent text-[11px] font-bold tabular-nums">
                                     v0.1.0
                                 </span>
                             </div>
-                            <div className="text-[13px] font-medium text-accent mt-0.5">
+                            <div className="text-[12px] font-medium text-accent mt-0.5">
                                 {t.aboutTagline}
                             </div>
-                            <p className="text-[12px] text-secondary leading-relaxed mt-2.5 max-w-sm">
+                            <p className="text-[12px] text-secondary leading-relaxed mt-2 max-w-[280px] mx-auto">
                                 {t.aboutDescription}
                             </p>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-center gap-2.5 mt-2">
+                        <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
                             <button
                                 type="button"
                                 onClick={() =>
                                     void api.openExternalUrl(GITHUB_REPO_URL)
                                 }
-                                className="mac-glass-pill px-4 py-2 rounded-[8px] text-[12px] font-medium flex items-center gap-2 cursor-pointer hover:bg-white/15 transition shadow-sm"
+                                className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition shadow-xs"
                             >
-                                <IconGitHub size={15} />
+                                <IconGitHub size={14} />
                                 <span>GitHub</span>
                             </button>
 
@@ -3999,14 +4077,14 @@ export const App: React.FC = () => {
                                 onClick={() =>
                                     void api.openExternalUrl(AUTHOR_WEBSITE_URL)
                                 }
-                                className="bg-accent hover:opacity-90 text-white px-4 py-2 rounded-[8px] text-[12px] font-medium flex items-center gap-2 shadow-sm cursor-pointer transition"
+                                className="bg-accent hover:opacity-90 text-white px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 shadow-xs cursor-pointer transition"
                             >
-                                <IconGlobe size={15} />
+                                <IconGlobe size={14} />
                                 <span>{t.aboutWebsiteBtn}</span>
                             </button>
                         </div>
 
-                        <div className="flex items-center justify-center gap-3 mt-1 text-[11px] text-secondary">
+                        <div className="flex items-center justify-center gap-3 text-[11px] text-secondary">
                             <button
                                 type="button"
                                 onClick={() =>
@@ -4015,7 +4093,7 @@ export const App: React.FC = () => {
                                 className="hover:text-accent hover:underline cursor-pointer flex items-center gap-1"
                             >
                                 <span>{t.aboutSpecLink}</span>
-                                <IconExternalLink size={11} />
+                                <IconExternalLink size={10} />
                             </button>
                             <span>·</span>
                             <button
@@ -4026,15 +4104,15 @@ export const App: React.FC = () => {
                                 className="hover:text-accent hover:underline cursor-pointer flex items-center gap-1"
                             >
                                 <span>{t.aboutChangelogLink}</span>
-                                <IconExternalLink size={11} />
+                                <IconExternalLink size={10} />
                             </button>
                         </div>
 
-                        <div className="w-full flex justify-end pt-3 border-t mac-divider mt-2">
+                        <div className="w-full pt-2 border-t mac-divider mt-1">
                             <button
                                 type="button"
                                 onClick={() => setIsAboutModalOpen(false)}
-                                className="mac-glass-pill px-4 py-2 rounded-[7px] font-medium cursor-pointer"
+                                className="mac-glass-pill w-full py-1.5 rounded-[7px] text-[12px] font-medium cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition"
                             >
                                 {settings?.language === 'en'
                                     ? 'Close'

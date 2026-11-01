@@ -167,13 +167,19 @@ declare global {
                     });
 
                     hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                        void audioEl.play().catch((err: unknown) => {
-                            const msg =
-                                err instanceof Error
-                                    ? err.message
-                                    : 'HLS play failed';
-                            bridge.notifyError(msg);
-                        });
+                        audioEl.muted = true;
+                        void audioEl
+                            .play()
+                            .then(() => {
+                                audioEl.muted = false;
+                            })
+                            .catch((err: unknown) => {
+                                const msg =
+                                    err instanceof Error
+                                        ? err.message
+                                        : 'HLS play failed';
+                                bridge.notifyError(msg);
+                            });
                     });
 
                     hlsInstance.on(Hls.Events.ERROR, (_event, data) => {
@@ -191,7 +197,9 @@ declare global {
                     audioEl.src = cmd.url;
                     audioEl.load();
                     try {
+                        audioEl.muted = true;
                         await audioEl.play();
+                        audioEl.muted = false;
                     } catch (err) {
                         const msg =
                             err instanceof Error

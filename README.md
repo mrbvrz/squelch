@@ -73,7 +73,7 @@ Download the latest ready-to-run macOS package:
   </a>
   &nbsp;&nbsp;
   <a href="https://www.buymeacoffee.com/mrbvrz" target="_blank">
-    <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=mrbvrz&button_colour=FFDD00&font_colour=000000&font_family=Poppins&outline_colour=000000&coffee_colour=ffffff" height="42" style="border: 0px; height: 42px;" alt="Buy Me A Coffee" />
+    <img src="https://www.owlstown.com/assets/icons/bmc-yellow-button-941f96a1.png" height="42" style="border: 0px; height: 42px;" alt="Buy Me A Coffee" />
   </a>
 </p>
 

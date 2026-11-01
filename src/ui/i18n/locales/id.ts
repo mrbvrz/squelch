@@ -189,9 +189,9 @@ export const idLocale: TranslationDictionary = {
     aboutTagline: 'Pemutar Radio Internet Menu Bar Modern & Ringan',
     aboutDescription:
         'Dirancang untuk mendengarkan siaran radio langsung dari menu bar tanpa membebani sistem. Mendukung aliran MP3, AAC/HE-AAC, OGG/Opus, dan HLS (.m3u8) dengan ekstraksi ICY metadata lokal, statistik durasi dengar, serta integrasi direktori publik.',
-    aboutWebsiteBtn: 'Situs Web',
-    aboutSpecLink: 'Spesifikasi & Arsitektur',
-    aboutChangelogLink: 'Catatan Rilis (Changelog)',
+    aboutWebsiteBtn: 'Website',
+    aboutSpecLink: 'Spesifikasi',
+    aboutChangelogLink: 'Changelog',
     aboutShowSpecsBtn: 'Lihat Spesifikasi & Arsitektur',
     aboutHideSpecsBtn: 'Sembunyikan Spesifikasi & Arsitektur',
     aboutSpecTitle: 'Spesifikasi Teknis & Arsitektur',

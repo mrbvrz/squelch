@@ -111,15 +111,15 @@ pub fn run() {
             }
 
             // 5. Build Rich Tray Context Menu
-            let menu_status = MenuItemBuilder::with_id("status", "📻 Squelch Radio").enabled(false).build(app)?;
-            let menu_play_pause = MenuItemBuilder::with_id("play_pause", "▶ Putar / Jeda").build(app)?;
-            let menu_stop = MenuItemBuilder::with_id("stop", "⏹ Hentikan").build(app)?;
+            let menu_status = MenuItemBuilder::with_id("status", "Squelch Radio").enabled(false).build(app)?;
+            let menu_play_pause = MenuItemBuilder::with_id("play_pause", "Putar / Jeda").build(app)?;
+            let menu_stop = MenuItemBuilder::with_id("stop", "Hentikan").build(app)?;
 
-            let menu_open = MenuItemBuilder::with_id("open_squelch", "📻 Buka Jendela Utama").build(app)?;
-            let menu_stations = MenuItemBuilder::with_id("stations_squelch", "📡 Stasiun Radio").build(app)?;
-            let menu_pref = MenuItemBuilder::with_id("pref_squelch", "⚙️ Pengaturan").build(app)?;
-            let menu_about = MenuItemBuilder::with_id("about_squelch", "ℹ️ Tentang Squelch").build(app)?;
-            let menu_quit = MenuItemBuilder::with_id("quit_squelch", "🚪 Keluar Squelch").build(app)?;
+            let menu_open = MenuItemBuilder::with_id("open_squelch", "Buka Jendela Utama").build(app)?;
+            let menu_stations = MenuItemBuilder::with_id("stations_squelch", "Stasiun Radio").build(app)?;
+            let menu_pref = MenuItemBuilder::with_id("pref_squelch", "Pengaturan").build(app)?;
+            let menu_about = MenuItemBuilder::with_id("about_squelch", "Tentang Squelch").build(app)?;
+            let menu_quit = MenuItemBuilder::with_id("quit_squelch", "Keluar Squelch").build(app)?;
 
             let tray_menu = MenuBuilder::new(app)
                 .item(&menu_status)

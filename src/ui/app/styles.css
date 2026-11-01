@@ -411,10 +411,15 @@ textarea:focus-visible {
     display: none;
 }
 
-/* Auto-Hiding Scrollbars: hidden when idle, visible only while actively scrolling */
+/* Visible & Interactive macOS Overlay Scrollbars */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(142, 142, 147, 0.38) transparent;
+}
+
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -422,17 +427,45 @@ textarea:focus-visible {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: transparent;
+    background: rgba(142, 142, 147, 0.35);
     border-radius: 9999px;
-    transition: background-color 180ms ease;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 150ms ease, opacity 150ms ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(142, 142, 147, 0.65);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: var(--accent-color, #0a84ff);
+    border: 2px solid transparent;
+    background-clip: padding-box;
 }
 
 html.is-scrolling ::-webkit-scrollbar-thumb,
 .is-scrolling::-webkit-scrollbar-thumb {
-    background: rgba(142, 142, 147, 0.44);
+    background: rgba(142, 142, 147, 0.55);
+    border: 2px solid transparent;
+    background-clip: padding-box;
 }
 
-html.is-scrolling ::-webkit-scrollbar-thumb:hover,
-.is-scrolling::-webkit-scrollbar-thumb:hover {
-    background: rgba(142, 142, 147, 0.65);
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.52);
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb:active {
+    background: var(--accent-color, #0a84ff);
+}
+
+[data-theme='dark'] html.is-scrolling ::-webkit-scrollbar-thumb,
+[data-theme='dark'] .is-scrolling::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.45);
 }

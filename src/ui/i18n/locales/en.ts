@@ -191,8 +191,8 @@ export const enLocale: TranslationDictionary = {
     aboutDescription:
         'Designed for effortless live radio listening from the system menu bar with near-zero resource overhead. Supports MP3, AAC/HE-AAC, OGG/Opus, and HLS (.m3u8) streams with local ICY metadata extraction, listening analytics, and public directory discovery.',
     aboutWebsiteBtn: 'Website',
-    aboutSpecLink: 'Specifications & Architecture',
-    aboutChangelogLink: 'Release Notes (Changelog)',
+    aboutSpecLink: 'Specifications',
+    aboutChangelogLink: 'Changelog',
     aboutShowSpecsBtn: 'Show Specifications & Architecture',
     aboutHideSpecsBtn: 'Hide Specifications & Architecture',
     aboutSpecTitle: 'Technical Specifications & Architecture',

@@ -12,6 +12,7 @@ import {
 } from '../utils/appearance';
 import {
     IconCompass,
+    IconFolder,
     IconPause,
     IconPlay,
     IconPlus,
@@ -231,71 +232,130 @@ export const TrayPopoverApp: React.FC = () => {
                     </div>
                 )}
 
-            {/* 2. TWO-COLUMN BENTO GLASS CARDS (Signal Spectrum + Sleep Timer with Increased Height) */}
-            <div className="grid grid-cols-2 gap-2.5">
-                {/* Card Left: Signal / Equalizer Bars */}
-                <div className="mac-settings-card p-3 flex flex-col justify-between min-h-[114px]">
-                    <div className="flex items-center justify-between text-[11px] text-secondary">
-                        <span className="flex items-center gap-1.5 font-semibold tracking-wide uppercase">
-                            <span
-                                className={`w-2 h-2 rounded-[3px] ${
-                                    isPlaying
-                                        ? 'bg-[#30D158] animate-pulse'
-                                        : 'bg-[#8E8E93]'
-                                }`}
-                            />
-                            {t.traySignalTitle}
-                        </span>
+            {/* 2. UNIFIED TRAY PLAYER DECK (Single Layer Card, Reduced Nesting) */}
+            <div className="mac-settings-card p-3 flex flex-col gap-2.5">
+                {/* Primary Station Identity & Playback Controls */}
+                <div className="flex items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <StationAvatar
+                            logoUrl={currentStation?.logoUrl}
+                            size="md"
+                            accentFallback
+                            onResolveLogo={(url) => api.resolveStationLogo(url)}
+                        />
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[13px] font-bold truncate leading-tight text-foreground">
+                                    {currentStation
+                                        ? currentStation.name
+                                        : t.traySelectPrompt}
+                                </span>
+                                {currentStation?.group && (
+                                    <span className="mac-glass-pill px-1.5 py-0.5 rounded-[4px] font-semibold text-[9px] uppercase tracking-wide shrink-0">
+                                        {currentStation.group}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="text-[11px] text-secondary truncate mt-0.5 flex items-center gap-1.5">
+                                <span
+                                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                                    style={{
+                                        backgroundColor: stateHeadline.color
+                                    }}
+                                />
+                                <span className="truncate">
+                                    {streamTitle
+                                        ? streamTitle
+                                        : currentStation
+                                          ? `${currentStation.genre} · ${currentStation.city}`
+                                          : t.trayClickStationHint}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                        {playerState !== 'idle' && (
+                            <button
+                                type="button"
+                                onClick={() => void api.stopPlayback()}
+                                aria-label={t.stop}
+                                title={t.stop}
+                                className="mac-glass-pill w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:text-[#FF453A] transition"
+                            >
+                                <IconStop size={13} />
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => void api.togglePlayPause()}
+                            aria-label={
+                                isPlaying || isBusy
+                                    ? t.statusPausedSub
+                                    : t.play
+                            }
+                            title={
+                                isPlaying || isBusy
+                                    ? t.statusPausedSub
+                                    : t.play
+                            }
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm cursor-pointer transition ${
+                                isPlaying || isBusy
+                                    ? 'bg-[#30D158] hover:bg-[#28B84C]'
+                                    : 'bg-accent hover:opacity-90'
+                            }`}
+                        >
+                            {isPlaying || isBusy ? (
+                                <IconPause size={15} />
+                            ) : (
+                                <IconPlay size={15} />
+                            )}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Secondary Row: Signal Waveform & Sleep Timer Quick Bar */}
+                <div className="flex items-center justify-between gap-2 pt-2 border-t mac-divider">
+                    {/* Live Audio Equalizer Waveform */}
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <IconRadioTower
+                            size={12}
+                            className={
+                                isPlaying
+                                    ? 'text-[#30D158] animate-pulse shrink-0'
+                                    : 'text-muted shrink-0'
+                            }
+                        />
                         <span
-                            className="font-semibold tabular-nums text-[11px]"
+                            className="text-[10px] font-bold uppercase tracking-wider tabular-nums shrink-0"
                             style={{ color: stateHeadline.color }}
                         >
                             {isPlaying
                                 ? t.traySignalStreaming
                                 : t.traySignalReady}
                         </span>
+                        <div className="flex items-end gap-1 h-3.5 w-16 px-0.5">
+                            {spectrumBars.slice(0, 7).map((heightPct, idx) => (
+                                <div
+                                    key={idx}
+                                    className="flex-1 rounded-[1.5px] transition-all duration-300"
+                                    style={{
+                                        height: `${Math.max(15, heightPct)}%`,
+                                        backgroundColor: isPlaying
+                                            ? '#30D158'
+                                            : 'rgba(142, 142, 147, 0.35)'
+                                    }}
+                                />
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="flex items-end justify-between gap-1.5 h-14 mt-2 px-1">
-                        {spectrumBars.map((heightPct, idx) => (
-                            <div
-                                key={idx}
-                                className="flex-1 rounded-[3px] transition-all duration-300"
-                                style={{
-                                    height: `${heightPct}%`,
-                                    backgroundColor: isPlaying
-                                        ? '#30D158'
-                                        : 'rgba(142, 142, 147, 0.35)'
-                                }}
-                            />
-                        ))}
-                    </div>
-                </div>
-
-                {/* Card Right: Sleep Timer Selector (1m removed, taller buttons) */}
-                <div className="mac-settings-card p-3 flex flex-col justify-between min-h-[114px]">
-                    <div className="flex items-center justify-between text-[11px] text-secondary">
-                        <span className="flex items-center gap-1 font-semibold tracking-wide uppercase">
-                            <IconTimer size={13} />
-                            {t.traySleepTitle}
-                        </span>
-                        <span
-                            className={`font-semibold tabular-nums text-[11px] ${
-                                sleepRemainingSec !== null &&
-                                sleepRemainingSec <= 60
-                                    ? 'text-[#FF9F0A]'
-                                    : ''
-                            }`}
-                        >
-                            {sleepRemainingSec !== null
-                                ? sleepRemainingSec <= 60
-                                    ? `${sleepRemainingSec}s`
-                                    : `${Math.ceil(sleepRemainingSec / 60)}m`
-                                : t.traySleepOff}
-                        </span>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-1.5 mt-2">
+                    {/* Sleep Timer Selector */}
+                    <div className="flex items-center gap-1 shrink-0">
+                        <IconTimer
+                            size={12}
+                            className="text-secondary mr-0.5"
+                        />
                         {(
                             [
                                 [null, t.traySleepOff],
@@ -310,9 +370,9 @@ export const TrayPopoverApp: React.FC = () => {
                                     key={label}
                                     type="button"
                                     onClick={() => void api.setSleepTimer(val)}
-                                    className={`py-2 rounded-[7px] text-[11px] font-semibold tabular-nums cursor-pointer transition ${
+                                    className={`px-1.5 py-0.5 rounded-[5px] text-[10px] font-semibold tabular-nums cursor-pointer transition ${
                                         active
-                                            ? 'bg-accent text-white shadow-sm'
+                                            ? 'bg-accent text-white shadow-xs'
                                             : 'mac-glass-pill hover:bg-white/15'
                                     }`}
                                 >
@@ -320,82 +380,6 @@ export const TrayPopoverApp: React.FC = () => {
                                 </button>
                             );
                         })}
-                    </div>
-                </div>
-            </div>
-
-            {/* 3. WIDE NOW PLAYING DECK CARD (Unified 10px Radius & Rounded-Rect Indicator Bar) */}
-            <div className="mac-settings-card mt-2.5 p-3">
-                <div className="flex items-center justify-between text-[11px] text-secondary mb-2">
-                    <span className="flex items-center gap-1.5 font-semibold">
-                        <span
-                            className="w-2 h-2 rounded-[3px] inline-block"
-                            style={{ backgroundColor: stateHeadline.color }}
-                        />
-                        {t.trayNowPlaying}
-                    </span>
-                    <span className="mac-glass-pill px-2 py-0.5 rounded-[5px] font-medium text-[10px]">
-                        {currentStation?.group || t.trayDefaultGroup}
-                    </span>
-                </div>
-
-                <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        <StationAvatar
-                            logoUrl={currentStation?.logoUrl}
-                            size="md"
-                            accentFallback
-                            onResolveLogo={(url) => api.resolveStationLogo(url)}
-                        />
-                        <div className="min-w-0 flex-1">
-                            <div className="text-[14px] font-bold truncate leading-tight">
-                                {currentStation
-                                    ? currentStation.name
-                                    : t.traySelectPrompt}
-                            </div>
-                            <div className="text-[11px] text-secondary truncate mt-0.5">
-                                {streamTitle
-                                    ? streamTitle
-                                    : currentStation
-                                      ? `${currentStation.genre} · ${currentStation.city}`
-                                      : t.trayClickStationHint}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                        {playerState !== 'idle' && (
-                            <button
-                                type="button"
-                                onClick={() => void api.stopPlayback()}
-                                aria-label={t.stop}
-                                title={t.stop}
-                                className="mac-glass-pill w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:text-[#FF453A] transition"
-                            >
-                                <IconStop size={14} />
-                            </button>
-                        )}
-                        <button
-                            type="button"
-                            onClick={() => void api.togglePlayPause()}
-                            aria-label={
-                                isPlaying || isBusy ? t.statusPausedSub : t.play
-                            }
-                            title={
-                                isPlaying || isBusy ? t.statusPausedSub : t.play
-                            }
-                            className={`w-9 h-9 rounded-full flex items-center justify-center text-white shadow-sm cursor-pointer transition ${
-                                isPlaying || isBusy
-                                    ? 'bg-[#30D158] hover:bg-[#28B84C]'
-                                    : 'bg-accent hover:opacity-90'
-                            }`}
-                        >
-                            {isPlaying || isBusy ? (
-                                <IconPause size={16} />
-                            ) : (
-                                <IconPlay size={16} />
-                            )}
-                        </button>
                     </div>
                 </div>
             </div>
@@ -513,15 +497,20 @@ export const TrayPopoverApp: React.FC = () => {
                                     }`}
                                 >
                                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                                        <span
-                                            className={`w-1.5 h-1.5 rounded-[2px] shrink-0 ${
-                                                active
-                                                    ? 'bg-[#30D158]'
-                                                    : st.status === 'online'
-                                                      ? 'bg-[#30D158]/70'
-                                                      : 'bg-[#FF453A]/70'
-                                            }`}
-                                        />
+                                        {active ? (
+                                            <IconPlay
+                                                size={10}
+                                                className="text-[#30D158] shrink-0 animate-pulse"
+                                            />
+                                        ) : (
+                                            <span
+                                                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                                    st.status === 'online'
+                                                        ? 'bg-[#30D158]/70'
+                                                        : 'bg-[#FF453A]/70'
+                                                }`}
+                                            />
+                                        )}
                                         <span className="font-medium truncate">
                                             {st.name}
                                         </span>
@@ -559,13 +548,13 @@ export const TrayPopoverApp: React.FC = () => {
                 </div>
             </div>
 
-            {/* 5. BOTTOM ACTION DOCK & STATS CARD (Unified 10px Radius) */}
-            <div className="mac-settings-card mt-2.5 p-3">
+            {/* 4. BOTTOM ACTION DOCK & STATS BAR */}
+            <div className="mac-settings-card mt-2.5 p-2.5 shrink-0">
                 <div className="flex items-center justify-between text-[11px] text-secondary pb-2 border-b mac-divider">
                     <button
                         type="button"
                         onClick={() => void api.openWindowTab('stations')}
-                        className="flex items-center gap-1 hover:text-current transition font-medium cursor-pointer"
+                        className="flex items-center gap-1.5 hover:text-foreground transition font-medium cursor-pointer"
                     >
                         <IconPlus size={13} />
                         <span>{t.trayAddStation}</span>
@@ -573,7 +562,7 @@ export const TrayPopoverApp: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => void api.openWindowTab('discover')}
-                        className="flex items-center gap-1 hover:text-current transition font-medium cursor-pointer"
+                        className="flex items-center gap-1.5 hover:text-foreground transition font-medium cursor-pointer"
                     >
                         <IconCompass size={13} />
                         <span>{t.trayDiscover}</span>
@@ -581,7 +570,7 @@ export const TrayPopoverApp: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => void api.openWindowTab('preferences')}
-                        className="flex items-center gap-1 hover:text-current transition font-medium cursor-pointer"
+                        className="flex items-center gap-1.5 hover:text-foreground transition font-medium cursor-pointer"
                     >
                         <IconSliders size={13} />
                         <span>{t.traySettings}</span>
@@ -589,32 +578,52 @@ export const TrayPopoverApp: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => void api.quitApp()}
-                        className="flex items-center gap-1 text-[#FF453A] hover:opacity-80 transition font-medium cursor-pointer"
+                        className="flex items-center gap-1.5 text-[#FF453A] hover:opacity-80 transition font-medium cursor-pointer"
                     >
                         <IconPower size={13} />
                         <span>{t.trayQuit}</span>
                     </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-2 text-left tabular-nums">
-                    <div>
-                        <div className="text-sm font-bold">
-                            {stations.length}
-                        </div>
-                        <div className="text-[10px] text-secondary">
-                            {t.trayStatStations}
+                <div className="grid grid-cols-3 gap-2 pt-2 text-left tabular-nums text-secondary">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <IconRadioTower
+                            size={12}
+                            className="text-muted shrink-0"
+                        />
+                        <div className="truncate">
+                            <span className="text-[12px] font-bold text-foreground mr-1">
+                                {stations.length}
+                            </span>
+                            <span className="text-[10px] text-secondary truncate">
+                                {t.trayStatStations}
+                            </span>
                         </div>
                     </div>
-                    <div>
-                        <div className="text-sm font-bold">{favCount}</div>
-                        <div className="text-[10px] text-secondary">
-                            {t.trayStatFavorites}
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <IconStar
+                            size={12}
+                            filled
+                            className="text-[#FF9F0A] shrink-0"
+                        />
+                        <div className="truncate">
+                            <span className="text-[12px] font-bold text-foreground mr-1">
+                                {favCount}
+                            </span>
+                            <span className="text-[10px] text-secondary truncate">
+                                {t.trayStatFavorites}
+                            </span>
                         </div>
                     </div>
-                    <div>
-                        <div className="text-sm font-bold">{groups.length}</div>
-                        <div className="text-[10px] text-secondary">
-                            {t.trayStatCategories}
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <IconFolder size={12} className="text-muted shrink-0" />
+                        <div className="truncate">
+                            <span className="text-[12px] font-bold text-foreground mr-1">
+                                {groups.length}
+                            </span>
+                            <span className="text-[10px] text-secondary truncate">
+                                {t.trayStatCategories}
+                            </span>
                         </div>
                     </div>
                 </div>

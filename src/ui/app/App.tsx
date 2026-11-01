@@ -735,6 +735,9 @@ export const App: React.FC = () => {
                 setIsImportExportOpen(false);
                 setIsAddingGroup(false);
                 setIsResetConfirmOpen(false);
+                setIsAboutModalOpen(false);
+                setIsQuitConfirmOpen(false);
+                setUpdateInfo(null);
             }
         };
         window.addEventListener('keydown', onKeyDown);
@@ -4357,18 +4360,6 @@ export const App: React.FC = () => {
                             >
                                 <span>{t.aboutChangelogLink}</span>
                                 <IconExternalLink size={10} />
-                            </button>
-                        </div>
-
-                        <div className="w-full pt-2 border-t mac-divider mt-1">
-                            <button
-                                type="button"
-                                onClick={() => setIsAboutModalOpen(false)}
-                                className="mac-glass-pill w-full py-1.5 rounded-[7px] text-[12px] font-medium cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition"
-                            >
-                                {settings?.language === 'en'
-                                    ? 'Close'
-                                    : 'Tutup'}
                             </button>
                         </div>
                     </div>

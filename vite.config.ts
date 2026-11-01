@@ -9,6 +9,9 @@ export default defineConfig({
     port: 1420,
     strictPort: true
   },
+  optimizeDeps: {
+    include: ['react', 'react-dom']
+  },
   build: {
     outDir: 'dist-ui',
     emptyOutDir: true,

@@ -559,6 +559,10 @@ export function initTauriBridge() {
                 return true;
             },
 
+            startDragging: async () => {
+                await invoke('start_window_drag');
+            },
+
             openWindowTab: async (tab: string) => {
                 await invoke('open_window_tab', { tab });
             },

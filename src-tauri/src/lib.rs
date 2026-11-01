@@ -283,7 +283,8 @@ pub fn run() {
             commands::open_about_window,
             commands::toggle_tray_popover,
             commands::quit_app,
-            commands::open_external
+            commands::open_external,
+            commands::start_window_drag
         ])
         .run(tauri::generate_context!())
         .expect("error while building tauri application");

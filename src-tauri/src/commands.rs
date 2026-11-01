@@ -4,6 +4,11 @@ use std::sync::Arc;
 use tauri::{AppHandle, Manager, State};
 
 #[tauri::command]
+pub fn start_window_drag(window: tauri::WebviewWindow) -> Result<(), String> {
+    window.start_dragging().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn get_proxy_port(store: State<Arc<AppStore>>) -> u16 {
     *store.proxy_port.lock().unwrap()
 }

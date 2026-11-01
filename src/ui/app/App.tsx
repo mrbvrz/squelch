@@ -64,7 +64,6 @@ import {
 import { StationAvatar } from '../components/StationAvatar';
 import { SquircleAppIcon } from '../components/SquircleAppIcon';
 import { SearchableFontPicker } from '../components/SearchableFontPicker';
-import { getCurrentWindow } from '@tauri-apps/api/window';
 import type {
     NewShowScheduleInput,
     ShowSchedule
@@ -1088,16 +1087,7 @@ export const App: React.FC = () => {
                 'button, input, a, select, textarea, [role="button"], kbd'
             )
         ) {
-            if (
-                typeof window !== 'undefined' &&
-                '__TAURI_INTERNALS__' in window
-            ) {
-                try {
-                    void getCurrentWindow().startDragging();
-                } catch {
-                    // Fallback
-                }
-            }
+            void (api as any)?.startDragging?.();
         }
     };
 

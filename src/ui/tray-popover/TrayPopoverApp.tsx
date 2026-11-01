@@ -245,17 +245,10 @@ export const TrayPopoverApp: React.FC = () => {
                             onResolveLogo={(url) => api.resolveStationLogo(url)}
                         />
                         <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-[13px] font-bold truncate leading-tight text-foreground">
-                                    {currentStation
-                                        ? currentStation.name
-                                        : t.traySelectPrompt}
-                                </span>
-                                {currentStation?.group && (
-                                    <span className="mac-glass-pill px-1.5 py-0.5 rounded-[4px] font-semibold text-[9px] uppercase tracking-wide shrink-0">
-                                        {currentStation.group}
-                                    </span>
-                                )}
+                            <div className="text-[13px] font-bold truncate leading-tight text-foreground">
+                                {currentStation
+                                    ? currentStation.name
+                                    : t.traySelectPrompt}
                             </div>
                             <div className="text-[11px] text-secondary truncate mt-0.5 flex items-center gap-1.5">
                                 <span

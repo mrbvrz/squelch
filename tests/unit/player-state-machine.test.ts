@@ -35,6 +35,29 @@ describe('PlayerStateMachine', () => {
         expect(sm.getLastError()).toBe('Network unreachable');
     });
 
+    it('transitions to reconnecting and handles retry exhaustion or recovery', () => {
+        const sm = new PlayerStateMachine();
+        sm.transition({ type: 'PLAY' });
+        sm.transition({ type: 'PLAYING' });
+
+        // Network issue triggers reconnect
+        const recon = sm.transition({ type: 'RECONNECT', attempt: 1 });
+        expect(recon.currentState).toBe('reconnecting');
+        expect(sm.getReconnectAttempt()).toBe(1);
+
+        // When reconnect succeeds
+        const recovered = sm.transition({ type: 'PLAYING' });
+        expect(recovered.currentState).toBe('playing');
+        expect(sm.getReconnectAttempt()).toBe(0);
+
+        // Prolonged stall again: retries exhausted -> STOP
+        sm.transition({ type: 'RECONNECT', attempt: 8 });
+        expect(sm.getState()).toBe('reconnecting');
+        const stopped = sm.transition({ type: 'STOP' });
+        expect(stopped.currentState).toBe('idle');
+        expect(sm.getReconnectAttempt()).toBe(0);
+    });
+
     it('prevents illegal transitions', () => {
         const sm = new PlayerStateMachine();
         expect(sm.getState()).toBe('idle');

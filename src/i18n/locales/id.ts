@@ -351,5 +351,12 @@ export const idLocale: TranslationDictionary = {
     updatesViewNotes: 'Lihat Catatan Rilis di GitHub',
     updatesDismiss: 'Nanti Saja',
     updatesChangelogLabel: 'Catatan Perubahan (Changelog)',
-    updatesError: 'Gagal memeriksa pembaruan'
+    updatesError: 'Gagal memeriksa pembaruan',
+
+    // System Notifications
+    notifConnectionLostTitle: 'Koneksi Terputus',
+    notifReconnectFailedBody:
+        'Gagal menyambung ulang ke {station} setelah {attempts} percobaan. Pemutaran dihentikan.',
+    notifTimeoutStoppedBody:
+        'Gagal memuat {station} karena kendala jaringan. Pemutaran dihentikan.'
 };

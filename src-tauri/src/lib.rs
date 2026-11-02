@@ -226,7 +226,10 @@ pub fn run() {
                         guard.clone()
                     };
 
-                    if current_state == "playing" || current_state == "buffering" {
+                    if current_state == "playing"
+                        || current_state == "buffering"
+                        || current_state == "reconnecting"
+                    {
                         frame_idx = (frame_idx + 1) % 12;
                         let bytes = if current_state == "playing" {
                             PLAYING_ICONS[frame_idx]

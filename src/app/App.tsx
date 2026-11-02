@@ -125,6 +125,9 @@ export const App: React.FC = () => {
 
     // Player states
     const [playerState, setPlayerState] = useState<PlayerState>('idle');
+    const [reconnectAttempt, setReconnectAttempt] = useState<number | null>(
+        null
+    );
     const [currentStation, setCurrentStation] = useState<Station | null>(null);
     const [streamTitle, setStreamTitle] = useState<string | null>(null);
     const [sleepRemainingSec, setSleepRemainingSec] = useState<number | null>(
@@ -238,6 +241,7 @@ export const App: React.FC = () => {
         setStations(stData.stations);
         setGroups(stData.groups);
         setPlayerState(player.state);
+        setReconnectAttempt(player.reconnectAttempt ?? null);
         setCurrentStation(player.currentStation);
         setStreamTitle(player.streamTitle);
         setSleepRemainingSec(player.sleepTimerRemainingSec);
@@ -608,7 +612,9 @@ export const App: React.FC = () => {
             case 'reconnecting':
                 return {
                     main: 'RETRY',
-                    sub: t.statusReconnectingSub,
+                    sub: reconnectAttempt
+                        ? `${t.statusReconnectingSub} (${reconnectAttempt})`
+                        : t.statusReconnectingSub,
                     color: '#FF9F0A'
                 };
             case 'paused':

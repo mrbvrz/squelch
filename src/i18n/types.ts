@@ -321,4 +321,9 @@ export interface TranslationDictionary {
     updatesDismiss: string;
     updatesChangelogLabel: string;
     updatesError: string;
+
+    // System Notifications
+    notifConnectionLostTitle: string;
+    notifReconnectFailedBody: string;
+    notifTimeoutStoppedBody: string;
 }

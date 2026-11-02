@@ -5,7 +5,7 @@ import type {
     StreamTestResult,
     DiscoverStationItem,
     RadioBrowserCountry,
-    PlayerState,
+    PlayerStatus,
     ListeningStatsSummary,
     ShowSchedule,
     NewShowScheduleInput
@@ -41,13 +41,7 @@ export const CHANGELOG_DOC_URL =
     'https://github.com/mrbvrz/squelch/blob/main/CHANGELOG.md';
 
 export interface SquelchWindowApi {
-    getPlayerStatus: () => Promise<{
-        state: PlayerState;
-        currentStation: Station | null;
-        streamTitle: string | null;
-        sleepTimerMinutes: number | null;
-        sleepTimerRemainingSec: number | null;
-    }>;
+    getPlayerStatus: () => Promise<PlayerStatus>;
     playStation: (stationId: string | Partial<Station>) => Promise<boolean>;
     togglePlayPause: () => Promise<boolean>;
     stopPlayback: () => Promise<boolean>;

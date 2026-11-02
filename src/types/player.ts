@@ -41,4 +41,5 @@ export interface PlayerStatus {
     streamTitle: string | null;
     sleepTimerMinutes: number | null;
     sleepTimerRemainingSec: number | null;
+    reconnectAttempt?: number | null;
 }

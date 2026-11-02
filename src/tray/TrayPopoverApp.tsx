@@ -3,7 +3,8 @@ import type {
     Station,
     StationsDataSchema,
     AppSettings,
-    PlayerState
+    PlayerState,
+    PlayerStatus
 } from '../types';
 import { getTranslations } from '../i18n';
 import {
@@ -26,13 +27,7 @@ import {
 import { StationAvatar } from '../components/StationAvatar';
 
 interface SquelchTrayPopoverApi {
-    getPlayerStatus: () => Promise<{
-        state: PlayerState;
-        currentStation: Station | null;
-        streamTitle: string | null;
-        sleepTimerMinutes: number | null;
-        sleepTimerRemainingSec: number | null;
-    }>;
+    getPlayerStatus: () => Promise<PlayerStatus>;
     playStation: (stationId: string) => Promise<boolean>;
     togglePlayPause: () => Promise<boolean>;
     stopPlayback: () => Promise<boolean>;
@@ -57,6 +52,9 @@ export const TrayPopoverApp: React.FC = () => {
     const api = window.squelchApi as SquelchTrayPopoverApi;
 
     const [playerState, setPlayerState] = useState<PlayerState>('idle');
+    const [reconnectAttempt, setReconnectAttempt] = useState<number | null>(
+        null
+    );
     const [currentStation, setCurrentStation] = useState<Station | null>(null);
     const [streamTitle, setStreamTitle] = useState<string | null>(null);
     const [sleepMinutes, setSleepMinutes] = useState<number | null>(null);
@@ -126,6 +124,7 @@ export const TrayPopoverApp: React.FC = () => {
             api.getSettings()
         ]);
         setPlayerState(status.state);
+        setReconnectAttempt(status.reconnectAttempt ?? null);
         setCurrentStation(status.currentStation);
         setStreamTitle(status.streamTitle);
         setSleepMinutes(status.sleepTimerMinutes);
@@ -217,7 +216,9 @@ export const TrayPopoverApp: React.FC = () => {
             case 'reconnecting':
                 return {
                     main: 'RETRY',
-                    sub: t.statusReconnectingSub,
+                    sub: reconnectAttempt
+                        ? `${t.statusReconnectingSub} (${reconnectAttempt})`
+                        : t.statusReconnectingSub,
                     color: '#FF9F0A'
                 };
             case 'paused':

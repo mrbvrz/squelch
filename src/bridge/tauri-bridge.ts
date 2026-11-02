@@ -13,11 +13,13 @@ import {
 } from '../utils/playlist';
 
 interface PlayerStatus {
-    state: 'idle' | 'buffering' | 'playing' | 'paused' | 'error';
+    state:
+        'idle' | 'buffering' | 'playing' | 'paused' | 'error' | 'reconnecting';
     currentStation: any | null;
     streamTitle: string | null;
     sleepTimerMinutes: number | null;
     sleepTimerRemainingSec: number | null;
+    reconnectAttempt?: number | null;
 }
 
 let playerStatus: PlayerStatus = {
@@ -25,7 +27,8 @@ let playerStatus: PlayerStatus = {
     currentStation: null,
     streamTitle: null,
     sleepTimerMinutes: null,
-    sleepTimerRemainingSec: null
+    sleepTimerRemainingSec: null,
+    reconnectAttempt: null
 };
 
 let sleepInterval: any = null;
@@ -354,12 +357,20 @@ export function initTauriBridge() {
         if (payload?.state) {
             if (payload.state === 'playing') {
                 lastTickTimeMs = Date.now();
+                playerStatus.reconnectAttempt = null;
             } else if (playerStatus.state === 'playing') {
                 recordListeningTick();
                 lastTickTimeMs = null;
                 void flushStatsToDisk();
             }
             playerStatus.state = payload.state;
+            if (payload.state === 'idle') {
+                playerStatus.currentStation = null;
+                playerStatus.streamTitle = null;
+                playerStatus.reconnectAttempt = null;
+            } else if (payload.state === 'reconnecting') {
+                playerStatus.reconnectAttempt = payload.attempt ?? null;
+            }
             syncPlayerStatusToRust();
             emit('ui:state-changed', { ...playerStatus });
         }
@@ -537,6 +548,7 @@ export function initTauriBridge() {
             },
             notifyPlaying: () => {
                 playerStatus.state = 'playing';
+                playerStatus.reconnectAttempt = null;
                 lastTickTimeMs = Date.now();
                 void invoke('set_tray_state', { stateName: 'playing' });
                 emit('squelch:audio:state', { state: 'playing' });
@@ -555,12 +567,48 @@ export function initTauriBridge() {
                 syncPlayerStatusToRust();
                 emit('ui:state-changed', { ...playerStatus });
             },
+            notifyReconnecting: (attempt: number, maxAttempts: number) => {
+                if (playerStatus.state === 'playing') {
+                    recordListeningTick();
+                    void flushStatsToDisk();
+                }
+                playerStatus.state = 'reconnecting';
+                playerStatus.reconnectAttempt = attempt;
+                lastTickTimeMs = null;
+                void invoke('set_tray_state', { stateName: 'reconnecting' });
+                emit('squelch:audio:state', {
+                    state: 'reconnecting',
+                    attempt,
+                    maxAttempts
+                });
+                syncPlayerStatusToRust();
+                emit('ui:state-changed', {
+                    ...playerStatus,
+                    reconnectAttempt: attempt
+                });
+            },
+            notifyStopped: () => {
+                if (playerStatus.state === 'playing') {
+                    recordListeningTick();
+                    lastTickTimeMs = null;
+                    void flushStatsToDisk();
+                }
+                playerStatus.state = 'idle';
+                playerStatus.currentStation = null;
+                playerStatus.streamTitle = null;
+                playerStatus.reconnectAttempt = null;
+                void invoke('set_tray_state', { stateName: 'idle' });
+                emit('squelch:audio:state', { state: 'idle' });
+                syncPlayerStatusToRust();
+                emit('ui:state-changed', { ...playerStatus });
+            },
             notifyError: (msg: string) => {
                 if (playerStatus.state === 'playing') {
                     recordListeningTick();
                     void flushStatsToDisk();
                 }
                 playerStatus.state = 'error';
+                playerStatus.reconnectAttempt = null;
                 lastTickTimeMs = null;
                 void invoke('set_tray_state', { stateName: 'error' });
                 emit('squelch:audio:state', { state: 'error', message: msg });
@@ -703,11 +751,22 @@ export function initTauriBridge() {
                     lastTickTimeMs = null;
                     void flushStatsToDisk();
                     playerStatus.state = 'paused';
+                    playerStatus.reconnectAttempt = null;
+                    void invoke('set_tray_state', { stateName: 'idle' });
+                    syncPlayerStatusToRust();
+                    await emit('squelch:audio:command', { type: 'pause' });
+                } else if (
+                    playerStatus.state === 'buffering' ||
+                    playerStatus.state === 'reconnecting'
+                ) {
+                    playerStatus.state = 'paused';
+                    playerStatus.reconnectAttempt = null;
                     void invoke('set_tray_state', { stateName: 'idle' });
                     syncPlayerStatusToRust();
                     await emit('squelch:audio:command', { type: 'pause' });
                 } else if (playerStatus.currentStation) {
                     playerStatus.state = 'buffering';
+                    playerStatus.reconnectAttempt = null;
                     void invoke('set_tray_state', { stateName: 'buffering' });
                     syncPlayerStatusToRust();
                     await (window as any).squelchApi.playStation(
@@ -739,6 +798,7 @@ export function initTauriBridge() {
                 playerStatus.state = 'idle';
                 playerStatus.currentStation = null;
                 playerStatus.streamTitle = null;
+                playerStatus.reconnectAttempt = null;
                 void invoke('set_tray_state', { stateName: 'idle' });
                 syncPlayerStatusToRust();
                 await emit('squelch:audio:command', { type: 'stop' });

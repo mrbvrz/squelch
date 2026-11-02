@@ -351,5 +351,12 @@ export const enLocale: TranslationDictionary = {
     updatesViewNotes: 'View Release Notes on GitHub',
     updatesDismiss: 'Later',
     updatesChangelogLabel: 'Release Notes',
-    updatesError: 'Failed to check for updates'
+    updatesError: 'Failed to check for updates',
+
+    // System Notifications
+    notifConnectionLostTitle: 'Connection Lost',
+    notifReconnectFailedBody:
+        'Failed to reconnect to {station} after {attempts} attempts. Playback stopped.',
+    notifTimeoutStoppedBody:
+        'Failed to connect to {station} due to network timeout. Playback stopped.'
 };

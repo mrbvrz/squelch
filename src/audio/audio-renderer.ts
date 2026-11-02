@@ -155,9 +155,27 @@ class AudioEqualizerEngine {
     const eqEngine = new AudioEqualizerEngine();
     let currentBufferLengthSeconds = 5;
     let currentEqualizerConfig: EqualizerPayload | null = null;
+    let currentVolume = 1.0;
+    let currentMuted = false;
 
     let hlsInstance: Hls | null = null;
     let currentStationName = 'Squelch';
+
+    // Real-time listener for Volume and Mute updates
+    listen<{ volume?: number; muted?: boolean }>(
+        'squelch:audio:volume',
+        (event) => {
+            const payload = event.payload;
+            if (typeof payload?.volume === 'number') {
+                currentVolume = Math.max(0, Math.min(1, payload.volume));
+                audioEl.volume = currentVolume;
+            }
+            if (typeof payload?.muted === 'boolean') {
+                currentMuted = Boolean(payload.muted);
+                audioEl.muted = currentMuted;
+            }
+        }
+    ).catch(() => {});
 
     // Real-time listener for EQ updates from UI
     listen<EqualizerPayload>('squelch:audio:eq', (event) => {
@@ -281,8 +299,8 @@ class AudioEqualizerEngine {
         switch (cmd.type) {
             case 'play': {
                 destroyHls();
-                audioEl.volume = 1.0;
-                audioEl.muted = false;
+                audioEl.volume = currentVolume;
+                audioEl.muted = currentMuted;
 
                 if (cmd.bufferLengthSeconds) {
                     currentBufferLengthSeconds =

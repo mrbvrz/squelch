@@ -5,11 +5,12 @@ mod store;
 use std::sync::Arc;
 use store::AppStore;
 use tauri::{
-    Emitter, Manager,
     image::Image,
     menu::{MenuBuilder, MenuItemBuilder},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    Emitter, Manager,
 };
+
 use tauri_plugin_positioner::{Position, WindowExt};
 
 static IDLE_ICON: &[u8] = include_bytes!("../icons/tray/tray_idle.png");
@@ -50,6 +51,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_positioner::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(

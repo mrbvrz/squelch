@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { AppSettings } from '../../types';
 import { SUPPORTED_LOCALES, type TranslationDictionary } from '../../i18n';
 import type { SquelchWindowApi } from '../types';
@@ -8,6 +8,12 @@ import { ThemePreviewCard } from '../../components/ThemePreviewCard';
 import { MacToggle } from '../../components/MacToggle';
 import { SearchableFontPicker } from '../../components/SearchableFontPicker';
 import { AudioEqualizerCard } from '../../components/AudioEqualizerCard';
+import { KeyboardShortcutRecorder } from '../../components/KeyboardShortcutRecorder';
+import { ShortcutCheatSheetModal } from '../../components/ShortcutCheatSheetModal';
+import {
+    GLOBAL_SHORTCUT_DEFINITIONS,
+    type ShortcutActionKey
+} from '../../utils/shortcuts';
 import {
     IconArrowDownTray,
     IconBackup,
@@ -84,6 +90,17 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     api,
     t
 }) => {
+    const [isCheatSheetOpen, setIsCheatSheetOpen] = useState(false);
+
+    const handleUpdateShortcut = (key: ShortcutActionKey, newAccel: string) => {
+        void api.updateSettings({
+            shortcuts: {
+                ...settings.shortcuts,
+                [key]: newAccel
+            }
+        });
+    };
+
     return (
         <div
             key="tab-preferences"
@@ -501,52 +518,61 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
             {/* Group 4: Global Shortcuts */}
             <div>
                 <div className="flex items-center justify-between mb-2 px-1">
-                    <h2 className="text-[13px] font-bold">{t.prefShortcuts}</h2>
-                    <span className="text-[11px] text-secondary">
-                        {t.prefShortcutRecordHint}
-                    </span>
+                    <div>
+                        <h2 className="text-[13px] font-bold flex items-center gap-1.5">
+                            <IconKey size={14} className="text-accent" />
+                            <span>{t.prefShortcuts}</span>
+                        </h2>
+                        <p className="text-[11px] text-secondary mt-0.5">
+                            {t.prefShortcutRecordHint}
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => setIsCheatSheetOpen(true)}
+                        className="mac-glass-pill px-2.5 py-1 rounded-[6px] text-[11px] font-medium flex items-center gap-1.5 text-secondary hover:text-foreground cursor-pointer transition shadow-xs"
+                    >
+                        <span>{t.prefShortcutCheatSheetBtn}</span>
+                        <kbd className="px-1.5 py-0.2 rounded font-mono text-[9px] bg-black/5 dark:bg-white/10 font-bold border border-black/10 dark:border-white/10">
+                            ?
+                        </kbd>
+                    </button>
                 </div>
-                <div className="mac-settings-card mac-inset-list">
-                    {(
-                        [
-                            ['playPause', t.prefShortcutPlayPause],
-                            ['nextStation', t.prefShortcutNext],
-                            ['prevStation', t.prefShortcutPrev]
-                        ] as Array<[keyof AppSettings['shortcuts'], string]>
-                    ).map(([key, label]) => {
-                        const isRecording = recordingShortcutKey === key;
+
+                <div className="mac-settings-card mac-inset-list rounded-xl overflow-hidden divide-y mac-divider">
+                    {GLOBAL_SHORTCUT_DEFINITIONS.map((def) => {
+                        const isRecording = recordingShortcutKey === def.key;
+                        const currentValue =
+                            settings.shortcuts?.[def.key] ?? '';
                         return (
-                            <div
-                                key={key}
-                                className="px-4 py-3 flex items-center justify-between gap-4"
-                            >
-                                <span className="text-[13px] font-medium">
-                                    {label}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setRecordingShortcutKey(
-                                            isRecording ? null : key
-                                        )
-                                    }
-                                    className={`px-3.5 py-1.5 rounded-[7px] font-mono text-[11px] min-w-[200px] flex items-center justify-center gap-1.5 cursor-pointer transition ${
-                                        isRecording
-                                            ? 'bg-accent text-white ring-2 ring-accent/40 animate-pulse'
-                                            : 'mac-glass-pill'
-                                    }`}
-                                >
-                                    <IconKey size={12} />
-                                    <span>
-                                        {isRecording
-                                            ? t.prefShortcutRecording
-                                            : settings.shortcuts[key]}
-                                    </span>
-                                </button>
-                            </div>
+                            <KeyboardShortcutRecorder
+                                key={def.key}
+                                definition={def}
+                                currentValue={currentValue}
+                                allShortcuts={settings.shortcuts}
+                                isRecording={isRecording}
+                                onStartRecording={() =>
+                                    setRecordingShortcutKey(def.key)
+                                }
+                                onStopRecording={() =>
+                                    setRecordingShortcutKey(null)
+                                }
+                                onChange={handleUpdateShortcut}
+                                lang={lang}
+                                t={t}
+                            />
                         );
                     })}
                 </div>
+
+                <ShortcutCheatSheetModal
+                    isOpen={isCheatSheetOpen}
+                    onClose={() => setIsCheatSheetOpen(false)}
+                    shortcuts={settings.shortcuts}
+                    lang={lang}
+                    t={t}
+                />
             </div>
 
             {/* Group 5: Backup & Restore Data */}

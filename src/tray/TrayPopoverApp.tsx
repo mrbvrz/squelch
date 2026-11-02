@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type {
     Station,
     StationsDataSchema,
@@ -70,8 +70,54 @@ export const TrayPopoverApp: React.FC = () => {
     const [activeFilter, setActiveFilter] = useState<string>('ALL');
     const [searchText, setSearchText] = useState<string>('');
     const [tick, setTick] = useState<number>(0);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     const t = getTranslations(settings?.language);
+
+    useEffect(() => {
+        const handlePopoverKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement | null;
+            const isEditing = target && target.tagName === 'INPUT';
+
+            if (e.key === 'Escape') {
+                if (searchText) {
+                    setSearchText('');
+                    target?.blur();
+                    return;
+                }
+                return;
+            }
+
+            if (
+                ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') ||
+                (!isEditing && e.key === '/' && !e.metaKey && !e.ctrlKey)
+            ) {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+                searchInputRef.current?.select();
+                return;
+            }
+
+            if (isEditing) return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                void api.togglePlayPause();
+                return;
+            }
+
+            if (e.key.toLowerCase() === 'm') {
+                e.preventDefault();
+                const globalApi = (window as any).squelchApi;
+                void globalApi?.toggleMute?.();
+                return;
+            }
+        };
+
+        window.addEventListener('keydown', handlePopoverKeyDown);
+        return () =>
+            window.removeEventListener('keydown', handlePopoverKeyDown);
+    }, [searchText, api]);
 
     const loadData = async () => {
         const [status, stData, cfg] = await Promise.all([
@@ -431,6 +477,7 @@ export const TrayPopoverApp: React.FC = () => {
                         className="absolute left-2.5 text-muted pointer-events-none"
                     />
                     <input
+                        ref={searchInputRef}
                         type="text"
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}

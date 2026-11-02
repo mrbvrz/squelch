@@ -42,6 +42,7 @@ import { ImportExportModal } from './modals/ImportExportModal';
 import { ResetConfirmModal } from './modals/ResetConfirmModal';
 import { QuitConfirmModal } from './modals/QuitConfirmModal';
 import { AboutModal } from './modals/AboutModal';
+import { ShortcutCheatSheetModal } from '../components/ShortcutCheatSheetModal';
 
 declare global {
     interface Window {
@@ -61,39 +62,6 @@ function isScheduleCurrentlyOnAir(sched: ShowSchedule): boolean {
     const startMin = (sH || 0) * 60 + (sM || 0);
     const endMin = (eH || 0) * 60 + (eM || 0);
     return currentMinutes >= startMin && currentMinutes < endMin;
-}
-
-function formatKeyboardEventToAccelerator(e: KeyboardEvent): string | null {
-    const ignoredKeys = new Set([
-        'Meta',
-        'Control',
-        'Shift',
-        'Alt',
-        'CapsLock',
-        'Tab'
-    ]);
-    if (ignoredKeys.has(e.key)) return null;
-
-    const parts: string[] = [];
-    if (e.metaKey || e.ctrlKey) parts.push('CommandOrControl');
-    if (e.altKey) parts.push('Alt');
-    if (e.shiftKey) parts.push('Shift');
-
-    let mainKey = e.key;
-    if (mainKey === ' ') mainKey = 'Space';
-    else if (mainKey === 'ArrowUp') mainKey = 'Up';
-    else if (mainKey === 'ArrowDown') mainKey = 'Down';
-    else if (mainKey === 'ArrowLeft') mainKey = 'Left';
-    else if (mainKey === 'ArrowRight') mainKey = 'Right';
-    else if (mainKey.length === 1) mainKey = mainKey.toUpperCase();
-
-    // Require at least one modifier unless it's a Function/Media key
-    if (parts.length === 0 && !/^F\d+$|^Media/i.test(mainKey)) {
-        parts.push('CommandOrControl');
-    }
-
-    parts.push(mainKey);
-    return parts.join('+');
 }
 
 export const App: React.FC = () => {
@@ -231,6 +199,7 @@ export const App: React.FC = () => {
         null
     );
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
+    const [isCheatSheetOpen, setIsCheatSheetOpen] = useState<boolean>(false);
     const [notifTestSuccess, setNotifTestSuccess] = useState<boolean>(false);
 
     // Show Schedules
@@ -486,40 +455,25 @@ export const App: React.FC = () => {
         }
     }, [settings?.autoCheckUpdates]);
 
-    // Direct Keyboard Shortcut Recorder Listener
+    // Comprehensive In-App Keyboard Shortcuts & Navigation
     useEffect(() => {
-        if (!recordingShortcutKey || !settings) return;
-
-        const handleRecordKeyDown = (e: KeyboardEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            if (e.key === 'Escape') {
-                setRecordingShortcutKey(null);
-                return;
-            }
-
-            const accel = formatKeyboardEventToAccelerator(e);
-            if (!accel) return;
-
-            void api.updateSettings({
-                shortcuts: {
-                    ...settings.shortcuts,
-                    [recordingShortcutKey]: accel
-                }
-            });
-            setRecordingShortcutKey(null);
-        };
-
-        window.addEventListener('keydown', handleRecordKeyDown, true);
-        return () =>
-            window.removeEventListener('keydown', handleRecordKeyDown, true);
-    }, [recordingShortcutKey, settings]);
-
-    useEffect(() => {
-        const onKeyDown = (e: KeyboardEvent) => {
+        const handleInAppKeyDown = (e: KeyboardEvent) => {
+            // When actively recording a shortcut in Preferences, do not intercept
             if (recordingShortcutKey) return;
+
+            const target = e.target as HTMLElement | null;
+            const isEditingText =
+                target &&
+                (target.tagName === 'INPUT' ||
+                    target.tagName === 'TEXTAREA' ||
+                    target.isContentEditable);
+
+            // Escape closes open modals or clears active search
             if (e.key === 'Escape') {
+                if (isEditingText) {
+                    target.blur();
+                    return;
+                }
                 setIsFormOpen(false);
                 setIsImportExportOpen(false);
                 setIsAddingGroup(false);
@@ -527,11 +481,113 @@ export const App: React.FC = () => {
                 setIsAboutModalOpen(false);
                 setIsQuitConfirmOpen(false);
                 setUpdateInfo(null);
+                setIsCheatSheetOpen(false);
+                setIsScheduleModalOpen(false);
+                setIsUpdateModalOpen(false);
+                setIsOnboardingOpen(false);
+                return;
+            }
+
+            // ⌘F or Ctrl+F (or '/' when not editing text): Focus search
+            if (
+                ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') ||
+                (!isEditingText && e.key === '/' && !e.metaKey && !e.ctrlKey)
+            ) {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+                searchInputRef.current?.select();
+                return;
+            }
+
+            // ⌘, or Ctrl+, : Open Preferences
+            if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+                e.preventDefault();
+                navigateToTab('preferences');
+                return;
+            }
+
+            // ⌘1 to ⌘6: Quick switch tabs
+            if (e.metaKey || e.ctrlKey) {
+                const tabNum = parseInt(e.key, 10);
+                const tabs: ActiveTab[] = [
+                    'stations',
+                    'schedules',
+                    'discover',
+                    'stats',
+                    'preferences',
+                    'about'
+                ];
+                if (!isNaN(tabNum) && tabNum >= 1 && tabNum <= tabs.length) {
+                    e.preventDefault();
+                    navigateToTab(tabs[tabNum - 1]);
+                    return;
+                }
+            }
+
+            // ⌘R or F5: Reconnect stream
+            if (
+                ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'r') ||
+                e.key === 'F5'
+            ) {
+                if (currentStation) {
+                    e.preventDefault();
+                    void api.playStation(currentStation.id);
+                    return;
+                }
+            }
+
+            // '?' key: Open Shortcut Cheat Sheet
+            if (!isEditingText && e.key === '?' && !e.metaKey && !e.ctrlKey) {
+                e.preventDefault();
+                setIsCheatSheetOpen((prev) => !prev);
+                return;
+            }
+
+            // The following controls are only active when NOT editing text
+            if (isEditingText) return;
+
+            // Space: Toggle Play/Pause
+            if (e.code === 'Space') {
+                e.preventDefault();
+                void api.togglePlayPause();
+                return;
+            }
+
+            // ArrowRight / ArrowLeft: Next / Prev station
+            if (e.key === 'ArrowRight' || e.key === 'l') {
+                e.preventDefault();
+                void api.nextStation();
+                return;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'h') {
+                e.preventDefault();
+                void api.prevStation();
+                return;
+            }
+
+            // ArrowUp / ArrowDown: Volume adjustments
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                void api.changeVolume(0.05);
+                return;
+            }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                void api.changeVolume(-0.05);
+                return;
+            }
+
+            // 'm' or 'M': Toggle Mute
+            if (e.key.toLowerCase() === 'm') {
+                e.preventDefault();
+                void api.toggleMute();
+                return;
             }
         };
-        window.addEventListener('keydown', onKeyDown);
-        return () => window.removeEventListener('keydown', onKeyDown);
-    }, [recordingShortcutKey]);
+
+        window.addEventListener('keydown', handleInAppKeyDown);
+        return () => window.removeEventListener('keydown', handleInAppKeyDown);
+    }, [recordingShortcutKey, currentStation, navigateToTab, api]);
 
     const isPlaying = playerState === 'playing';
     const isBusy =
@@ -1286,6 +1342,16 @@ export const App: React.FC = () => {
                 }
                 t={t}
             />
+
+            {settings && (
+                <ShortcutCheatSheetModal
+                    isOpen={isCheatSheetOpen}
+                    onClose={() => setIsCheatSheetOpen(false)}
+                    shortcuts={settings.shortcuts}
+                    lang={lang}
+                    t={t}
+                />
+            )}
         </div>
     );
 };

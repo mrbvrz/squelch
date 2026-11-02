@@ -32,6 +32,7 @@ bytes = "1"
 futures-util = "0.3"
 axum = "0.8"
 tokio-stream = { version = "0.1", features = ["sync"] }
+tauri-plugin-global-shortcut = "2"
 
 [profile.release]
 opt-level = "z"

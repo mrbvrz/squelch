@@ -28,6 +28,8 @@ let playerStatus: PlayerStatus = {
 };
 
 let sleepInterval: any = null;
+let currentAudioVolume = 1.0;
+let isAudioMuted = false;
 
 function syncPlayerStatusToRust() {
     void invoke('update_player_status', { status: playerStatus }).catch(
@@ -362,15 +364,93 @@ export function initTauriBridge() {
         }
     });
 
-    // Listen to tray context menu actions
+    // Listen to tray context menu and global shortcut actions
     listen('squelch:action', async (event: any) => {
         const action = event.payload?.action || event.payload;
+        const api = (window as any).squelchApi;
+        if (!api) return;
+
         if (action === 'toggle-play-pause') {
-            await (window as any).squelchApi?.togglePlayPause();
+            await api.togglePlayPause();
         } else if (action === 'stop') {
-            await (window as any).squelchApi?.stopPlayback();
+            await api.stopPlayback();
+        } else if (action === 'next-station') {
+            await api.nextStation();
+        } else if (action === 'prev-station') {
+            await api.prevStation();
+        } else if (action === 'toggle-mute') {
+            await api.toggleMute();
+        } else if (action === 'volume-up') {
+            await api.changeVolume(0.05);
+        } else if (action === 'volume-down') {
+            await api.changeVolume(-0.05);
+        } else if (action === 'toggle-app') {
+            await api.toggleTrayPopover();
         }
     });
+
+    // Global Shortcuts Engine (active in background audio worker)
+    const isAudioWorker =
+        typeof window !== 'undefined' &&
+        window.location.pathname.includes('audio.html');
+
+    if (isAudioWorker) {
+        const syncGlobalShortcuts = async (shortcuts?: any) => {
+            if (
+                typeof window === 'undefined' ||
+                !(window as any).__TAURI_INTERNALS__
+            ) {
+                return;
+            }
+            try {
+                const { register, unregisterAll } =
+                    await import('@tauri-apps/plugin-global-shortcut');
+                await unregisterAll();
+                if (!shortcuts || typeof shortcuts !== 'object') return;
+
+                const registerItem = async (
+                    accel: string | undefined,
+                    action: string
+                ) => {
+                    if (!accel || !accel.trim()) return;
+                    try {
+                        await register(accel.trim(), (event) => {
+                            if (event.state === 'Pressed') {
+                                void emit('squelch:action', { action });
+                            }
+                        });
+                    } catch (err) {
+                        console.warn(
+                            `[GlobalShortcuts] Failed to register "${accel}" for ${action}:`,
+                            err
+                        );
+                    }
+                };
+
+                await registerItem(shortcuts.playPause, 'toggle-play-pause');
+                await registerItem(shortcuts.nextStation, 'next-station');
+                await registerItem(shortcuts.prevStation, 'prev-station');
+                await registerItem(shortcuts.toggleMute, 'toggle-mute');
+                await registerItem(shortcuts.volumeUp, 'volume-up');
+                await registerItem(shortcuts.volumeDown, 'volume-down');
+                await registerItem(shortcuts.showHideApp, 'toggle-app');
+            } catch (err) {
+                console.warn('[GlobalShortcuts] Init failed:', err);
+            }
+        };
+
+        // Initial setup of global shortcuts
+        void invoke('get_settings').then((res: any) => {
+            if (res?.shortcuts) {
+                void syncGlobalShortcuts(res.shortcuts);
+            }
+        });
+
+        // Listen for shortcut preference changes
+        void listen('squelch:shortcuts:sync', (event: any) => {
+            void syncGlobalShortcuts(event.payload);
+        });
+    }
 
     // Background Schedule Runner (checks every 20s for reminders and autoplay)
     const triggeredSlots = new Set<string>();
@@ -636,6 +716,18 @@ export function initTauriBridge() {
                     await (window as any).squelchApi.playStation(
                         playerStatus.currentStation.id
                     );
+                } else {
+                    try {
+                        const data: any = await invoke('get_stations_data');
+                        const stations = data?.stations || [];
+                        if (stations.length > 0) {
+                            await (window as any).squelchApi.playStation(
+                                stations[0].id
+                            );
+                        }
+                    } catch {
+                        // ignore
+                    }
                 }
                 await emit('ui:state-changed', { ...playerStatus });
                 return true;
@@ -655,6 +747,99 @@ export function initTauriBridge() {
                 await emit('squelch:audio:command', { type: 'stop' });
                 await emit('ui:state-changed', { ...playerStatus });
                 return true;
+            },
+
+            nextStation: async () => {
+                try {
+                    const data: any = await invoke('get_stations_data');
+                    const stations = data?.stations || [];
+                    if (stations.length === 0) return false;
+                    const currentIndex = stations.findIndex(
+                        (s: any) => s.id === playerStatus.currentStation?.id
+                    );
+                    const nextIndex =
+                        currentIndex >= 0
+                            ? (currentIndex + 1) % stations.length
+                            : 0;
+                    return await (window as any).squelchApi.playStation(
+                        stations[nextIndex].id
+                    );
+                } catch {
+                    return false;
+                }
+            },
+
+            prevStation: async () => {
+                try {
+                    const data: any = await invoke('get_stations_data');
+                    const stations = data?.stations || [];
+                    if (stations.length === 0) return false;
+                    const currentIndex = stations.findIndex(
+                        (s: any) => s.id === playerStatus.currentStation?.id
+                    );
+                    const prevIndex =
+                        currentIndex > 0
+                            ? currentIndex - 1
+                            : stations.length - 1;
+                    return await (window as any).squelchApi.playStation(
+                        stations[prevIndex].id
+                    );
+                } catch {
+                    return false;
+                }
+            },
+
+            toggleMute: async () => {
+                isAudioMuted = !isAudioMuted;
+                await emit('squelch:audio:volume', {
+                    volume: currentAudioVolume,
+                    muted: isAudioMuted
+                });
+                await emit('ui:state-changed', {
+                    ...playerStatus,
+                    isMuted: isAudioMuted,
+                    volume: currentAudioVolume
+                });
+                return isAudioMuted;
+            },
+
+            changeVolume: async (delta: number) => {
+                currentAudioVolume = Math.max(
+                    0,
+                    Math.min(
+                        1,
+                        Math.round((currentAudioVolume + delta) * 100) / 100
+                    )
+                );
+                isAudioMuted = false;
+                await emit('squelch:audio:volume', {
+                    volume: currentAudioVolume,
+                    muted: false
+                });
+                await emit('ui:state-changed', {
+                    ...playerStatus,
+                    volume: currentAudioVolume,
+                    isMuted: false
+                });
+                return currentAudioVolume;
+            },
+
+            setVolume: async (vol: number) => {
+                currentAudioVolume = Math.max(
+                    0,
+                    Math.min(1, Math.round(vol * 100) / 100)
+                );
+                isAudioMuted = false;
+                await emit('squelch:audio:volume', {
+                    volume: currentAudioVolume,
+                    muted: false
+                });
+                await emit('ui:state-changed', {
+                    ...playerStatus,
+                    volume: currentAudioVolume,
+                    isMuted: false
+                });
+                return currentAudioVolume;
             },
 
             sendNotification: async (
@@ -1065,6 +1250,12 @@ export function initTauriBridge() {
                                 res.settings.bufferLengthSeconds
                         });
                     }
+                    if (partial?.shortcuts !== undefined) {
+                        void emit(
+                            'squelch:shortcuts:sync',
+                            res.settings.shortcuts
+                        );
+                    }
                 }
                 await emit('ui:state-changed', { type: 'settings', ...res });
                 return res?.settings;
@@ -1078,6 +1269,7 @@ export function initTauriBridge() {
                     void emit('squelch:audio:buffer', {
                         bufferLengthSeconds: res.settings.bufferLengthSeconds
                     });
+                    void emit('squelch:shortcuts:sync', res.settings.shortcuts);
                 }
                 await emit('ui:state-changed', { type: 'settings', ...res });
                 return res?.settings;

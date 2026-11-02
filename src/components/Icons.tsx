@@ -80,6 +80,7 @@ export const IconInfo = wrapHeroicon(InformationCircleIcon);
 export const IconEdit = wrapHeroicon(PencilSquareIcon);
 export const IconTrash = wrapHeroicon(TrashIcon);
 export const IconClose = wrapHeroicon(XMarkIcon);
+export const IconX = IconClose;
 export const IconChevronLeft = wrapHeroicon(ChevronLeftIcon);
 export const IconChevronRight = wrapHeroicon(ChevronRightIcon);
 export const IconChevronDown = wrapHeroicon(ChevronDownIcon);

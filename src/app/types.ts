@@ -51,6 +51,11 @@ export interface SquelchWindowApi {
     playStation: (stationId: string | Partial<Station>) => Promise<boolean>;
     togglePlayPause: () => Promise<boolean>;
     stopPlayback: () => Promise<boolean>;
+    nextStation: () => Promise<boolean>;
+    prevStation: () => Promise<boolean>;
+    toggleMute: () => Promise<boolean>;
+    changeVolume: (delta: number) => Promise<number>;
+    setVolume: (vol: number) => Promise<number>;
     setSleepTimer: (minutes: number | null) => Promise<boolean>;
     openWindowTab: (
         tab: 'stations' | 'discover' | 'stats' | 'preferences' | 'about'

@@ -109,13 +109,13 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                     <span>{t.prefAppearanceSection}</span>
                 </h2>
                 <div className="mac-settings-card mac-inset-list">
-                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                             <div className="text-[13px] font-medium">
                                 {t.prefThemeLabel}
                             </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                             <ThemePreviewCard
                                 mode="system"
                                 active={

@@ -17,13 +17,13 @@ export const ThemePreviewCard: React.FC<ThemePreviewCardProps> = ({
     <button
         type="button"
         onClick={onSelect}
-        className="flex flex-col items-center gap-2 cursor-pointer group focus:outline-none"
+        className="flex flex-col items-center gap-1.5 cursor-pointer group focus:outline-none select-none"
     >
         <div
-            className={`w-32 h-20 rounded-[10px] overflow-hidden border-2 transition p-1.5 flex flex-col justify-between relative ${
+            className={`w-[84px] h-[52px] rounded-[8px] overflow-hidden border-2 transition p-1 flex flex-col justify-between relative ${
                 active
                     ? 'border-accent shadow-[0_0_0_2px_rgba(10,132,255,0.25)]'
-                    : 'border-white/15 hover:border-white/30'
+                    : 'border-black/10 dark:border-white/15 hover:border-black/25 dark:hover:border-white/30'
             }`}
             style={{
                 background:
@@ -34,15 +34,17 @@ export const ThemePreviewCard: React.FC<ThemePreviewCardProps> = ({
                           : 'linear-gradient(135deg, #F2F3F7 50%, #1C1D22 50%)'
             }}
         >
+            {/* macOS Window Traffic Lights */}
             <div className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-[#FF5F56]" />
-                <span className="w-2 h-2 rounded-full bg-[#FFBD2E]" />
-                <span className="w-2 h-2 rounded-full bg-[#27C93F]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FF5F56]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FFBD2E]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#27C93F]" />
             </div>
 
-            <div className="flex gap-1.5 flex-1 mt-1.5">
+            {/* macOS Window Mock UI Content */}
+            <div className="flex gap-1 flex-1 mt-1">
                 <div
-                    className="w-8 rounded-[4px]"
+                    className="w-5 rounded-[3px]"
                     style={{
                         background:
                             mode === 'light'
@@ -50,16 +52,16 @@ export const ThemePreviewCard: React.FC<ThemePreviewCardProps> = ({
                                 : 'rgba(255,255,255,0.12)'
                     }}
                 />
-                <div className="flex-1 flex flex-col gap-1">
+                <div className="flex-1 flex flex-col gap-0.5 justify-center">
                     <div
-                        className="h-3 rounded-[3px] w-full"
+                        className="h-2 rounded-[2px] w-full"
                         style={{
                             background: 'var(--accent-color, #0A84FF)',
                             opacity: 0.85
                         }}
                     />
                     <div
-                        className="h-2.5 rounded-[3px] w-4/5"
+                        className="h-1.5 rounded-[2px] w-4/5"
                         style={{
                             background:
                                 mode === 'light'
@@ -68,7 +70,7 @@ export const ThemePreviewCard: React.FC<ThemePreviewCardProps> = ({
                         }}
                     />
                     <div
-                        className="h-2.5 rounded-[3px] w-3/5"
+                        className="h-1.5 rounded-[2px] w-3/5"
                         style={{
                             background:
                                 mode === 'light'
@@ -81,7 +83,7 @@ export const ThemePreviewCard: React.FC<ThemePreviewCardProps> = ({
         </div>
 
         <span
-            className={`text-[12px] font-medium ${
+            className={`text-[11px] font-medium transition ${
                 active ? 'text-accent font-semibold' : 'text-secondary'
             }`}
         >

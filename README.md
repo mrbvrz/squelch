@@ -28,12 +28,12 @@
 
 <table align="center" style="border: none;">
   <tr>
-    <td align="center" width="60%" style="border: none; vertical-align: top;">
+    <td align="center" width="50%" style="border: none; vertical-align: top;">
       <strong>Main Station Management Window</strong><br />
       <sub>Full-featured broadcast directory, schedules, listening analytics & preferences</sub><br /><br />
       <img src="docs/screenshots/squelch-main-window.png" width="98%" alt="Squelch Main Management Window" />
     </td>
-    <td align="center" width="40%" style="border: none; vertical-align: top;">
+    <td align="center" width="50%" style="border: none; vertical-align: top;">
       <strong>About Squelch</strong><br />
       <sub>Native macOS dark frosted glass HUD dialog</sub><br /><br />
       <img src="docs/screenshots/squelch-about-window.png" width="98%" alt="Squelch About Window" />

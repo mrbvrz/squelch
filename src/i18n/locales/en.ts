@@ -141,7 +141,7 @@ export const enLocale: TranslationDictionary = {
     prefThemeDark: 'Dark',
     prefAccentLabel: 'Accent Color',
     prefGlassOpacityLabel: 'Glass Surface Opacity',
-    prefGlassOpacityDesc: 'Window and tray popover opacity level (default 90%)',
+    prefGlassOpacityDesc: 'Window and tray popover opacity level',
     prefFontFamilyLabel: 'Typography (System Font)',
     prefFontFamilyDesc:
         'Use default OS system font or pick any installed font family',

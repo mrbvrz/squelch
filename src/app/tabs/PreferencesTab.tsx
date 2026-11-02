@@ -210,7 +210,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                 {t.prefGlassOpacityDesc}
                             </div>
                         </div>
-                        <div className="flex items-center gap-2.5 shrink-0">
+                        <div className="flex items-center gap-3 shrink-0">
                             <input
                                 type="range"
                                 min={40}
@@ -225,32 +225,14 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                         glassOpacity: val
                                     });
                                 }}
-                                className="w-28 cursor-pointer"
+                                className="w-32 cursor-pointer"
                                 style={{
                                     accentColor: 'var(--accent-color)'
                                 }}
                             />
-                            <div className="flex items-center gap-1 p-0.5 rounded-[7px] mac-glass-pill tabular-nums">
-                                {[70, 80, 90, 100].map((pct) => (
-                                    <button
-                                        key={pct}
-                                        type="button"
-                                        onClick={() =>
-                                            void api.updateSettings({
-                                                glassOpacity: pct
-                                            })
-                                        }
-                                        className={`px-2 py-0.5 rounded-[5px] text-[11px] font-medium cursor-pointer transition ${
-                                            (settings.glassOpacity ?? 90) ===
-                                            pct
-                                                ? 'bg-accent text-white'
-                                                : 'text-secondary'
-                                        }`}
-                                    >
-                                        {pct}%
-                                    </button>
-                                ))}
-                            </div>
+                            <span className="text-[12px] font-mono font-medium text-secondary tabular-nums min-w-[36px] text-right">
+                                {settings.glassOpacity ?? 90}%
+                            </span>
                         </div>
                     </div>
 

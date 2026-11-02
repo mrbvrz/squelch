@@ -141,7 +141,7 @@ export const idLocale: TranslationDictionary = {
     prefThemeDark: 'Gelap',
     prefAccentLabel: 'Warna Aksen',
     prefGlassOpacityLabel: 'Ketebalan Latar Glass',
-    prefGlassOpacityDesc: 'Tingkat opasitas jendela dan menu tray (bawaan 90%)',
+    prefGlassOpacityDesc: 'Tingkat opasitas jendela dan menu tray',
     prefFontFamilyLabel: 'Jenis Huruf (Font)',
     prefFontFamilyDesc: 'Gunakan font sistem bawaan atau pilih font terinstal',
     prefFontSystemDefault: 'Font Sistem Bawaan (SF Pro / Segoe UI)',

@@ -76,7 +76,7 @@ export const StationModal: React.FC<StationModalProps> = ({
                 onSubmit={onSave}
                 className="mac-modal-surface w-full max-w-lg p-6 space-y-4 text-xs"
             >
-                <div className="flex items-center justify-between pb-3 border-b mac-divider">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <StationAvatar
                             logoUrl={formLogo || null}
@@ -249,7 +249,7 @@ export const StationModal: React.FC<StationModalProps> = ({
                     />
                 </div>
 
-                <div className="flex justify-end gap-2.5 pt-3 border-t mac-divider">
+                <div className="flex justify-end gap-2.5 pt-2">
                     <button
                         type="button"
                         onClick={onClose}

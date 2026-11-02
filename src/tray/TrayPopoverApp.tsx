@@ -20,6 +20,7 @@ import {
     IconRadioTower,
     IconSearch,
     IconSliders,
+    IconSparkles,
     IconStar,
     IconStop,
     IconTimer
@@ -33,7 +34,13 @@ interface SquelchTrayPopoverApi {
     stopPlayback: () => Promise<boolean>;
     setSleepTimer: (minutes: number | null) => Promise<boolean>;
     openWindowTab: (
-        tab: 'stations' | 'discover' | 'stats' | 'preferences' | 'about'
+        tab:
+            | 'stations'
+            | 'discover'
+            | 'stats'
+            | 'preferences'
+            | 'about'
+            | 'updates'
     ) => Promise<boolean>;
     quitApp: () => Promise<boolean>;
     requestQuitConfirm: () => Promise<void>;
@@ -619,6 +626,19 @@ export const TrayPopoverApp: React.FC = () => {
                     >
                         <IconSliders size={13} />
                         <span>{t.traySettings}</span>
+                    </button>
+                    <button
+                        type="button"
+                        title={t.updatesCheckBtn}
+                        onClick={() => void api.openWindowTab('updates')}
+                        className="flex items-center gap-1.5 hover:text-foreground transition font-medium cursor-pointer"
+                    >
+                        <IconSparkles size={13} className="text-accent" />
+                        <span>
+                            {settings?.language === 'en'
+                                ? 'Updates'
+                                : 'Pembaruan'}
+                        </span>
                     </button>
                     <button
                         type="button"

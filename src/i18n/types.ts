@@ -314,7 +314,10 @@ export interface TranslationDictionary {
     updatesCurrentVersion: string;
     updatesCheckBtn: string;
     updatesChecking: string;
+    updatesCheckingTitle: string;
+    updatesCheckingDesc: string;
     updatesUpToDate: string;
+    updatesUpToDateDesc: string;
     updatesAvailable: string;
     updatesAutoCheck: string;
     updatesModalTitle: string;
@@ -324,6 +327,8 @@ export interface TranslationDictionary {
     updatesDismiss: string;
     updatesChangelogLabel: string;
     updatesError: string;
+    updatesRetryBtn: string;
+    updatesDoneBtn: string;
 
     // System Notifications
     notifConnectionLostTitle: string;

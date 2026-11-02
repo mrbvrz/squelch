@@ -51,7 +51,7 @@ export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-2.5 pt-3 border-t mac-divider">
+                <div className="flex justify-end gap-2.5 pt-2">
                     <button
                         type="button"
                         onClick={onClose}

@@ -344,7 +344,12 @@ export const idLocale: TranslationDictionary = {
     updatesCurrentVersion: 'Versi Terpasang',
     updatesCheckBtn: 'Periksa Pembaruan',
     updatesChecking: 'Memeriksa GitHub…',
+    updatesCheckingTitle: 'Memeriksa Pembaruan...',
+    updatesCheckingDesc:
+        'Menghubungi server GitHub untuk mengecek versi terbaru Squelch.',
     updatesUpToDate: 'Squelch sudah versi terbaru',
+    updatesUpToDateDesc:
+        'Anda telah menggunakan versi terbaru Squelch. Tidak ada tindakan yang diperlukan.',
     updatesAvailable: 'Pembaruan Tersedia',
     updatesAutoCheck: 'Periksa pembaruan otomatis saat aplikasi dibuka',
     updatesModalTitle: 'Pembaruan Baru Tersedia: {ver}',
@@ -355,6 +360,8 @@ export const idLocale: TranslationDictionary = {
     updatesDismiss: 'Nanti Saja',
     updatesChangelogLabel: 'Catatan Perubahan (Changelog)',
     updatesError: 'Gagal memeriksa pembaruan',
+    updatesRetryBtn: 'Coba Lagi',
+    updatesDoneBtn: 'Selesai',
 
     // System Notifications
     notifConnectionLostTitle: 'Koneksi Terputus',

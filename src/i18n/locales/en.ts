@@ -344,7 +344,12 @@ export const enLocale: TranslationDictionary = {
     updatesCurrentVersion: 'Installed Version',
     updatesCheckBtn: 'Check for Updates',
     updatesChecking: 'Checking GitHub…',
+    updatesCheckingTitle: 'Checking for Updates...',
+    updatesCheckingDesc:
+        'Connecting to GitHub to check for the latest Squelch release.',
     updatesUpToDate: 'Squelch is up to date',
+    updatesUpToDateDesc:
+        'You are running the latest version of Squelch. No action required.',
     updatesAvailable: 'Update Available',
     updatesAutoCheck: 'Check for updates automatically on launch',
     updatesModalTitle: 'New Version Available: {ver}',
@@ -355,6 +360,8 @@ export const enLocale: TranslationDictionary = {
     updatesDismiss: 'Later',
     updatesChangelogLabel: 'Release Notes',
     updatesError: 'Failed to check for updates',
+    updatesRetryBtn: 'Try Again',
+    updatesDoneBtn: 'Done',
 
     // System Notifications
     notifConnectionLostTitle: 'Connection Lost',

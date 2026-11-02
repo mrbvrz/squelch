@@ -6,7 +6,7 @@ use std::sync::Arc;
 use store::AppStore;
 use tauri::{
     image::Image,
-    menu::{MenuBuilder, MenuItemBuilder},
+    menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Emitter, Manager,
 };
@@ -45,6 +45,84 @@ static BUFFERING_ICONS: [&[u8]; 12] = [
     include_bytes!("../icons/tray/tray_buffering_10.png"),
     include_bytes!("../icons/tray/tray_buffering_11.png"),
 ];
+
+fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
+    match id {
+        "play_pause" => {
+            let _ = app.emit(
+                "squelch:action",
+                serde_json::json!({ "action": "toggle-play-pause" }),
+            );
+        }
+        "stop" => {
+            let _ = app.emit(
+                "squelch:action",
+                serde_json::json!({ "action": "stop" }),
+            );
+        }
+        "open_squelch" => {
+            if let Some(win) = app.get_webview_window("main") {
+                let _ = win.show();
+                let _ = win.unminimize();
+                let _ = win.set_focus();
+            }
+        }
+        "stations_squelch" => {
+            if let Some(win) = app.get_webview_window("main") {
+                let _ = win.eval(
+                    "window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'stations' }));",
+                );
+                let _ = win.show();
+                let _ = win.unminimize();
+                let _ = win.set_focus();
+            }
+        }
+        "pref_squelch" => {
+            if let Some(win) = app.get_webview_window("main") {
+                let _ = win.eval(
+                    "window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'preferences' }));",
+                );
+                let _ = win.show();
+                let _ = win.unminimize();
+                let _ = win.set_focus();
+            }
+        }
+        "update_squelch" => {
+            let _ = app.emit("ui:open-update-modal", ());
+            if let Some(win) = app.get_webview_window("main") {
+                let _ = win.eval(
+                    "window.dispatchEvent(new CustomEvent('squelch:check-updates'));",
+                );
+                let _ = win.show();
+                let _ = win.unminimize();
+                let _ = win.set_focus();
+            }
+        }
+        "about_squelch" => {
+            let _ = app.emit("squelch:open-about", ());
+            if let Some(win) = app.get_webview_window("main") {
+                let _ = win.eval(
+                    "window.location.hash = '#about'; window.dispatchEvent(new CustomEvent('squelch:open-about'));",
+                );
+                let _ = win.show();
+                let _ = win.unminimize();
+                let _ = win.set_focus();
+            }
+        }
+        "quit_squelch" => {
+            let _ = app.emit("squelch:confirm-quit", ());
+            if let Some(win) = app.get_webview_window("main") {
+                let _ = win.eval(
+                    "window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));",
+                );
+                let _ = win.show();
+                let _ = win.unminimize();
+                let _ = win.set_focus();
+            }
+        }
+        _ => {}
+    }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -112,6 +190,7 @@ pub fn run() {
             let menu_open = MenuItemBuilder::with_id("open_squelch", "Buka Jendela Utama").build(app)?;
             let menu_stations = MenuItemBuilder::with_id("stations_squelch", "Stasiun Radio").build(app)?;
             let menu_pref = MenuItemBuilder::with_id("pref_squelch", "Pengaturan").build(app)?;
+            let menu_update = MenuItemBuilder::with_id("update_squelch", "Periksa Pembaruan...").build(app)?;
             let menu_about = MenuItemBuilder::with_id("about_squelch", "Tentang Squelch").build(app)?;
             let menu_quit = MenuItemBuilder::with_id("quit_squelch", "Keluar Squelch").build(app)?;
 
@@ -124,10 +203,56 @@ pub fn run() {
                 .item(&menu_open)
                 .item(&menu_stations)
                 .item(&menu_pref)
+                .item(&menu_update)
                 .item(&menu_about)
                 .separator()
                 .item(&menu_quit)
                 .build()?;
+
+            // Build macOS Native Application Menu Bar
+            let app_menu_about = MenuItemBuilder::with_id("about_squelch", "Tentang Squelch").build(app)?;
+            let app_menu_update = MenuItemBuilder::with_id("update_squelch", "Periksa Pembaruan...").build(app)?;
+            let app_menu_pref = MenuItemBuilder::with_id("pref_squelch", "Pengaturan...").accelerator("CmdOrCtrl+,").build(app)?;
+            let app_menu_quit = MenuItemBuilder::with_id("quit_squelch", "Keluar Squelch").accelerator("CmdOrCtrl+Q").build(app)?;
+
+            let app_submenu = SubmenuBuilder::new(app, "Squelch")
+                .item(&app_menu_about)
+                .item(&app_menu_update)
+                .separator()
+                .item(&app_menu_pref)
+                .separator()
+                .item(&PredefinedMenuItem::hide(app, Some("Sembunyikan Squelch"))?)
+                .item(&PredefinedMenuItem::hide_others(app, Some("Sembunyikan Lainnya"))?)
+                .item(&PredefinedMenuItem::show_all(app, Some("Tampilkan Semua"))?)
+                .separator()
+                .item(&app_menu_quit)
+                .build()?;
+
+            let edit_submenu = SubmenuBuilder::new(app, "Edit")
+                .item(&PredefinedMenuItem::undo(app, None)?)
+                .item(&PredefinedMenuItem::redo(app, None)?)
+                .separator()
+                .item(&PredefinedMenuItem::cut(app, None)?)
+                .item(&PredefinedMenuItem::copy(app, None)?)
+                .item(&PredefinedMenuItem::paste(app, None)?)
+                .item(&PredefinedMenuItem::select_all(app, None)?)
+                .build()?;
+
+            let window_submenu = SubmenuBuilder::new(app, "Jendela")
+                .item(&PredefinedMenuItem::minimize(app, None)?)
+                .item(&PredefinedMenuItem::close_window(app, None)?)
+                .build()?;
+
+            let app_menu = MenuBuilder::new(app)
+                .item(&app_submenu)
+                .item(&edit_submenu)
+                .item(&window_submenu)
+                .build()?;
+
+            let _ = app.set_menu(app_menu);
+            app.on_menu_event(move |app, event| {
+                handle_menu_action(app, event.id().as_ref());
+            });
 
             // 6. Build System Tray Icon with Template Icon
             let init_icon = Image::from_bytes(IDLE_ICON).expect("failed to load initial tray icon");
@@ -138,55 +263,8 @@ pub fn run() {
                 .icon_as_template(true)
                 .menu(&tray_menu)
                 .show_menu_on_left_click(false)
-                .on_menu_event(move |app, event| match event.id().as_ref() {
-                    "play_pause" => {
-                        let _ = app.emit("squelch:action", serde_json::json!({ "action": "toggle-play-pause" }));
-                    }
-                    "stop" => {
-                        let _ = app.emit("squelch:action", serde_json::json!({ "action": "stop" }));
-                    }
-                    "open_squelch" => {
-                        if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.show();
-                            let _ = win.unminimize();
-                            let _ = win.set_focus();
-                        }
-                    }
-                    "stations_squelch" => {
-                        if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'stations' }));");
-                            let _ = win.show();
-                            let _ = win.unminimize();
-                            let _ = win.set_focus();
-                        }
-                    }
-                    "pref_squelch" => {
-                        if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'preferences' }));");
-                            let _ = win.show();
-                            let _ = win.unminimize();
-                            let _ = win.set_focus();
-                        }
-                    }
-                    "about_squelch" => {
-                        let _ = app.emit("squelch:open-about", ());
-                        if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.eval("window.location.hash = '#about'; window.dispatchEvent(new CustomEvent('squelch:open-about'));");
-                            let _ = win.show();
-                            let _ = win.unminimize();
-                            let _ = win.set_focus();
-                        }
-                    }
-                    "quit_squelch" => {
-                        let _ = app.emit("squelch:confirm-quit", ());
-                        if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));");
-                            let _ = win.show();
-                            let _ = win.unminimize();
-                            let _ = win.set_focus();
-                        }
-                    }
-                    _ => {}
+                .on_menu_event(move |app, event| {
+                    handle_menu_action(app, event.id().as_ref());
                 })
                 .on_tray_icon_event(|tray, event| {
                     tauri_plugin_positioner::on_tray_event(tray.app_handle(), &event);

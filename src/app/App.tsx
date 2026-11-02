@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState
+} from 'react';
 import { getTranslations } from '../i18n';
 import type {
     AppSettings,
@@ -204,6 +210,31 @@ export const App: React.FC = () => {
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
     const [notifTestSuccess, setNotifTestSuccess] = useState<boolean>(false);
 
+    const handleCheckForUpdates = useCallback(
+        async (manual = true) => {
+            if (manual) {
+                setIsUpdateModalOpen(true);
+            }
+            setIsCheckingUpdate(true);
+            setUpdateCheckError(null);
+            try {
+                const res = await api.checkForUpdates();
+                setUpdateInfo(res);
+                if (res.hasUpdate) {
+                    setIsUpdateModalOpen(true);
+                }
+            } catch (err: any) {
+                console.error('Update check failed:', err);
+                if (manual) {
+                    setUpdateCheckError(err?.message || String(err));
+                }
+            } finally {
+                setIsCheckingUpdate(false);
+            }
+        },
+        [api]
+    );
+
     // Show Schedules
     const [schedules, setSchedules] = useState<ShowSchedule[]>([]);
     const [isScheduleModalOpen, setIsScheduleModalOpen] =
@@ -355,6 +386,7 @@ export const App: React.FC = () => {
 
         let unlistenAbout: (() => void) | null = null;
         let unlistenQuit: (() => void) | null = null;
+        let unlistenUpdate: (() => void) | null = null;
         if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
             import('@tauri-apps/api/event')
                 .then(({ listen }) => {
@@ -368,9 +400,18 @@ export const App: React.FC = () => {
                     }).then((u) => {
                         unlistenQuit = u;
                     });
+                    listen('ui:open-update-modal', () => {
+                        void handleCheckForUpdates(true);
+                    }).then((u) => {
+                        unlistenUpdate = u;
+                    });
                 })
                 .catch(() => {});
         }
+
+        const handleCustomCheckUpdates = () => {
+            void handleCheckForUpdates(true);
+        };
 
         window.addEventListener('hashchange', handleHashChange);
         window.addEventListener('squelch:open-about', handleCustomOpenAbout);
@@ -379,6 +420,10 @@ export const App: React.FC = () => {
             handleCustomConfirmQuit
         );
         window.addEventListener('squelch:navigate', handleCustomNavigate);
+        window.addEventListener(
+            'squelch:check-updates',
+            handleCustomCheckUpdates
+        );
         handleHashChange();
 
         return () => {
@@ -386,6 +431,7 @@ export const App: React.FC = () => {
             unsub();
             if (unlistenAbout) unlistenAbout();
             if (unlistenQuit) unlistenQuit();
+            if (unlistenUpdate) unlistenUpdate();
             window.removeEventListener('keydown', handleGlobalKeyDown);
             window.removeEventListener('hashchange', handleHashChange);
             window.removeEventListener(
@@ -400,8 +446,12 @@ export const App: React.FC = () => {
                 'squelch:navigate',
                 handleCustomNavigate
             );
+            window.removeEventListener(
+                'squelch:check-updates',
+                handleCustomCheckUpdates
+            );
         };
-    }, []);
+    }, [handleCheckForUpdates]);
 
     useEffect(() => {
         if (activeTab === 'discover' && discResults.length === 0) {
@@ -431,25 +481,6 @@ export const App: React.FC = () => {
             setIsOnboardingOpen(true);
         }
     }, [settings?.hasCompletedOnboarding]);
-
-    const handleCheckForUpdates = async (manual = true) => {
-        setIsCheckingUpdate(true);
-        setUpdateCheckError(null);
-        try {
-            const res = await api.checkForUpdates();
-            setUpdateInfo(res);
-            if (res.hasUpdate) {
-                setIsUpdateModalOpen(true);
-            }
-        } catch (err: any) {
-            console.error('Update check failed:', err);
-            if (manual) {
-                setUpdateCheckError(err?.message || String(err));
-            }
-        } finally {
-            setIsCheckingUpdate(false);
-        }
-    };
 
     // Auto-check for updates quietly 3s after startup
     useEffect(() => {
@@ -1354,6 +1385,9 @@ export const App: React.FC = () => {
                     void api.openExternalUrl(url)
                 }
                 t={t}
+                isChecking={isCheckingUpdate}
+                error={updateCheckError}
+                onCheckAgain={() => void handleCheckForUpdates(true)}
             />
         </div>
     );

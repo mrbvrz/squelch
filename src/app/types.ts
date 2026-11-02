@@ -123,6 +123,7 @@ export interface SquelchWindowApi {
     getDiagnostics: () => Promise<string>;
     openLogsFolder: () => Promise<boolean>;
     checkForUpdates: () => Promise<UpdateCheckResult>;
+    openUpdateModal?: () => Promise<void>;
     sendNotification: (title: string, body: string) => Promise<boolean>;
     requestQuitConfirm?: () => Promise<void>;
     onStateChanged: (cb: (data: unknown) => void) => () => void;

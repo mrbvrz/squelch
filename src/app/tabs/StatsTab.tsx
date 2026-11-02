@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type {
     ListeningStatsSummary,
     StatSeriesPoint,
@@ -9,6 +9,15 @@ import type { SquelchWindowApi, StatsPeriodMode } from '../types';
 import { StationAvatar } from '../../components/StationAvatar';
 import { formatDurationCompact } from '../../utils/appearance';
 import { IconChart, IconPlay, IconStop } from '../../components/Icons';
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    CartesianGrid
+} from 'recharts';
 
 export interface StatsTabProps {
     statsSummary: ListeningStatsSummary;
@@ -35,6 +44,32 @@ export const StatsTab: React.FC<StatsTabProps> = ({
     lang,
     t
 }) => {
+    const chartData = useMemo(() => {
+        return activeChartPoints.map((pt) => ({
+            key: pt.key,
+            name: pt.label,
+            seconds: pt.seconds,
+            formatted: formatDurationCompact(pt.seconds, lang)
+        }));
+    }, [activeChartPoints, lang]);
+
+    const CustomTooltip = ({ active, payload }: any) => {
+        if (active && payload && payload.length) {
+            const data = payload[0].payload;
+            return (
+                <div className="mac-modal-surface px-3 py-2 rounded-xl shadow-xl border border-card-border backdrop-blur-xl text-xs space-y-1">
+                    <div className="font-semibold text-foreground text-[11px]">
+                        {data.name}
+                    </div>
+                    <div className="text-accent font-bold text-[13px] tabular-nums flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-accent inline-block" />
+                        {data.formatted}
+                    </div>
+                </div>
+            );
+        }
+        return null;
+    };
     return (
         <div
             key="tab-stats"
@@ -128,61 +163,92 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                     </div>
                 </div>
 
-                <div className="mac-settings-card p-5">
-                    <div className="h-44 flex items-end justify-between gap-1.5 pt-6 pb-2 border-b mac-divider">
-                        {activeChartPoints.map((pt) => {
-                            const ratio =
-                                pt.seconds > 0
-                                    ? Math.max(
-                                          0.08,
-                                          pt.seconds / maxChartSeconds
-                                      )
-                                    : 0.03;
-                            const heightPct = Math.round(ratio * 100);
-                            return (
-                                <div
-                                    key={pt.key}
-                                    className="flex-1 flex flex-col items-center justify-end h-full group relative"
-                                >
-                                    {/* Tooltip on hover */}
-                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-6 px-2 py-0.5 rounded bg-black/85 text-white text-[10px] font-mono whitespace-nowrap pointer-events-none z-10 shadow">
-                                        {pt.label}:{' '}
-                                        {formatDurationCompact(
-                                            pt.seconds,
-                                            lang
-                                        )}
-                                    </div>
-                                    <div
-                                        className={`w-full max-w-[28px] rounded-t-[4px] transition-all duration-300 ${
-                                            pt.seconds > 0
-                                                ? 'bg-accent opacity-85 group-hover:opacity-100'
-                                                : 'bg-white/10'
-                                        }`}
-                                        style={{
-                                            height: `${heightPct}%`
-                                        }}
-                                    />
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* X-Axis Labels */}
-                    <div className="flex items-center justify-between gap-1 pt-2.5">
-                        {activeChartPoints.map((pt, idx) => {
-                            const showLabel =
-                                statsViewMode !== 'monthly' ||
-                                idx % 5 === 0 ||
-                                idx === activeChartPoints.length - 1;
-                            return (
-                                <div
-                                    key={pt.key}
-                                    className="flex-1 text-center text-[10px] text-secondary tabular-nums truncate"
-                                >
-                                    {showLabel ? pt.label : ''}
-                                </div>
-                            );
-                        })}
+                <div className="mac-settings-card p-4 pt-5">
+                    <div className="h-48 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart
+                                data={chartData}
+                                margin={{
+                                    top: 10,
+                                    right: 12,
+                                    left: -16,
+                                    bottom: 0
+                                }}
+                            >
+                                <defs>
+                                    <linearGradient
+                                        id="statsGradient"
+                                        x1="0"
+                                        y1="0"
+                                        x2="0"
+                                        y2="1"
+                                    >
+                                        <stop
+                                            offset="5%"
+                                            stopColor="var(--accent-color)"
+                                            stopOpacity={0.4}
+                                        />
+                                        <stop
+                                            offset="95%"
+                                            stopColor="var(--accent-color)"
+                                            stopOpacity={0.0}
+                                        />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    vertical={false}
+                                    stroke="rgba(128, 128, 128, 0.12)"
+                                />
+                                <XAxis
+                                    dataKey="name"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{
+                                        fontSize: 10,
+                                        fill: 'var(--ink-secondary)'
+                                    }}
+                                    interval={
+                                        statsViewMode === 'monthly' ? 4 : 0
+                                    }
+                                />
+                                <YAxis
+                                    domain={[0, Math.max(60, maxChartSeconds)]}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{
+                                        fontSize: 10,
+                                        fill: 'var(--ink-secondary)'
+                                    }}
+                                    tickFormatter={(sec: number) =>
+                                        formatDurationCompact(sec, lang)
+                                    }
+                                />
+                                <Tooltip
+                                    content={<CustomTooltip />}
+                                    cursor={{
+                                        stroke: 'var(--accent-color)',
+                                        strokeWidth: 1,
+                                        strokeDasharray: '3 3',
+                                        strokeOpacity: 0.6
+                                    }}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="seconds"
+                                    stroke="var(--accent-color)"
+                                    strokeWidth={2.5}
+                                    fillOpacity={1}
+                                    fill="url(#statsGradient)"
+                                    activeDot={{
+                                        r: 5,
+                                        fill: 'var(--accent-color)',
+                                        stroke: '#ffffff',
+                                        strokeWidth: 2
+                                    }}
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
             </div>

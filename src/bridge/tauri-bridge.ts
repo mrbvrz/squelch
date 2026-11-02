@@ -1041,6 +1041,11 @@ export function initTauriBridge() {
                 await emit('squelch:navigate', { action: 'about' });
             },
 
+            openUpdateModal: async () => {
+                window.dispatchEvent(new CustomEvent('squelch:check-updates'));
+                await emit('ui:open-update-modal', {});
+            },
+
             openExternalUrl: async (url: string) => {
                 await invoke('open_external', { url });
             },

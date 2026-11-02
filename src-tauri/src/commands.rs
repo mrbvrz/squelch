@@ -553,7 +553,12 @@ pub fn set_tray_state(state_name: String, store: State<Arc<AppStore>>) {
 #[tauri::command]
 pub fn open_window_tab(app: AppHandle, tab: String) -> Result<(), String> {
     if let Some(win) = app.get_webview_window("main") {
-        let _ = win.eval(&format!("window.location.hash = '#{}';", tab));
+        if tab == "updates" {
+            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:check-updates'));");
+            let _ = app.emit("ui:open-update-modal", ());
+        } else {
+            let _ = win.eval(&format!("window.location.hash = '#{}';", tab));
+        }
         let _ = win.show();
         let _ = win.unminimize();
         let _ = win.set_focus();

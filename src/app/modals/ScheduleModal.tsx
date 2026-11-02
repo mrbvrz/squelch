@@ -10,7 +10,7 @@ import {
 } from '../../components/Icons';
 import { MacToggle } from '../../components/MacToggle';
 import { StationAvatar } from '../../components/StationAvatar';
-import { renderFormattedNotes } from '../../utils/text-format';
+import { markdownToHtml, htmlToMarkdown } from '../../utils/text-format';
 
 export interface DayLabelItem {
     day: number;
@@ -79,83 +79,70 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
 }) => {
     const [isStationDropdownOpen, setIsStationDropdownOpen] = useState(false);
     const [stationSearchQuery, setStationSearchQuery] = useState('');
-    const [showNotesPreview, setShowNotesPreview] = useState(false);
     const stationDropdownContainerRef = useRef<HTMLDivElement>(null);
     const stationSearchInputRef = useRef<HTMLInputElement>(null);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const editorRef = useRef<HTMLDivElement>(null);
+    const isInternalUpdate = useRef(false);
 
-    const applyFormatting = (
-        prefix: string,
-        suffix: string,
-        defaultPlaceholder: string
-    ) => {
-        const textarea = textareaRef.current;
-        if (!textarea) return;
+    // Sync external schedNotes to contentEditable HTML
+    useEffect(() => {
+        if (!editorRef.current) return;
+        if (isInternalUpdate.current) {
+            isInternalUpdate.current = false;
+            return;
+        }
+        const targetHtml = markdownToHtml(schedNotes);
+        if (editorRef.current.innerHTML !== targetHtml) {
+            editorRef.current.innerHTML = targetHtml;
+        }
+    }, [schedNotes, isOpen]);
 
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const currentText = schedNotes;
-        const selectedText = currentText.substring(start, end);
-
-        const replacement = selectedText
-            ? `${prefix}${selectedText}${suffix}`
-            : `${prefix}${defaultPlaceholder}${suffix}`;
-
-        const newText =
-            currentText.substring(0, start) +
-            replacement +
-            currentText.substring(end);
-
-        setSchedNotes(newText);
-
-        requestAnimationFrame(() => {
-            textarea.focus();
-            if (selectedText) {
-                textarea.setSelectionRange(
-                    start + prefix.length,
-                    start + prefix.length + selectedText.length
-                );
-            } else {
-                textarea.setSelectionRange(
-                    start + prefix.length,
-                    start + prefix.length + defaultPlaceholder.length
-                );
-            }
-        });
+    const handleEditorInput = () => {
+        if (!editorRef.current) return;
+        isInternalUpdate.current = true;
+        const md = htmlToMarkdown(editorRef.current.innerHTML);
+        setSchedNotes(md);
     };
 
-    const insertBullet = () => {
-        const textarea = textareaRef.current;
-        if (!textarea) return;
-
-        const start = textarea.selectionStart;
-        const currentText = schedNotes;
-        const lastNewline = currentText.lastIndexOf('\n', start - 1);
-        const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
-
-        const newText =
-            currentText.substring(0, lineStart) +
-            '- ' +
-            currentText.substring(lineStart);
-
-        setSchedNotes(newText);
-
-        requestAnimationFrame(() => {
-            textarea.focus();
-            textarea.setSelectionRange(start + 2, start + 2);
-        });
+    const execEditorCommand = (
+        command: string,
+        value: string | undefined = undefined
+    ) => {
+        if (!editorRef.current) return;
+        editorRef.current.focus();
+        document.execCommand(command, false, value);
+        handleEditorInput();
     };
 
-    const handleTextareaKeyDown = (
-        e: React.KeyboardEvent<HTMLTextAreaElement>
-    ) => {
+    const handleInsertCode = () => {
+        if (!editorRef.current) return;
+        editorRef.current.focus();
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const range = sel.getRangeAt(0);
+        const selectedText =
+            range.toString() || (lang === 'id' ? 'kode' : 'code');
+        const codeNode = document.createElement('code');
+        codeNode.className =
+            'px-1 py-0.5 rounded bg-black/10 dark:bg-white/15 font-mono text-[10px] text-accent';
+        codeNode.textContent = selectedText;
+        range.deleteContents();
+        range.insertNode(codeNode);
+        sel.selectAllChildren(codeNode);
+        handleEditorInput();
+    };
+
+    const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
         const isMod = e.metaKey || e.ctrlKey;
         if (isMod && (e.key === 'b' || e.key === 'B')) {
             e.preventDefault();
-            applyFormatting('**', '**', lang === 'id' ? 'tebal' : 'bold');
+            execEditorCommand('bold');
         } else if (isMod && (e.key === 'i' || e.key === 'I')) {
             e.preventDefault();
-            applyFormatting('*', '*', lang === 'id' ? 'miring' : 'italic');
+            execEditorCommand('italic');
+        } else if (isMod && (e.key === 'u' || e.key === 'U')) {
+            e.preventDefault();
+            execEditorCommand('strikeThrough');
         }
     };
 
@@ -200,7 +187,6 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
         if (!isOpen) {
             setIsStationDropdownOpen(false);
             setStationSearchQuery('');
-            setShowNotesPreview(false);
         }
     }, [isOpen]);
 
@@ -238,7 +224,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                 onSubmit={onSave}
                 className="mac-modal-surface w-full max-w-lg p-6 space-y-4 text-xs"
             >
-                <div className="flex items-center justify-between pb-3 border-b mac-divider">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-[8px] bg-accent text-white flex items-center justify-center shrink-0">
                             <IconCalendar size={18} />
@@ -562,7 +548,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                         />
                     </div>
 
-                    <div className="flex items-center justify-between gap-3 pt-2 border-t mac-divider">
+                    <div className="flex items-center justify-between gap-3 pt-1">
                         <span className="font-semibold text-[12px]">
                             {t.scheduleReminder}
                         </span>
@@ -584,7 +570,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                     </div>
                 </div>
 
-                {/* Notes & Description with Integrated Toolbar */}
+                {/* Notes & Description with Integrated Toolbar (Live Editable Preview) */}
                 <div>
                     <label className="block font-semibold mb-1.5 text-foreground">
                         {t.scheduleNotes}
@@ -596,13 +582,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                                 <button
                                     type="button"
                                     title="Tebal (⌘B / Ctrl+B)"
-                                    onClick={() =>
-                                        applyFormatting(
-                                            '**',
-                                            '**',
-                                            lang === 'id' ? 'tebal' : 'bold'
-                                        )
-                                    }
+                                    onClick={() => execEditorCommand('bold')}
                                     className="w-6 h-6 rounded-[5px] flex items-center justify-center font-bold text-[12px] hover:bg-black/10 dark:hover:bg-white/10 text-secondary hover:text-foreground transition cursor-pointer"
                                 >
                                     B
@@ -610,13 +590,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                                 <button
                                     type="button"
                                     title="Miring (⌘I / Ctrl+I)"
-                                    onClick={() =>
-                                        applyFormatting(
-                                            '*',
-                                            '*',
-                                            lang === 'id' ? 'miring' : 'italic'
-                                        )
-                                    }
+                                    onClick={() => execEditorCommand('italic')}
                                     className="w-6 h-6 rounded-[5px] flex items-center justify-center italic font-serif text-[12px] hover:bg-black/10 dark:hover:bg-white/10 text-secondary hover:text-foreground transition cursor-pointer"
                                 >
                                     I
@@ -625,11 +599,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                                     type="button"
                                     title="Coret"
                                     onClick={() =>
-                                        applyFormatting(
-                                            '~~',
-                                            '~~',
-                                            lang === 'id' ? 'coret' : 'strike'
-                                        )
+                                        execEditorCommand('strikeThrough')
                                     }
                                     className="w-6 h-6 rounded-[5px] flex items-center justify-center line-through text-[12px] hover:bg-black/10 dark:hover:bg-white/10 text-secondary hover:text-foreground transition cursor-pointer"
                                 >
@@ -641,7 +611,9 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                                 <button
                                     type="button"
                                     title="Daftar Butir"
-                                    onClick={insertBullet}
+                                    onClick={() =>
+                                        execEditorCommand('insertUnorderedList')
+                                    }
                                     className="px-1.5 h-6 rounded-[5px] flex items-center gap-1 text-[11px] hover:bg-black/10 dark:hover:bg-white/10 text-secondary hover:text-foreground transition cursor-pointer"
                                 >
                                     • List
@@ -649,71 +621,38 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                                 <button
                                     type="button"
                                     title="Kode"
-                                    onClick={() =>
-                                        applyFormatting('`', '`', 'kode')
-                                    }
+                                    onClick={handleInsertCode}
                                     className="w-6 h-6 rounded-[5px] flex items-center justify-center font-mono text-[11px] hover:bg-black/10 dark:hover:bg-white/10 text-secondary hover:text-foreground transition cursor-pointer"
                                 >
                                     {'</>'}
                                 </button>
                             </div>
-
-                            {/* Write / Preview Tab Pill */}
-                            <div className="flex items-center p-0.5 rounded-[5px] bg-black/5 dark:bg-white/10 text-[10px]">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowNotesPreview(false)}
-                                    className={`px-2 py-0.5 rounded-[4px] cursor-pointer font-medium transition ${
-                                        !showNotesPreview
-                                            ? 'bg-accent text-white shadow-xs'
-                                            : 'text-secondary hover:text-foreground'
-                                    }`}
-                                >
-                                    {lang === 'id' ? 'Tulis' : 'Write'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowNotesPreview(true)}
-                                    className={`px-2 py-0.5 rounded-[4px] cursor-pointer font-medium transition ${
-                                        showNotesPreview
-                                            ? 'bg-accent text-white shadow-xs'
-                                            : 'text-secondary hover:text-foreground'
-                                    }`}
-                                >
-                                    {lang === 'id' ? 'Pratinjau' : 'Preview'}
-                                </button>
-                            </div>
+                            <span className="text-[10px] text-secondary/60">
+                                {lang === 'id'
+                                    ? 'Format Langsung'
+                                    : 'Live Preview'}
+                            </span>
                         </div>
 
-                        {/* Content Area (Textarea or Preview) */}
-                        {showNotesPreview ? (
-                            <div className="min-h-[80px] max-h-40 overflow-y-auto px-3 py-2.5 text-[12px] text-foreground bg-transparent">
-                                {schedNotes.trim() ? (
-                                    renderFormattedNotes(schedNotes)
-                                ) : (
-                                    <span className="text-secondary/60 italic text-[11px]">
-                                        {lang === 'id'
-                                            ? 'Belum ada catatan untuk dipratinjau...'
-                                            : 'No notes to preview yet...'}
-                                    </span>
-                                )}
-                            </div>
-                        ) : (
-                            <textarea
-                                ref={textareaRef}
-                                rows={3}
-                                placeholder="e.g. Program pagi favorit dengan **info lalu lintas** & *kuis*"
-                                value={schedNotes}
-                                onChange={(e) => setSchedNotes(e.target.value)}
-                                onKeyDown={handleTextareaKeyDown}
-                                className="w-full bg-transparent border-0 px-3 py-2 text-[12px] text-foreground focus:outline-none resize-y min-h-[72px] placeholder:text-secondary/50"
-                            />
-                        )}
+                        {/* Direct Editable WYSIWYG Surface */}
+                        <div
+                            ref={editorRef}
+                            contentEditable
+                            suppressContentEditableWarning
+                            onInput={handleEditorInput}
+                            onKeyDown={handleEditorKeyDown}
+                            data-placeholder={
+                                lang === 'id'
+                                    ? 'Tulis catatan, deskripsi acara, bintang tamu, dll...'
+                                    : 'Enter notes, show description, guest stars, etc...'
+                            }
+                            className="min-h-[76px] max-h-44 overflow-y-auto px-3 py-2 text-[12px] text-foreground focus:outline-none leading-relaxed select-text [&_strong]:font-bold [&_b]:font-bold [&_em]:italic [&_i]:italic [&_del]:line-through [&_del]:opacity-70 [&_s]:line-through [&_strike]:line-through [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:bg-black/10 dark:[&_code]:bg-white/15 [&_code]:font-mono [&_code]:text-[10px] [&_code]:text-accent [&_ul]:list-disc [&_ul]:ml-4 [&_ul]:space-y-0.5 empty:before:content-[attr(data-placeholder)] empty:before:text-secondary/50 empty:before:pointer-events-none cursor-text"
+                        />
                     </div>
                 </div>
 
                 {/* Modal Actions */}
-                <div className="flex justify-end gap-2 pt-3 border-t mac-divider">
+                <div className="flex justify-end gap-2 pt-2">
                     <button
                         type="button"
                         onClick={onClose}

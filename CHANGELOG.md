@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.3] - Unreleased
+
+### Added
+- Seamless in-app background download for updates (`start_download_update`, `cancel_update_download`, `open_update_installer`, `reveal_update_in_finder`).
+- Live progress indicator with download percentage and bytes streamed directly inside the application.
+- Background progress pill when update modal is dismissed while radio playback continues seamlessly.
+
+---
+
 ## [0.1.2] - 2026-11-03
 
 ### Polish, Modern Stats Analytics, macOS Design System & CI/CD Automation

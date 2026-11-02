@@ -167,7 +167,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
                             </h3>
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
                                 <span className="px-2 py-0.5 rounded-[5px] bg-black/10 dark:bg-white/10 text-secondary text-[11px] font-mono tabular-nums">
-                                    v{updateInfo?.currentVersion || '0.1.2'}
+                                    v{updateInfo?.currentVersion || '0.1.3'}
                                 </span>
                                 {updateInfo?.hasUpdate && (
                                     <>

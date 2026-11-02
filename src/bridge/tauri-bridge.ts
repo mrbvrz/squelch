@@ -1582,7 +1582,7 @@ export function initTauriBridge() {
                 const cfg: any = await invoke('get_settings');
                 const report = {
                     timestamp: new Date().toISOString(),
-                    app: 'Squelch v0.1.2 (Tauri v2 macOS)',
+                    app: 'Squelch v0.1.3 (Tauri v2 macOS)',
                     platform: 'darwin (macOS)',
                     userAgent: navigator.userAgent,
                     player: {

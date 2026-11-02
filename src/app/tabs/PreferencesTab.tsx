@@ -608,7 +608,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                     Squelch
                                 </div>
                                 <span className="px-2 py-0.5 rounded-[5px] bg-accent/15 text-accent text-[11px] font-mono font-bold tabular-nums">
-                                    v{updateInfo?.currentVersion || '0.1.2'}
+                                    v{updateInfo?.currentVersion || '0.1.3'}
                                 </span>
                                 {updateInfo?.hasUpdate ? (
                                     <span className="px-2 py-0.5 rounded-full bg-[#FF9F0A]/15 text-[#FF9F0A] text-[11px] font-semibold flex items-center gap-1">

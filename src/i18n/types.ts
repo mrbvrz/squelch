@@ -279,6 +279,7 @@ export interface TranslationDictionary {
     fieldGroup: string;
     fieldTags: string;
     colType: string;
+    typeAutoLocked: string;
     testStreamBtn: string;
     testingStream: string;
     testOkPrefix: string;

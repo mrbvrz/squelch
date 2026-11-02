@@ -22,6 +22,7 @@ import {
     bindActiveScrollbars,
     FALLBACK_COUNTRIES
 } from '../utils/appearance';
+import { detectStreamTypeFromUrl } from '../utils/stream';
 import { OnboardingModal } from '../components/OnboardingModal';
 import { UpdateModal, type UpdateCheckResult } from '../components/UpdateModal';
 
@@ -835,11 +836,14 @@ export const App: React.FC = () => {
         e.preventDefault();
         if (!formName.trim() || !formUrl.trim()) return;
 
+        const detected = detectStreamTypeFromUrl(formUrl.trim());
+        const finalStreamType = detected || formType;
+
         await api.saveStation({
             id: editingStation?.id,
             name: formName.trim(),
             streamUrl: formUrl.trim(),
-            streamType: formType,
+            streamType: finalStreamType,
             logoUrl: formLogo.trim() || null,
             genre: formGenre.trim() || 'Radio',
             city: formCity.trim() || 'Indonesia',

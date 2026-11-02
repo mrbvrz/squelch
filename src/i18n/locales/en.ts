@@ -299,6 +299,7 @@ export const enLocale: TranslationDictionary = {
     fieldGroup: 'Category / Group',
     fieldTags: 'Tags (comma-separated)',
     colType: 'Codec',
+    typeAutoLocked: 'Auto-locked',
     testStreamBtn: 'Test Stream',
     testingStream: 'Testing…',
     testOkPrefix: 'Stream verified',

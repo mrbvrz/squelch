@@ -299,6 +299,7 @@ export const idLocale: TranslationDictionary = {
     fieldGroup: 'Kategori / Grup',
     fieldTags: 'Tag (pisahkan dengan koma)',
     colType: 'Tipe',
+    typeAutoLocked: 'Otomatis',
     testStreamBtn: 'Uji Stream',
     testingStream: 'Menguji…',
     testOkPrefix: 'Stream aktif',

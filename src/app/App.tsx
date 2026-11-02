@@ -1313,6 +1313,7 @@ export const App: React.FC = () => {
                 dayLabels={DAY_LABELS}
                 lang={lang}
                 t={t}
+                onResolveLogo={(url) => api.resolveStationLogo(url)}
             />
 
             {settings && (

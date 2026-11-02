@@ -150,7 +150,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <span className="text-[13px] font-medium">
                             {t.prefAccentLabel}
                         </span>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
                             {ACCENT_SWATCHES.map((swatch) => {
                                 const selected =
                                     (
@@ -168,9 +168,9 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                                 accentColor: swatch.hex
                                             })
                                         }
-                                        className={`w-3.5 h-3.5 rounded-full cursor-pointer transition-transform flex items-center justify-center shrink-0 ${
+                                        className={`w-[17px] h-[17px] rounded-full cursor-pointer transition-transform flex items-center justify-center shrink-0 ${
                                             selected
-                                                ? 'scale-115 ring-2 ring-white/90 shadow-xs'
+                                                ? 'scale-110 ring-2 ring-white/90 shadow-xs'
                                                 : 'hover:scale-105 opacity-90 hover:opacity-100'
                                         }`}
                                         style={{
@@ -178,12 +178,12 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                         }}
                                     >
                                         {selected && (
-                                            <span className="w-1 h-1 rounded-full bg-white shadow-xs" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
                                         )}
                                     </button>
                                 );
                             })}
-                            <div className="relative flex items-center ml-1">
+                            <div className="relative flex items-center ml-0.5">
                                 <input
                                     type="color"
                                     value={settings.accentColor ?? '#0A84FF'}
@@ -194,7 +194,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                             accentColor: e.target.value
                                         })
                                     }
-                                    className="w-4 h-4 rounded-full cursor-pointer bg-transparent border border-black/15 dark:border-white/20 p-0 overflow-hidden"
+                                    className="w-[19px] h-[19px] rounded-full cursor-pointer bg-transparent border border-black/15 dark:border-white/20 p-0 overflow-hidden"
                                 />
                             </div>
                         </div>

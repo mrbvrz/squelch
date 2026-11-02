@@ -20,26 +20,26 @@
 
 ## Interface Showcase
 
+<p align="center">
+  <strong>Menu Bar Tray Popover</strong><br />
+  <sub>Compact 2-click HUD player with live waveform & sleep timer</sub><br /><br />
+  <img src="docs/screenshots/squelch-tray-popover.png" width="360px" alt="Squelch Menu Bar Tray Popover" />
+</p>
+
 <table align="center" style="border: none;">
   <tr>
-    <td align="center" width="46%" style="border: none; vertical-align: top;">
-      <strong>Menu Bar Tray Popover</strong><br />
-      <sub>Compact 2-click HUD player with live waveform & sleep timer</sub><br /><br />
-      <img src="docs/screenshots/squelch-tray-popover.png" width="340px" alt="Squelch Menu Bar Tray Popover" />
+    <td align="center" width="60%" style="border: none; vertical-align: top;">
+      <strong>Main Station Management Window</strong><br />
+      <sub>Full-featured broadcast directory, schedules, listening analytics & preferences</sub><br /><br />
+      <img src="docs/screenshots/squelch-main-window.png" width="98%" alt="Squelch Main Management Window" />
     </td>
-    <td align="center" width="54%" style="border: none; vertical-align: top;">
+    <td align="center" width="40%" style="border: none; vertical-align: top;">
       <strong>About Squelch</strong><br />
       <sub>Native macOS dark frosted glass HUD dialog</sub><br /><br />
-      <img src="docs/screenshots/squelch-about-window.png" width="420px" alt="Squelch About Window" />
+      <img src="docs/screenshots/squelch-about-window.png" width="98%" alt="Squelch About Window" />
     </td>
   </tr>
 </table>
-
-<p align="center">
-  <strong>Main Station Management Window</strong><br />
-  <sub>Full-featured broadcast directory, schedules, listening analytics & preferences</sub><br /><br />
-  <img src="docs/screenshots/squelch-main-window.png" width="94%" alt="Squelch Main Management Window" />
-</p>
 
 ---
 

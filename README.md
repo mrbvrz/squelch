@@ -14,7 +14,7 @@
     <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" />
   </a>
   <a href="https://github.com/mrbvrz/squelch/releases">
-    <img src="https://img.shields.io/badge/Version-0.1.0-emerald.svg" alt="Version 0.1.0" />
+    <img src="https://img.shields.io/badge/Version-0.1.1-emerald.svg" alt="Version 0.1.1" />
   </a>
   <a href="https://tauri.app/">
     <img src="https://img.shields.io/badge/Built%20with-Tauri%20v2%20%26%20Rust-orange.svg" alt="Tauri v2" />
@@ -63,9 +63,9 @@ curl -fsSL https://raw.githubusercontent.com/mrbvrz/squelch/main/install.sh | ba
 
 Download the ready-to-run package from GitHub Releases:
 
-- 🍏 **[Download Squelch for macOS (.dmg)](https://github.com/mrbvrz/squelch/releases/download/v0.1.0/Squelch-0.1.0-arm64.dmg)**
-- 📦 **[Download Squelch for macOS (.zip)](https://github.com/mrbvrz/squelch/releases/download/v0.1.0/Squelch-0.1.0-arm64-mac.zip)**
-- 🚀 **[View All Release Assets](https://github.com/mrbvrz/squelch/releases/tag/v0.1.0)**
+- 🍏 **[Download Squelch for macOS (.dmg)](https://github.com/mrbvrz/squelch/releases/download/v0.1.1/Squelch-0.1.1-arm64.dmg)**
+- 📦 **[Download Squelch for macOS (.zip)](https://github.com/mrbvrz/squelch/releases/download/v0.1.1/Squelch-0.1.1-arm64.zip)**
+- 🚀 **[View All Release Assets](https://github.com/mrbvrz/squelch/releases/tag/v0.1.1)**
 
 > [!TIP]
 > **First-time launch on macOS:**

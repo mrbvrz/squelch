@@ -115,6 +115,9 @@ export const idLocale: TranslationDictionary = {
     discoverPreviewBtn: 'Pratinjau',
     discoverAddBtn: '+ Tambah',
     discoverAdded: 'Tersimpan',
+    discoverSearchCountryPlaceholder: 'Cari negara…',
+    discoverCountriesFound: 'negara ditemukan',
+    discoverNoCountryMatch: 'Tidak ada negara yang cocok',
 
     // Listening Stats Tab (Mingguan, Bulanan, Tahunan)
     statsTitle: 'Aktivitas Mendengarkan',

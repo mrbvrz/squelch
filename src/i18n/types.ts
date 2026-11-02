@@ -118,6 +118,9 @@ export interface TranslationDictionary {
     discoverPreviewBtn: string;
     discoverAddBtn: string;
     discoverAdded: string;
+    discoverSearchCountryPlaceholder: string;
+    discoverCountriesFound: string;
+    discoverNoCountryMatch: string;
 
     // Listening Stats Tab (Mingguan, Bulanan, Tahunan)
     statsTitle: string;

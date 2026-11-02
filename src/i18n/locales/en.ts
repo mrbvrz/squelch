@@ -115,6 +115,9 @@ export const enLocale: TranslationDictionary = {
     discoverPreviewBtn: 'Preview',
     discoverAddBtn: '+ Add',
     discoverAdded: 'Saved',
+    discoverSearchCountryPlaceholder: 'Search country…',
+    discoverCountriesFound: 'countries found',
+    discoverNoCountryMatch: 'No matching country',
 
     // Listening Stats Tab (Weekly, Monthly, Yearly)
     statsTitle: 'Listening Activity',

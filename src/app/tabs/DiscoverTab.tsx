@@ -7,6 +7,7 @@ import type {
 import type { TranslationDictionary } from '../../i18n';
 import type { SquelchWindowApi } from '../types';
 import { StationAvatar } from '../../components/StationAvatar';
+import { SearchableCountryPicker } from '../../components/SearchableCountryPicker';
 import { countryCodeToFlag } from '../../utils/appearance';
 import {
     IconCheck,
@@ -88,25 +89,22 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
 
                 {/* Inline Filter & Search Row: Country Dropdown, Name, Tag, and Search Button */}
                 <div className="px-4 py-3 flex flex-wrap items-center gap-2 text-xs">
-                    <select
+                    <SearchableCountryPicker
                         value={discCountry}
-                        aria-label="Country Filter"
-                        onChange={(e) => {
-                            const newCountry = e.target.value;
+                        countries={discCountries}
+                        onChange={(newCountry) => {
                             setDiscCountry(newCountry);
                             if (handleCountryChange) {
                                 handleCountryChange(newCountry);
                             }
                         }}
-                        className="mac-input px-2.5 h-8 rounded-[7px] text-xs w-36 sm:w-44 shrink-0 cursor-pointer"
-                    >
-                        <option value="">🌐 {t.discoverGlobalFilter}</option>
-                        {discCountries.map((c) => (
-                            <option key={c.code} value={c.code}>
-                                {c.flag || '🌐'} {c.name}
-                            </option>
-                        ))}
-                    </select>
+                        globalLabel={t.discoverGlobalFilter}
+                        placeholder={t.discoverSearchCountryPlaceholder}
+                        foundLabel={t.discoverCountriesFound}
+                        noMatchLabel={t.discoverNoCountryMatch}
+                        ariaLabel="Country Filter"
+                        className="w-40 sm:w-48"
+                    />
 
                     <input
                         type="text"

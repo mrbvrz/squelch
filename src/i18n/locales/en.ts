@@ -145,7 +145,7 @@ export const enLocale: TranslationDictionary = {
     prefFontFamilyLabel: 'Typography (System Font)',
     prefFontFamilyDesc:
         'Use default OS system font or pick any installed font family',
-    prefFontSystemDefault: 'System Default (SF Pro / Segoe UI)',
+    prefFontSystemDefault: 'System Default',
     prefFontSearchPlaceholder: 'Search system fonts...',
     prefFontFound: 'fonts found',
     prefFontSelected: 'Selected',

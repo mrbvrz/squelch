@@ -131,7 +131,7 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
                 aria-expanded={isOpen}
                 aria-label={ariaLabel}
                 onClick={() => setIsOpen((prev) => !prev)}
-                className="mac-input px-3 py-1.5 rounded-[7px] text-[12px] w-64 cursor-pointer flex items-center justify-between gap-2 text-left hover:border-accent/40 transition shadow-sm"
+                className="mac-input px-3 py-1.5 rounded-[7px] text-[12px] w-48 cursor-pointer flex items-center justify-between gap-2 text-left hover:border-accent/40 transition shadow-sm"
             >
                 <span
                     className="truncate flex-1 font-medium"
@@ -157,7 +157,7 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
                 <div
                     role="listbox"
                     aria-label={ariaLabel}
-                    className="absolute right-0 top-full mt-1.5 w-76 z-50 mac-modal-surface rounded-xl shadow-2xl p-2.5 text-xs flex flex-col gap-2 backdrop-blur-xl animate-scale-enter"
+                    className="absolute right-0 top-full mt-1.5 w-64 z-50 mac-modal-surface rounded-xl shadow-2xl p-2.5 text-xs flex flex-col gap-2 backdrop-blur-xl animate-scale-enter"
                 >
                     {/* Search Input Box */}
                     <div className="relative flex items-center px-2 py-1 rounded-[7px] mac-input focus-within:border-accent/60 transition">

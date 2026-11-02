@@ -241,6 +241,9 @@ export interface TranslationDictionary {
     prefClearStatsConfirmTitle: string;
     prefClearStatsConfirmDesc: string;
 
+    prefClearDropdownLabel: string;
+    prefClearBtn: string;
+
     prefResetAllTitle: string;
     prefResetAllDesc: string;
     prefResetAllBtn: string;

@@ -258,6 +258,9 @@ export const idLocale: TranslationDictionary = {
     prefClearStatsConfirmDesc:
         'Semua catatan waktu mendengarkan radio akan direset ke angka 0. Tindakan ini tidak dapat dibatalkan.',
 
+    prefClearDropdownLabel: 'Hapus Data Tertentu',
+    prefClearBtn: 'Hapus...',
+
     prefResetAllTitle: 'Hapus Semua Data (Setel Ulang Total)',
     prefResetAllDesc:
         'Kembalikan Squelch ke kondisi awal pabrik. Semua stasiun radio, jadwal, statistik, dan preferensi akan dihapus total.',

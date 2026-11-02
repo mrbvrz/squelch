@@ -258,6 +258,9 @@ export const enLocale: TranslationDictionary = {
     prefClearStatsConfirmDesc:
         'All listening duration logs will be reset to 0. This action cannot be undone.',
 
+    prefClearDropdownLabel: 'Delete Specific Data',
+    prefClearBtn: 'Delete...',
+
     prefResetAllTitle: 'Delete All Data (Factory Reset)',
     prefResetAllDesc:
         'Restore Squelch to original factory condition. All stations, schedules, statistics, and preferences will be erased.',

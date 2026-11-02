@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { AppSettings } from '../../types';
 import { SUPPORTED_LOCALES, type TranslationDictionary } from '../../i18n';
 import type { SquelchWindowApi } from '../types';
@@ -95,6 +95,10 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     api,
     t
 }) => {
+    const [selectedClearTarget, setSelectedClearTarget] = useState<
+        'stations' | 'schedules' | 'stats' | 'all'
+    >('stations');
+
     const handleUpdateShortcut = (key: ShortcutActionKey, newAccel: string) => {
         void api.updateSettings({
             shortcuts: {
@@ -518,7 +522,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                     </p>
                 </div>
 
-                <div className="mac-settings-card mac-inset-list rounded-xl overflow-hidden divide-y mac-divider">
+                <div className="mac-settings-card rounded-xl overflow-hidden">
                     {GLOBAL_SHORTCUT_DEFINITIONS.map((def) => {
                         const isRecording = recordingShortcutKey === def.key;
                         const currentValue =
@@ -814,8 +818,6 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         </div>
                     </div>
 
-                    <div className="mx-4 border-t mac-divider" />
-
                     <div className="px-4 py-2.5 flex items-center justify-between">
                         <button
                             type="button"
@@ -865,79 +867,75 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                     <IconTrash size={14} className="text-[#FF453A]" />
                     <span>{t.prefDangerSection}</span>
                 </h2>
-                <div className="mac-settings-card mac-inset-list border border-[#FF453A]/30 overflow-hidden divide-y mac-divider">
-                    {/* 1. Hapus Stasiun Radio */}
-                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="min-w-0">
+                <div className="mac-settings-card border border-[#FF453A]/30 overflow-hidden p-4 space-y-4">
+                    {/* 1. Dropdown Hapus Data Tertentu */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="min-w-0 flex-1">
                             <div className="text-[13px] font-semibold text-foreground">
-                                {t.prefClearStationsTitle}
+                                {t.prefClearDropdownLabel || 'Hapus Data Tertentu'}
                             </div>
                             <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
-                                {t.prefClearStationsDesc}
+                                {selectedClearTarget === 'stations'
+                                    ? t.prefClearStationsDesc
+                                    : selectedClearTarget === 'schedules'
+                                      ? t.prefClearSchedulesDesc
+                                      : selectedClearTarget === 'stats'
+                                        ? t.prefClearStatsDesc
+                                        : t.prefResetAllDesc}
                             </p>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() =>
-                                onRequestReset
-                                    ? onRequestReset('stations')
-                                    : setIsResetConfirmOpen(true)
-                            }
-                            className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 transition cursor-pointer shrink-0"
-                        >
-                            {t.prefClearStationsBtn}
-                        </button>
-                    </div>
-
-                    {/* 2. Hapus Jadwal Siaran */}
-                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="min-w-0">
-                            <div className="text-[13px] font-semibold text-foreground">
-                                {t.prefClearSchedulesTitle}
-                            </div>
-                            <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
-                                {t.prefClearSchedulesDesc}
-                            </p>
+                        <div className="flex items-center gap-2.5 shrink-0">
+                            <select
+                                value={selectedClearTarget}
+                                aria-label={
+                                    t.prefClearDropdownLabel ||
+                                    'Pilih data yang ingin dihapus'
+                                }
+                                onChange={(e) =>
+                                    setSelectedClearTarget(
+                                        e.target.value as
+                                            | 'stations'
+                                            | 'schedules'
+                                            | 'stats'
+                                            | 'all'
+                                    )
+                                }
+                                className="mac-input px-3 h-[34px] rounded-[7px] text-[12px] cursor-pointer hover:border-accent/40 transition shadow-sm font-medium"
+                            >
+                                <option value="stations">
+                                    {t.tabStations}
+                                </option>
+                                <option value="schedules">
+                                    {t.tabSchedules}
+                                </option>
+                                <option value="stats">
+                                    {t.tabStats}
+                                </option>
+                                <option value="all">
+                                    {t.prefResetAllTitle}
+                                </option>
+                            </select>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    onRequestReset
+                                        ? onRequestReset(selectedClearTarget)
+                                        : setIsResetConfirmOpen(true)
+                                }
+                                className={`px-3.5 h-[34px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition shrink-0 ${
+                                    selectedClearTarget === 'all'
+                                        ? 'bg-[#FF453A] hover:bg-[#D70015] text-white'
+                                        : 'mac-glass-pill text-[#FF453A] hover:bg-[#FF453A]/10'
+                                }`}
+                            >
+                                {t.prefClearBtn || 'Hapus...'}
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() =>
-                                onRequestReset
-                                    ? onRequestReset('schedules')
-                                    : setIsResetConfirmOpen(true)
-                            }
-                            className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 transition cursor-pointer shrink-0"
-                        >
-                            {t.prefClearSchedulesBtn}
-                        </button>
                     </div>
 
-                    {/* 3. Hapus Riwayat Statistik */}
-                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="min-w-0">
-                            <div className="text-[13px] font-semibold text-foreground">
-                                {t.prefClearStatsTitle}
-                            </div>
-                            <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
-                                {t.prefClearStatsDesc}
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() =>
-                                onRequestReset
-                                    ? onRequestReset('stats')
-                                    : setIsResetConfirmOpen(true)
-                            }
-                            className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 transition cursor-pointer shrink-0"
-                        >
-                            {t.prefClearStatsBtn}
-                        </button>
-                    </div>
-
-                    {/* 4. Kembalikan Pengaturan Bawaan */}
-                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="min-w-0">
+                    {/* 2. Kembali ke Pengaturan Awal */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+                        <div className="min-w-0 flex-1">
                             <div className="text-[13px] font-semibold text-foreground">
                                 {t.prefResetBtn}
                             </div>
@@ -952,32 +950,9 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                     ? onRequestReset('settings')
                                     : setIsResetConfirmOpen(true)
                             }
-                            className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 transition cursor-pointer shrink-0"
+                            className="mac-glass-pill px-3.5 h-[34px] rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 transition cursor-pointer shrink-0"
                         >
                             {t.prefResetBtn}
-                        </button>
-                    </div>
-
-                    {/* 5. Hapus Semua Data (Setel Ulang Total) */}
-                    <div className="p-4 bg-[#FF453A]/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="min-w-0">
-                            <div className="text-[13px] font-bold text-[#FF453A]">
-                                {t.prefResetAllTitle}
-                            </div>
-                            <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
-                                {t.prefResetAllDesc}
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() =>
-                                onRequestReset
-                                    ? onRequestReset('all')
-                                    : setIsResetConfirmOpen(true)
-                            }
-                            className="bg-[#FF453A] hover:bg-[#D70015] text-white px-4 py-2 rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition shrink-0"
-                        >
-                            {t.prefResetAllBtn}
                         </button>
                     </div>
                 </div>

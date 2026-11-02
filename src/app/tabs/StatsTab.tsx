@@ -53,6 +53,34 @@ export const StatsTab: React.FC<StatsTabProps> = ({
         }));
     }, [activeChartPoints, lang]);
 
+    const { yDomain, yTicks } = useMemo(() => {
+        const rawMaxHours = maxChartSeconds / 3600;
+        let step = 1;
+        if (rawMaxHours > 24) {
+            step = Math.ceil(rawMaxHours / 5 / 5) * 5;
+        } else if (rawMaxHours > 12) {
+            step = 4;
+        } else if (rawMaxHours > 5) {
+            step = 2;
+        } else {
+            step = 1;
+        }
+
+        const ceilingHours = Math.max(
+            step * 2,
+            Math.ceil(rawMaxHours / step) * step
+        );
+        const ticks: number[] = [];
+        for (let h = 0; h <= ceilingHours; h += step) {
+            ticks.push(h * 3600);
+        }
+
+        return {
+            yDomain: [0, ceilingHours * 3600] as [number, number],
+            yTicks: ticks
+        };
+    }, [maxChartSeconds]);
+
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
@@ -93,8 +121,6 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                         </div>
                     </div>
                 </div>
-
-                <div className="mx-4 border-t mac-divider" />
 
                 {/* 4 KPI Summary Metrics: Hari Ini, Minggu Ini, Bulan Ini, Tahun Ini */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 divide-x mac-divider px-2 py-3">
@@ -190,7 +216,7 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                                 margin={{
                                     top: 10,
                                     right: 12,
-                                    left: -16,
+                                    left: -6,
                                     bottom: 0
                                 }}
                             >
@@ -236,16 +262,22 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                                     }
                                 />
                                 <YAxis
-                                    domain={[0, Math.max(60, maxChartSeconds)]}
+                                    domain={yDomain}
+                                    ticks={yTicks}
                                     axisLine={false}
                                     tickLine={false}
+                                    width={46}
                                     tick={{
                                         fontSize: 10,
                                         fill: 'var(--ink-secondary)'
                                     }}
-                                    tickFormatter={(sec: number) =>
-                                        formatDurationCompact(sec, lang)
-                                    }
+                                    tickFormatter={(sec: number) => {
+                                        if (sec === 0) return '0';
+                                        const hours = Math.round(sec / 3600);
+                                        return lang === 'id'
+                                            ? `${hours} jam`
+                                            : `${hours}h`;
+                                    }}
                                 />
                                 <Tooltip
                                     content={<CustomTooltip />}

@@ -33,7 +33,7 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
     placeholder = 'Cari font sistem...',
     isLoading = false,
     foundLabel = 'font ditemukan',
-    selectedLabel = 'Terpilih',
+    selectedLabel: _selectedLabel,
     loadingLabel = 'Memuat font sistem...',
     noMatchLabel = 'Tidak ada font yang cocok'
 }) => {
@@ -185,24 +185,19 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
                     </div>
 
                     {/* Status Bar: Count and Selected Font */}
-                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-[7px] bg-black/5 dark:bg-white/5 text-[11px] tabular-nums">
+                    <div className="flex items-center justify-between px-2 py-1 rounded-[6px] bg-black/5 dark:bg-white/5 text-[10px] tabular-nums">
                         <div className="flex items-center gap-1 text-secondary">
-                            <span className="font-semibold text-foreground">
+                            <span className="font-medium text-foreground">
                                 {isLoading ? '...' : totalMatchingCount}
                             </span>
                             <span>{foundLabel}</span>
                         </div>
-                        <div
-                            className="flex items-center gap-1.5 truncate max-w-[140px]"
+                        <span
+                            className="font-medium text-accent truncate max-w-[130px] text-right"
                             title={isSystemSelected ? defaultLabel : value}
                         >
-                            <span className="text-[10px] text-secondary font-medium">
-                                {selectedLabel}:
-                            </span>
-                            <span className="font-semibold text-accent truncate">
-                                {isSystemSelected ? defaultLabel : value}
-                            </span>
-                        </div>
+                            {isSystemSelected ? defaultLabel : value}
+                        </span>
                     </div>
 
                     {/* Dropdown Content Area */}
@@ -227,10 +222,7 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
                         >
                             {/* Pinned Selected Font (if custom font selected & no search) */}
                             {!isSystemSelected && !searchQuery.trim() && (
-                                <div className="mb-1.5 pb-1.5 border-b border-black/5 dark:border-white/10">
-                                    <div className="text-[10px] font-semibold text-secondary uppercase tracking-wider px-2 py-0.5 mb-0.5">
-                                        {selectedLabel}
-                                    </div>
+                                <div className="mb-1 pb-1 border-b border-black/5 dark:border-white/10">
                                     <button
                                         type="button"
                                         role="option"

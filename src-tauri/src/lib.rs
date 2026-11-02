@@ -225,7 +225,6 @@ pub fn run() {
             let menu_open = MenuItemBuilder::with_id("open_squelch", "Buka Jendela Utama").build(app)?;
             let menu_stations = MenuItemBuilder::with_id("stations_squelch", "Stasiun Radio").build(app)?;
             let menu_pref = MenuItemBuilder::with_id("pref_squelch", "Pengaturan").build(app)?;
-            let menu_update = MenuItemBuilder::with_id("update_squelch", "Periksa Pembaruan...").build(app)?;
             let menu_about = MenuItemBuilder::with_id("about_squelch", "Tentang Squelch").build(app)?;
             let menu_quit = MenuItemBuilder::with_id("quit_squelch", "Keluar Squelch").build(app)?;
 
@@ -238,7 +237,6 @@ pub fn run() {
                 .item(&menu_open)
                 .item(&menu_stations)
                 .item(&menu_pref)
-                .item(&menu_update)
                 .item(&menu_about)
                 .separator()
                 .item(&menu_quit)

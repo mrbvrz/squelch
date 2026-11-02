@@ -1403,6 +1403,57 @@ export function initTauriBridge() {
                 return res?.settings;
             },
 
+            clearStationsData: async () => {
+                await invoke('clear_stations_data');
+                await emit('ui:state-changed', { type: 'stations' });
+            },
+
+            clearSchedulesData: async () => {
+                await invoke('clear_schedules_data');
+                await emit('ui:state-changed', { type: 'schedules' });
+            },
+
+            clearListeningStats: async () => {
+                statsData = {
+                    schemaVersion: 1,
+                    dailySeconds: {},
+                    hourlySeconds: {},
+                    monthlySeconds: {},
+                    stationSeconds: {},
+                    stationNames: {},
+                    stationLogos: {},
+                    totalSeconds: 0
+                };
+                statsDirty = false;
+                await invoke('clear_listening_stats');
+                await emit('ui:state-changed', { type: 'stats' });
+            },
+
+            resetAllData: async () => {
+                statsData = {
+                    schemaVersion: 1,
+                    dailySeconds: {},
+                    hourlySeconds: {},
+                    monthlySeconds: {},
+                    stationSeconds: {},
+                    stationNames: {},
+                    stationLogos: {},
+                    totalSeconds: 0
+                };
+                statsDirty = false;
+                const res: any = await invoke('reset_all_data');
+                if (res?.settings) {
+                    applyAppearanceVariables(res.settings);
+                    void emit('squelch:audio:eq', res.settings.equalizer);
+                    void emit('squelch:audio:buffer', {
+                        bufferLengthSeconds: res.settings.bufferLengthSeconds
+                    });
+                    void emit('squelch:shortcuts:sync', res.settings.shortcuts);
+                }
+                await emit('ui:state-changed', { type: 'all', ...res });
+                return res?.settings;
+            },
+
             getSystemFonts: async () => {
                 return await invoke('get_system_fonts');
             },

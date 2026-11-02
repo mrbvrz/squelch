@@ -225,7 +225,7 @@ export const idLocale: TranslationDictionary = {
     prefDiagShowBtn: 'Tampilkan Laporan Diagnostik',
     prefDiagHideBtn: 'Sembunyikan Laporan Diagnostik',
     prefDataDirLabel: 'Direktori data',
-    prefDangerSection: 'Atur Ulang Pengaturan',
+    prefDangerSection: 'Pengelolaan Data & Reset',
     prefResetDesc:
         'Kembalikan seluruh preferensi tampilan, jaringan, dan pintasan keyboard ke pengaturan awal.',
     prefResetBtn: 'Kembalikan Bawaan',
@@ -233,6 +233,38 @@ export const idLocale: TranslationDictionary = {
     prefResetConfirmDesc:
         'Semua kustomisasi tema, warna aksen, font, dan pintasan keyboard akan dikembalikan ke nilai bawaan.',
     prefResetConfirmYes: 'Ya, Kembalikan Bawaan',
+
+    prefClearStationsTitle: 'Hapus Semua Stasiun Radio',
+    prefClearStationsDesc:
+        'Hapus seluruh daftar stasiun radio dan kategori yang tersimpan dalam koleksi Anda.',
+    prefClearStationsBtn: 'Hapus Stasiun',
+    prefClearStationsConfirmTitle: 'Hapus Semua Stasiun Radio?',
+    prefClearStationsConfirmDesc:
+        'Tindakan ini akan mengosongkan seluruh stasiun radio dan kategori Anda. Data yang dihapus tidak dapat dipulihkan kecuali Anda memiliki cadangan.',
+
+    prefClearSchedulesTitle: 'Hapus Semua Jadwal Siaran',
+    prefClearSchedulesDesc:
+        'Hapus semua jadwal siaran radio dan pengingat yang telah Anda jadwalkan.',
+    prefClearSchedulesBtn: 'Hapus Jadwal',
+    prefClearSchedulesConfirmTitle: 'Hapus Semua Jadwal Siaran?',
+    prefClearSchedulesConfirmDesc:
+        'Seluruh jadwal siaran radio dan pengingat otomatis akan dihapus permanen.',
+
+    prefClearStatsTitle: 'Hapus Riwayat Statistik',
+    prefClearStatsDesc:
+        'Setel ulang seluruh riwayat durasi mendengarkan harian, mingguan, bulanan, dan stasiun terpopuler.',
+    prefClearStatsBtn: 'Hapus Statistik',
+    prefClearStatsConfirmTitle: 'Hapus Riwayat Statistik Mendengarkan?',
+    prefClearStatsConfirmDesc:
+        'Semua catatan waktu mendengarkan radio akan direset ke angka 0. Tindakan ini tidak dapat dibatalkan.',
+
+    prefResetAllTitle: 'Hapus Semua Data (Setel Ulang Total)',
+    prefResetAllDesc:
+        'Kembalikan Squelch ke kondisi awal pabrik. Semua stasiun radio, jadwal, statistik, dan preferensi akan dihapus total.',
+    prefResetAllBtn: 'Hapus Semua Data',
+    prefResetAllConfirmTitle: 'Setel Ulang Total Aplikasi?',
+    prefResetAllConfirmDesc:
+        'PERINGATAN: Tindakan ini akan menghapus SEMUA data termasuk stasiun radio, jadwal siaran, riwayat statistik, dan setelan preferensi kembali ke kondisi awal saat baru dipasang.',
 
     // About & Diagnostics
     aboutTagline: 'Pemutar Radio Internet Menu Bar Modern & Ringan',

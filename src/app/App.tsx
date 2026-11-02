@@ -197,6 +197,9 @@ export const App: React.FC = () => {
     const [copiedDiag, setCopiedDiag] = useState<boolean>(false);
     const [isResetConfirmOpen, setIsResetConfirmOpen] =
         useState<boolean>(false);
+    const [resetTarget, setResetTarget] = useState<
+        'settings' | 'stations' | 'schedules' | 'stats' | 'all'
+    >('settings');
     const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
     const [isQuitConfirmOpen, setIsQuitConfirmOpen] = useState<boolean>(false);
     const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
@@ -727,6 +730,49 @@ export const App: React.FC = () => {
         return maxVal > 0 ? maxVal : 60;
     }, [activeChartPoints]);
 
+    const handleRequestReset = (
+        target: 'settings' | 'stations' | 'schedules' | 'stats' | 'all'
+    ) => {
+        setResetTarget(target);
+        setIsResetConfirmOpen(true);
+    };
+
+    const resetModalMeta = useMemo(() => {
+        switch (resetTarget) {
+            case 'stations':
+                return {
+                    title: t.prefClearStationsConfirmTitle,
+                    description: t.prefClearStationsConfirmDesc,
+                    confirmBtn: t.prefClearStationsBtn
+                };
+            case 'schedules':
+                return {
+                    title: t.prefClearSchedulesConfirmTitle,
+                    description: t.prefClearSchedulesConfirmDesc,
+                    confirmBtn: t.prefClearSchedulesBtn
+                };
+            case 'stats':
+                return {
+                    title: t.prefClearStatsConfirmTitle,
+                    description: t.prefClearStatsConfirmDesc,
+                    confirmBtn: t.prefClearStatsBtn
+                };
+            case 'all':
+                return {
+                    title: t.prefResetAllConfirmTitle,
+                    description: t.prefResetAllConfirmDesc,
+                    confirmBtn: t.prefResetAllBtn
+                };
+            case 'settings':
+            default:
+                return {
+                    title: t.prefResetConfirmTitle,
+                    description: t.prefResetConfirmDesc,
+                    confirmBtn: t.prefResetBtn
+                };
+        }
+    }, [resetTarget, t]);
+
     const openAddStationModal = () => {
         setEditingStation(null);
         setFormName('');
@@ -1239,6 +1285,7 @@ export const App: React.FC = () => {
                             diagnosticsText={diagnosticsText}
                             setDiagnosticsText={setDiagnosticsText}
                             setIsResetConfirmOpen={setIsResetConfirmOpen}
+                            onRequestReset={handleRequestReset}
                             api={api}
                             t={t}
                         />
@@ -1307,13 +1354,23 @@ export const App: React.FC = () => {
                 onClose={() => setIsResetConfirmOpen(false)}
                 onConfirm={async () => {
                     setIsResetConfirmOpen(false);
-                    await api.resetSettings();
+                    if (resetTarget === 'stations') {
+                        await api.clearStationsData();
+                    } else if (resetTarget === 'schedules') {
+                        await api.clearSchedulesData();
+                    } else if (resetTarget === 'stats') {
+                        await api.clearListeningStats();
+                    } else if (resetTarget === 'all') {
+                        await api.resetAllData();
+                    } else {
+                        await api.resetSettings();
+                    }
                     await refreshAll();
                 }}
-                title={t.prefResetBtn}
-                description={t.prefResetDesc}
+                title={resetModalMeta.title}
+                description={resetModalMeta.description}
                 cancelBtnText={t.cancelBtn}
-                confirmBtnText={t.prefResetBtn}
+                confirmBtnText={resetModalMeta.confirmBtn}
             />
 
             <QuitConfirmModal

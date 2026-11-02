@@ -370,7 +370,11 @@ pub fn run() {
             commands::check_for_updates,
             commands::send_notification,
             commands::get_player_status,
-            commands::update_player_status
+            commands::update_player_status,
+            commands::clear_stations_data,
+            commands::clear_schedules_data,
+            commands::clear_listening_stats,
+            commands::reset_all_data
         ])
         .run(tauri::generate_context!())
         .expect("error while building tauri application");

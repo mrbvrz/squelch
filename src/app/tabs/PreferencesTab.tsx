@@ -26,7 +26,8 @@ import {
     IconRestore,
     IconSparkles,
     IconSpinner,
-    IconSwatch
+    IconSwatch,
+    IconTrash
 } from '../../components/Icons';
 
 export interface PreferencesTabProps {
@@ -57,6 +58,9 @@ export interface PreferencesTabProps {
     diagnosticsText: string;
     setDiagnosticsText: (text: string) => void;
     setIsResetConfirmOpen: (open: boolean) => void;
+    onRequestReset?: (
+        target: 'settings' | 'stations' | 'schedules' | 'stats' | 'all'
+    ) => void;
     api: SquelchWindowApi;
     t: TranslationDictionary;
 }
@@ -87,6 +91,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     diagnosticsText,
     setDiagnosticsText,
     setIsResetConfirmOpen,
+    onRequestReset,
     api,
     t
 }) => {
@@ -854,27 +859,127 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                 </div>
             </div>
 
-            {/* Group 7: Reset Defaults at Bottom */}
+            {/* Group: Data Management & Reset Options */}
             <div>
-                <h2 className="text-[13px] font-bold mb-2 px-1 text-[#FF453A]">
-                    {t.prefDangerSection}
+                <h2 className="text-[13px] font-bold mb-2 px-1 text-[#FF453A] flex items-center gap-1.5">
+                    <IconTrash size={14} className="text-[#FF453A]" />
+                    <span>{t.prefDangerSection}</span>
                 </h2>
-                <div className="mac-settings-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-[#FF453A]/30">
-                    <div>
-                        <div className="text-[13px] font-medium">
-                            {t.prefResetBtn}
+                <div className="mac-settings-card mac-inset-list border border-[#FF453A]/30 overflow-hidden divide-y mac-divider">
+                    {/* 1. Hapus Stasiun Radio */}
+                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="min-w-0">
+                            <div className="text-[13px] font-semibold text-foreground">
+                                {t.prefClearStationsTitle}
+                            </div>
+                            <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
+                                {t.prefClearStationsDesc}
+                            </p>
                         </div>
-                        <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
-                            {t.prefResetDesc}
-                        </p>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                onRequestReset
+                                    ? onRequestReset('stations')
+                                    : setIsResetConfirmOpen(true)
+                            }
+                            className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 transition cursor-pointer shrink-0"
+                        >
+                            {t.prefClearStationsBtn}
+                        </button>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => setIsResetConfirmOpen(true)}
-                        className="bg-[#FF453A] hover:bg-[#D70015] text-white px-4 py-1.5 rounded-[7px] font-semibold shadow-sm cursor-pointer transition shrink-0"
-                    >
-                        {t.prefResetBtn}
-                    </button>
+
+                    {/* 2. Hapus Jadwal Siaran */}
+                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="min-w-0">
+                            <div className="text-[13px] font-semibold text-foreground">
+                                {t.prefClearSchedulesTitle}
+                            </div>
+                            <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
+                                {t.prefClearSchedulesDesc}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                onRequestReset
+                                    ? onRequestReset('schedules')
+                                    : setIsResetConfirmOpen(true)
+                            }
+                            className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 transition cursor-pointer shrink-0"
+                        >
+                            {t.prefClearSchedulesBtn}
+                        </button>
+                    </div>
+
+                    {/* 3. Hapus Riwayat Statistik */}
+                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="min-w-0">
+                            <div className="text-[13px] font-semibold text-foreground">
+                                {t.prefClearStatsTitle}
+                            </div>
+                            <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
+                                {t.prefClearStatsDesc}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                onRequestReset
+                                    ? onRequestReset('stats')
+                                    : setIsResetConfirmOpen(true)
+                            }
+                            className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 transition cursor-pointer shrink-0"
+                        >
+                            {t.prefClearStatsBtn}
+                        </button>
+                    </div>
+
+                    {/* 4. Kembalikan Pengaturan Bawaan */}
+                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="min-w-0">
+                            <div className="text-[13px] font-semibold text-foreground">
+                                {t.prefResetBtn}
+                            </div>
+                            <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
+                                {t.prefResetDesc}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                onRequestReset
+                                    ? onRequestReset('settings')
+                                    : setIsResetConfirmOpen(true)
+                            }
+                            className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 transition cursor-pointer shrink-0"
+                        >
+                            {t.prefResetBtn}
+                        </button>
+                    </div>
+
+                    {/* 5. Hapus Semua Data (Setel Ulang Total) */}
+                    <div className="p-4 bg-[#FF453A]/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="min-w-0">
+                            <div className="text-[13px] font-bold text-[#FF453A]">
+                                {t.prefResetAllTitle}
+                            </div>
+                            <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
+                                {t.prefResetAllDesc}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                onRequestReset
+                                    ? onRequestReset('all')
+                                    : setIsResetConfirmOpen(true)
+                            }
+                            className="bg-[#FF453A] hover:bg-[#D70015] text-white px-4 py-2 rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition shrink-0"
+                        >
+                            {t.prefResetAllBtn}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

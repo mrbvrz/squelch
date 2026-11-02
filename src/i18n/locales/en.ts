@@ -225,7 +225,7 @@ export const enLocale: TranslationDictionary = {
     prefDiagShowBtn: 'Show Diagnostic Report',
     prefDiagHideBtn: 'Hide Diagnostic Report',
     prefDataDirLabel: 'Data directory',
-    prefDangerSection: 'Reset Configuration',
+    prefDangerSection: 'Data Management & Reset',
     prefResetDesc:
         'Restore all appearance, network, and keyboard shortcut preferences to factory defaults.',
     prefResetBtn: 'Reset Defaults',
@@ -233,6 +233,38 @@ export const enLocale: TranslationDictionary = {
     prefResetConfirmDesc:
         'All custom theme, accent color, font, and shortcut settings will be restored to defaults.',
     prefResetConfirmYes: 'Yes, Reset Defaults',
+
+    prefClearStationsTitle: 'Delete All Radio Stations',
+    prefClearStationsDesc:
+        'Delete all saved radio stations and categories from your personal collection.',
+    prefClearStationsBtn: 'Delete Stations',
+    prefClearStationsConfirmTitle: 'Delete All Radio Stations?',
+    prefClearStationsConfirmDesc:
+        'This action will clear all your radio stations and categories. Deleted data cannot be recovered unless you have a backup file.',
+
+    prefClearSchedulesTitle: 'Delete All Show Schedules',
+    prefClearSchedulesDesc:
+        'Delete all scheduled radio shows, reminders, and auto-play events.',
+    prefClearSchedulesBtn: 'Delete Schedules',
+    prefClearSchedulesConfirmTitle: 'Delete All Show Schedules?',
+    prefClearSchedulesConfirmDesc:
+        'All broadcast schedules and automated reminders will be permanently deleted.',
+
+    prefClearStatsTitle: 'Clear Listening Statistics',
+    prefClearStatsDesc:
+        'Reset all daily, weekly, monthly, and yearly listening history and top stations.',
+    prefClearStatsBtn: 'Clear Statistics',
+    prefClearStatsConfirmTitle: 'Clear Listening History & Statistics?',
+    prefClearStatsConfirmDesc:
+        'All listening duration logs will be reset to 0. This action cannot be undone.',
+
+    prefResetAllTitle: 'Delete All Data (Factory Reset)',
+    prefResetAllDesc:
+        'Restore Squelch to original factory condition. All stations, schedules, statistics, and preferences will be erased.',
+    prefResetAllBtn: 'Reset All Data',
+    prefResetAllConfirmTitle: 'Factory Reset Squelch?',
+    prefResetAllConfirmDesc:
+        'WARNING: This will permanently erase ALL data including stations, schedules, listening statistics, and settings back to a fresh install.',
 
     // About & Diagnostics
     aboutTagline: 'Modern & Lightweight Menu Bar Internet Radio Receiver',

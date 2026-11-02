@@ -223,6 +223,30 @@ export interface TranslationDictionary {
     prefResetConfirmDesc: string;
     prefResetConfirmYes: string;
 
+    prefClearStationsTitle: string;
+    prefClearStationsDesc: string;
+    prefClearStationsBtn: string;
+    prefClearStationsConfirmTitle: string;
+    prefClearStationsConfirmDesc: string;
+
+    prefClearSchedulesTitle: string;
+    prefClearSchedulesDesc: string;
+    prefClearSchedulesBtn: string;
+    prefClearSchedulesConfirmTitle: string;
+    prefClearSchedulesConfirmDesc: string;
+
+    prefClearStatsTitle: string;
+    prefClearStatsDesc: string;
+    prefClearStatsBtn: string;
+    prefClearStatsConfirmTitle: string;
+    prefClearStatsConfirmDesc: string;
+
+    prefResetAllTitle: string;
+    prefResetAllDesc: string;
+    prefResetAllBtn: string;
+    prefResetAllConfirmTitle: string;
+    prefResetAllConfirmDesc: string;
+
     // About & Diagnostics
     aboutTagline: string;
     aboutDescription: string;

@@ -900,7 +900,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                             | 'all'
                                     )
                                 }
-                                className="mac-input px-3 h-[34px] rounded-[7px] text-[12px] cursor-pointer hover:border-accent/40 transition shadow-sm font-medium"
+                                className="mac-input px-3 w-36 h-[34px] rounded-[7px] text-[12px] cursor-pointer hover:border-accent/40 transition shadow-sm font-medium"
                             >
                                 <option value="stations">
                                     {t.tabStations}

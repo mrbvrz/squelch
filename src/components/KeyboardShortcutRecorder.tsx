@@ -103,7 +103,7 @@ export const KeyboardShortcutRecorder: React.FC<
     const desc = lang === 'id' ? definition.descId : definition.descEn;
 
     return (
-        <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b mac-divider last:border-b-0 hover:bg-black/[0.015] dark:hover:bg-white/[0.015] transition">
+        <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-black/[0.015] dark:hover:bg-white/[0.015] transition">
             {/* Action Label & Description */}
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">

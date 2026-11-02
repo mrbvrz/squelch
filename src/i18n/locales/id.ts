@@ -259,7 +259,7 @@ export const idLocale: TranslationDictionary = {
         'Semua catatan waktu mendengarkan radio akan direset ke angka 0. Tindakan ini tidak dapat dibatalkan.',
 
     prefClearDropdownLabel: 'Hapus Data',
-    prefClearAllDataOption: 'Semua Data (Stasiun, Jadwal, & Statistik)',
+    prefClearAllDataOption: 'Semua Data',
     prefClearBtn: 'Hapus Data',
 
     prefResetAllTitle: 'Semua Data',

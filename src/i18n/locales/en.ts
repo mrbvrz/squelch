@@ -259,7 +259,7 @@ export const enLocale: TranslationDictionary = {
         'All listening duration logs will be reset to 0. This action cannot be undone.',
 
     prefClearDropdownLabel: 'Delete Data',
-    prefClearAllDataOption: 'All Data (Stations, Schedules, & Stats)',
+    prefClearAllDataOption: 'All Data',
     prefClearBtn: 'Delete Data',
 
     prefResetAllTitle: 'All Data',

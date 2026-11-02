@@ -155,7 +155,7 @@ export const SearchableCountryPicker: React.FC<
     return (
         <div
             ref={containerRef}
-            className={`relative inline-block text-left shrink-0 ${className}`}
+            className={`relative inline-block text-left shrink-0 ${isOpen ? 'z-50' : 'z-20'} ${className}`}
         >
             {/* Dropdown Trigger Button */}
             <button
@@ -197,7 +197,7 @@ export const SearchableCountryPicker: React.FC<
                 <div
                     role="listbox"
                     aria-label={ariaLabel}
-                    className="absolute left-0 top-full mt-1.5 w-64 z-50 mac-modal-surface rounded-xl shadow-2xl p-2.5 text-xs flex flex-col gap-2 backdrop-blur-xl animate-scale-enter"
+                    className="absolute left-0 top-full mt-1.5 w-64 z-[100] mac-modal-surface rounded-xl shadow-2xl p-2.5 text-xs flex flex-col gap-2 backdrop-blur-xl animate-scale-enter"
                 >
                     {/* Search Input Box */}
                     <div className="relative flex items-center px-2 py-1 rounded-[7px] mac-input focus-within:border-accent/60 transition">

@@ -70,7 +70,10 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
             key="tab-discover"
             className="max-w-3xl space-y-6 animate-tab-enter"
         >
-            <form onSubmit={handleDiscoverSearch} className="mac-settings-card">
+            <form
+                onSubmit={handleDiscoverSearch}
+                className="mac-settings-card relative z-30"
+            >
                 <div className="p-4 flex items-start gap-3.5">
                     <div className="w-9 h-9 rounded-[8px] bg-[#32ADE6] text-white flex items-center justify-center shadow-sm shrink-0 mt-0.5">
                         <IconCompass size={19} />
@@ -88,7 +91,7 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
                 <div className="mx-4 border-t mac-divider" />
 
                 {/* Inline Filter & Search Row: Country Dropdown, Name, Tag, and Search Button */}
-                <div className="px-4 py-3 flex flex-wrap items-center gap-2 text-xs">
+                <div className="px-4 py-3 flex flex-wrap items-center gap-2 text-xs relative z-40">
                     <SearchableCountryPicker
                         value={discCountry}
                         countries={discCountries}
@@ -144,12 +147,12 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
             </form>
 
             {discError && (
-                <div className="mac-settings-card p-3.5 text-[#FF453A] text-xs">
+                <div className="mac-settings-card p-3.5 text-[#FF453A] text-xs relative z-10">
                     {discError}
                 </div>
             )}
 
-            <div>
+            <div className="relative z-10">
                 <h2 className="text-[13px] font-bold mb-2 px-1">
                     {t.discoverAvailableHeader} ({discResults.length})
                 </h2>

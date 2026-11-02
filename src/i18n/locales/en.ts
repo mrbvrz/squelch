@@ -115,21 +115,28 @@ export const enLocale: TranslationDictionary = {
     discoverPreviewBtn: 'Preview',
     discoverAddBtn: '+ Add',
     discoverAdded: 'Saved',
+    discoverSearchCountryPlaceholder: 'Search country…',
+    discoverCountriesFound: 'countries found',
+    discoverNoCountryMatch: 'No matching country',
 
-    // Listening Stats Tab (Weekly, Monthly, Yearly)
+    // Listening Stats Tab (Daily, Weekly, Monthly, Yearly)
     statsTitle: 'Listening Activity',
     statsSubtitle:
-        'Weekly, monthly, and yearly listening duration history along with your most played stations.',
+        'Daily, weekly, monthly, and yearly listening duration history along with your most played stations.',
+    statsTodayLabel: 'Today',
     statsWeekLabel: 'This Week',
     statsMonthLabel: 'This Month',
     statsYearLabel: 'This Year',
     statsChartTitle: 'Listening Duration Graph',
+    statsDailyView: 'Daily',
     statsWeeklyView: 'Weekly',
     statsMonthlyView: 'Monthly',
     statsYearlyView: 'Yearly',
     statsTopStationsTitle: 'Most Listened Stations',
+    statsEmptyTitle: 'No Listening History Yet',
     statsEmptyText:
         'No listening duration recorded yet. Play any station to start tracking statistics.',
+    statsEmptyActionBtn: 'Listen Now',
 
     // Preferences Tab
     prefSubtitle:
@@ -141,11 +148,16 @@ export const enLocale: TranslationDictionary = {
     prefThemeDark: 'Dark',
     prefAccentLabel: 'Accent Color',
     prefGlassOpacityLabel: 'Glass Surface Opacity',
-    prefGlassOpacityDesc: 'Window and tray popover opacity level (default 90%)',
+    prefGlassOpacityDesc: 'Window and tray popover opacity level',
     prefFontFamilyLabel: 'Typography (System Font)',
     prefFontFamilyDesc:
         'Use default OS system font or pick any installed font family',
-    prefFontSystemDefault: 'System Default (SF Pro / Segoe UI)',
+    prefFontSystemDefault: 'System Default',
+    prefFontSearchPlaceholder: 'Search system fonts...',
+    prefFontFound: 'fonts found',
+    prefFontSelected: 'Selected',
+    prefFontLoading: 'Loading system fonts...',
+    prefFontNoMatch: 'No matching fonts found',
     prefGeneral: 'General & Behavior',
     prefLanguage: 'Interface Language',
     prefLaunchAtLogin: 'Launch at system login',
@@ -182,11 +194,15 @@ export const enLocale: TranslationDictionary = {
     prefEqResetBandTooltip: 'Double-click to reset band to 0 dB',
     prefShortcuts: 'Global Keyboard Shortcuts',
     prefShortcutRecordHint:
-        'Click any shortcut button then press new key combination (Esc to cancel)',
+        'Press keys from anywhere in macOS to control radio playback instantly',
     prefShortcutRecording: 'Press keys…',
     prefShortcutPlayPause: 'Play / Pause Stream',
     prefShortcutNext: 'Next Station',
     prefShortcutPrev: 'Previous Station',
+    prefShortcutUnassigned: 'Click to assign shortcut',
+    prefShortcutClear: 'Clear Shortcut',
+    prefShortcutReset: 'Reset to Default',
+    prefShortcutConflict: 'This shortcut conflicts with another action',
     prefBackupSection: 'Backup & Restore Data',
     prefBackupTitle: 'Stations & Settings Backup',
     prefBackupDesc:
@@ -211,7 +227,7 @@ export const enLocale: TranslationDictionary = {
     prefDiagShowBtn: 'Show Diagnostic Report',
     prefDiagHideBtn: 'Hide Diagnostic Report',
     prefDataDirLabel: 'Data directory',
-    prefDangerSection: 'Reset Configuration',
+    prefDangerSection: 'Data Management & Reset',
     prefResetDesc:
         'Restore all appearance, network, and keyboard shortcut preferences to factory defaults.',
     prefResetBtn: 'Reset Defaults',
@@ -219,6 +235,42 @@ export const enLocale: TranslationDictionary = {
     prefResetConfirmDesc:
         'All custom theme, accent color, font, and shortcut settings will be restored to defaults.',
     prefResetConfirmYes: 'Yes, Reset Defaults',
+
+    prefClearStationsTitle: 'Delete All Radio Stations',
+    prefClearStationsDesc:
+        'Delete all saved radio stations and categories from your personal collection.',
+    prefClearStationsBtn: 'Delete Stations',
+    prefClearStationsConfirmTitle: 'Delete All Radio Stations?',
+    prefClearStationsConfirmDesc:
+        'This action will clear all your radio stations and categories. Deleted data cannot be recovered unless you have a backup file.',
+
+    prefClearSchedulesTitle: 'Delete All Show Schedules',
+    prefClearSchedulesDesc:
+        'Delete all scheduled radio shows, reminders, and auto-play events.',
+    prefClearSchedulesBtn: 'Delete Schedules',
+    prefClearSchedulesConfirmTitle: 'Delete All Show Schedules?',
+    prefClearSchedulesConfirmDesc:
+        'All broadcast schedules and automated reminders will be permanently deleted.',
+
+    prefClearStatsTitle: 'Clear Listening Statistics',
+    prefClearStatsDesc:
+        'Reset all daily, weekly, monthly, and yearly listening history and top stations.',
+    prefClearStatsBtn: 'Clear Statistics',
+    prefClearStatsConfirmTitle: 'Clear Listening History & Statistics?',
+    prefClearStatsConfirmDesc:
+        'All listening duration logs will be reset to 0. This action cannot be undone.',
+
+    prefClearDropdownLabel: 'Delete Data',
+    prefClearAllDataOption: 'All Data',
+    prefClearBtn: 'Delete Data',
+
+    prefResetAllTitle: 'All Data',
+    prefResetAllDesc:
+        'Delete all radio stations, show schedules, and listening statistics simultaneously without resetting app preferences.',
+    prefResetAllBtn: 'Delete All Data',
+    prefResetAllConfirmTitle: 'Delete All Data?',
+    prefResetAllConfirmDesc:
+        'All radio stations, broadcast schedules, and listening history will be permanently deleted. Your app preferences will remain saved.',
 
     // About & Diagnostics
     aboutTagline: 'Modern & Lightweight Menu Bar Internet Radio Receiver',
@@ -253,6 +305,7 @@ export const enLocale: TranslationDictionary = {
     fieldGroup: 'Category / Group',
     fieldTags: 'Tags (comma-separated)',
     colType: 'Codec',
+    typeAutoLocked: 'Auto-locked',
     testStreamBtn: 'Test Stream',
     testingStream: 'Testing…',
     testOkPrefix: 'Stream verified',
@@ -332,7 +385,12 @@ export const enLocale: TranslationDictionary = {
     updatesCurrentVersion: 'Installed Version',
     updatesCheckBtn: 'Check for Updates',
     updatesChecking: 'Checking GitHub…',
+    updatesCheckingTitle: 'Checking for Updates...',
+    updatesCheckingDesc:
+        'Connecting to GitHub to check for the latest Squelch release.',
     updatesUpToDate: 'Squelch is up to date',
+    updatesUpToDateDesc:
+        'You are running the latest version of Squelch. No action required.',
     updatesAvailable: 'Update Available',
     updatesAutoCheck: 'Check for updates automatically on launch',
     updatesModalTitle: 'New Version Available: {ver}',
@@ -342,5 +400,14 @@ export const enLocale: TranslationDictionary = {
     updatesViewNotes: 'View Release Notes on GitHub',
     updatesDismiss: 'Later',
     updatesChangelogLabel: 'Release Notes',
-    updatesError: 'Failed to check for updates'
+    updatesError: 'Failed to check for updates',
+    updatesRetryBtn: 'Try Again',
+    updatesDoneBtn: 'Done',
+
+    // System Notifications
+    notifConnectionLostTitle: 'Connection Lost',
+    notifReconnectFailedBody:
+        'Failed to reconnect to {station} after {attempts} attempts. Playback stopped.',
+    notifTimeoutStoppedBody:
+        'Failed to connect to {station} due to network timeout. Playback stopped.'
 };

@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type {
     Station,
     StationsDataSchema,
     AppSettings,
-    PlayerState
+    PlayerState,
+    PlayerStatus
 } from '../types';
 import { getTranslations } from '../i18n';
 import {
@@ -19,6 +20,7 @@ import {
     IconRadioTower,
     IconSearch,
     IconSliders,
+    IconSparkles,
     IconStar,
     IconStop,
     IconTimer
@@ -26,19 +28,19 @@ import {
 import { StationAvatar } from '../components/StationAvatar';
 
 interface SquelchTrayPopoverApi {
-    getPlayerStatus: () => Promise<{
-        state: PlayerState;
-        currentStation: Station | null;
-        streamTitle: string | null;
-        sleepTimerMinutes: number | null;
-        sleepTimerRemainingSec: number | null;
-    }>;
+    getPlayerStatus: () => Promise<PlayerStatus>;
     playStation: (stationId: string) => Promise<boolean>;
     togglePlayPause: () => Promise<boolean>;
     stopPlayback: () => Promise<boolean>;
     setSleepTimer: (minutes: number | null) => Promise<boolean>;
     openWindowTab: (
-        tab: 'stations' | 'discover' | 'stats' | 'preferences' | 'about'
+        tab:
+            | 'stations'
+            | 'discover'
+            | 'stats'
+            | 'preferences'
+            | 'about'
+            | 'updates'
     ) => Promise<boolean>;
     quitApp: () => Promise<boolean>;
     requestQuitConfirm: () => Promise<void>;
@@ -57,6 +59,9 @@ export const TrayPopoverApp: React.FC = () => {
     const api = window.squelchApi as SquelchTrayPopoverApi;
 
     const [playerState, setPlayerState] = useState<PlayerState>('idle');
+    const [reconnectAttempt, setReconnectAttempt] = useState<number | null>(
+        null
+    );
     const [currentStation, setCurrentStation] = useState<Station | null>(null);
     const [streamTitle, setStreamTitle] = useState<string | null>(null);
     const [sleepMinutes, setSleepMinutes] = useState<number | null>(null);
@@ -70,8 +75,54 @@ export const TrayPopoverApp: React.FC = () => {
     const [activeFilter, setActiveFilter] = useState<string>('ALL');
     const [searchText, setSearchText] = useState<string>('');
     const [tick, setTick] = useState<number>(0);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     const t = getTranslations(settings?.language);
+
+    useEffect(() => {
+        const handlePopoverKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement | null;
+            const isEditing = target && target.tagName === 'INPUT';
+
+            if (e.key === 'Escape') {
+                if (searchText) {
+                    setSearchText('');
+                    target?.blur();
+                    return;
+                }
+                return;
+            }
+
+            if (
+                ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') ||
+                (!isEditing && e.key === '/' && !e.metaKey && !e.ctrlKey)
+            ) {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+                searchInputRef.current?.select();
+                return;
+            }
+
+            if (isEditing) return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                void api.togglePlayPause();
+                return;
+            }
+
+            if (e.key.toLowerCase() === 'm') {
+                e.preventDefault();
+                const globalApi = (window as any).squelchApi;
+                void globalApi?.toggleMute?.();
+                return;
+            }
+        };
+
+        window.addEventListener('keydown', handlePopoverKeyDown);
+        return () =>
+            window.removeEventListener('keydown', handlePopoverKeyDown);
+    }, [searchText, api]);
 
     const loadData = async () => {
         const [status, stData, cfg] = await Promise.all([
@@ -80,6 +131,7 @@ export const TrayPopoverApp: React.FC = () => {
             api.getSettings()
         ]);
         setPlayerState(status.state);
+        setReconnectAttempt(status.reconnectAttempt ?? null);
         setCurrentStation(status.currentStation);
         setStreamTitle(status.streamTitle);
         setSleepMinutes(status.sleepTimerMinutes);
@@ -171,7 +223,9 @@ export const TrayPopoverApp: React.FC = () => {
             case 'reconnecting':
                 return {
                     main: 'RETRY',
-                    sub: t.statusReconnectingSub,
+                    sub: reconnectAttempt
+                        ? `${t.statusReconnectingSub} (${reconnectAttempt})`
+                        : t.statusReconnectingSub,
                     color: '#FF9F0A'
                 };
             case 'paused':
@@ -431,6 +485,7 @@ export const TrayPopoverApp: React.FC = () => {
                         className="absolute left-2.5 text-muted pointer-events-none"
                     />
                     <input
+                        ref={searchInputRef}
                         type="text"
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
@@ -571,6 +626,19 @@ export const TrayPopoverApp: React.FC = () => {
                     >
                         <IconSliders size={13} />
                         <span>{t.traySettings}</span>
+                    </button>
+                    <button
+                        type="button"
+                        title={t.updatesCheckBtn}
+                        onClick={() => void api.openWindowTab('updates')}
+                        className="flex items-center gap-1.5 hover:text-foreground transition font-medium cursor-pointer"
+                    >
+                        <IconSparkles size={13} className="text-accent" />
+                        <span>
+                            {settings?.language === 'en'
+                                ? 'Updates'
+                                : 'Pembaruan'}
+                        </span>
                     </button>
                     <button
                         type="button"

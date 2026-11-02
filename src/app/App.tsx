@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState
+} from 'react';
 import { getTranslations } from '../i18n';
 import type {
     AppSettings,
@@ -16,6 +22,7 @@ import {
     bindActiveScrollbars,
     FALLBACK_COUNTRIES
 } from '../utils/appearance';
+import { detectStreamTypeFromUrl } from '../utils/stream';
 import { OnboardingModal } from '../components/OnboardingModal';
 import { UpdateModal, type UpdateCheckResult } from '../components/UpdateModal';
 
@@ -61,39 +68,6 @@ function isScheduleCurrentlyOnAir(sched: ShowSchedule): boolean {
     const startMin = (sH || 0) * 60 + (sM || 0);
     const endMin = (eH || 0) * 60 + (eM || 0);
     return currentMinutes >= startMin && currentMinutes < endMin;
-}
-
-function formatKeyboardEventToAccelerator(e: KeyboardEvent): string | null {
-    const ignoredKeys = new Set([
-        'Meta',
-        'Control',
-        'Shift',
-        'Alt',
-        'CapsLock',
-        'Tab'
-    ]);
-    if (ignoredKeys.has(e.key)) return null;
-
-    const parts: string[] = [];
-    if (e.metaKey || e.ctrlKey) parts.push('CommandOrControl');
-    if (e.altKey) parts.push('Alt');
-    if (e.shiftKey) parts.push('Shift');
-
-    let mainKey = e.key;
-    if (mainKey === ' ') mainKey = 'Space';
-    else if (mainKey === 'ArrowUp') mainKey = 'Up';
-    else if (mainKey === 'ArrowDown') mainKey = 'Down';
-    else if (mainKey === 'ArrowLeft') mainKey = 'Left';
-    else if (mainKey === 'ArrowRight') mainKey = 'Right';
-    else if (mainKey.length === 1) mainKey = mainKey.toUpperCase();
-
-    // Require at least one modifier unless it's a Function/Media key
-    if (parts.length === 0 && !/^F\d+$|^Media/i.test(mainKey)) {
-        parts.push('CommandOrControl');
-    }
-
-    parts.push(mainKey);
-    return parts.join('+');
 }
 
 export const App: React.FC = () => {
@@ -149,6 +123,7 @@ export const App: React.FC = () => {
     const [settings, setSettings] = useState<AppSettings | null>(null);
     const [dataDir, setDataDir] = useState<string>('');
     const [systemFonts, setSystemFonts] = useState<string[]>([]);
+    const [isLoadingFonts, setIsLoadingFonts] = useState<boolean>(true);
     const [appIconDataUrl, setAppIconDataUrl] = useState<string | null>(null);
     const [statsSummary, setStatsSummary] =
         useState<ListeningStatsSummary | null>(null);
@@ -157,6 +132,9 @@ export const App: React.FC = () => {
 
     // Player states
     const [playerState, setPlayerState] = useState<PlayerState>('idle');
+    const [reconnectAttempt, setReconnectAttempt] = useState<number | null>(
+        null
+    );
     const [currentStation, setCurrentStation] = useState<Station | null>(null);
     const [streamTitle, setStreamTitle] = useState<string | null>(null);
     const [sleepRemainingSec, setSleepRemainingSec] = useState<number | null>(
@@ -220,6 +198,9 @@ export const App: React.FC = () => {
     const [copiedDiag, setCopiedDiag] = useState<boolean>(false);
     const [isResetConfirmOpen, setIsResetConfirmOpen] =
         useState<boolean>(false);
+    const [resetTarget, setResetTarget] = useState<
+        'settings' | 'stations' | 'schedules' | 'stats' | 'all'
+    >('settings');
     const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
     const [isQuitConfirmOpen, setIsQuitConfirmOpen] = useState<boolean>(false);
     const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
@@ -232,6 +213,31 @@ export const App: React.FC = () => {
     );
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
     const [notifTestSuccess, setNotifTestSuccess] = useState<boolean>(false);
+
+    const handleCheckForUpdates = useCallback(
+        async (manual = true) => {
+            if (manual) {
+                setIsUpdateModalOpen(true);
+            }
+            setIsCheckingUpdate(true);
+            setUpdateCheckError(null);
+            try {
+                const res = await api.checkForUpdates();
+                setUpdateInfo(res);
+                if (res.hasUpdate) {
+                    setIsUpdateModalOpen(true);
+                }
+            } catch (err: any) {
+                console.error('Update check failed:', err);
+                if (manual) {
+                    setUpdateCheckError(err?.message || String(err));
+                }
+            } finally {
+                setIsCheckingUpdate(false);
+            }
+        },
+        [api]
+    );
 
     // Show Schedules
     const [schedules, setSchedules] = useState<ShowSchedule[]>([]);
@@ -270,6 +276,7 @@ export const App: React.FC = () => {
         setStations(stData.stations);
         setGroups(stData.groups);
         setPlayerState(player.state);
+        setReconnectAttempt(player.reconnectAttempt ?? null);
         setCurrentStation(player.currentStation);
         setStreamTitle(player.streamTitle);
         setSleepRemainingSec(player.sleepTimerRemainingSec);
@@ -283,6 +290,7 @@ export const App: React.FC = () => {
     };
 
     const loadAvailableSystemFonts = async () => {
+        setIsLoadingFonts(true);
         try {
             const mainFonts = await api.getSystemFonts();
             if (typeof window.queryLocalFonts === 'function') {
@@ -305,6 +313,8 @@ export const App: React.FC = () => {
             setSystemFonts(mainFonts);
         } catch {
             setSystemFonts([]);
+        } finally {
+            setIsLoadingFonts(false);
         }
     };
 
@@ -380,6 +390,7 @@ export const App: React.FC = () => {
 
         let unlistenAbout: (() => void) | null = null;
         let unlistenQuit: (() => void) | null = null;
+        let unlistenUpdate: (() => void) | null = null;
         if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
             import('@tauri-apps/api/event')
                 .then(({ listen }) => {
@@ -393,9 +404,18 @@ export const App: React.FC = () => {
                     }).then((u) => {
                         unlistenQuit = u;
                     });
+                    listen('ui:open-update-modal', () => {
+                        void handleCheckForUpdates(true);
+                    }).then((u) => {
+                        unlistenUpdate = u;
+                    });
                 })
                 .catch(() => {});
         }
+
+        const handleCustomCheckUpdates = () => {
+            void handleCheckForUpdates(true);
+        };
 
         window.addEventListener('hashchange', handleHashChange);
         window.addEventListener('squelch:open-about', handleCustomOpenAbout);
@@ -404,6 +424,10 @@ export const App: React.FC = () => {
             handleCustomConfirmQuit
         );
         window.addEventListener('squelch:navigate', handleCustomNavigate);
+        window.addEventListener(
+            'squelch:check-updates',
+            handleCustomCheckUpdates
+        );
         handleHashChange();
 
         return () => {
@@ -411,6 +435,7 @@ export const App: React.FC = () => {
             unsub();
             if (unlistenAbout) unlistenAbout();
             if (unlistenQuit) unlistenQuit();
+            if (unlistenUpdate) unlistenUpdate();
             window.removeEventListener('keydown', handleGlobalKeyDown);
             window.removeEventListener('hashchange', handleHashChange);
             window.removeEventListener(
@@ -425,8 +450,12 @@ export const App: React.FC = () => {
                 'squelch:navigate',
                 handleCustomNavigate
             );
+            window.removeEventListener(
+                'squelch:check-updates',
+                handleCustomCheckUpdates
+            );
         };
-    }, []);
+    }, [handleCheckForUpdates]);
 
     useEffect(() => {
         if (activeTab === 'discover' && discResults.length === 0) {
@@ -457,25 +486,6 @@ export const App: React.FC = () => {
         }
     }, [settings?.hasCompletedOnboarding]);
 
-    const handleCheckForUpdates = async (manual = true) => {
-        setIsCheckingUpdate(true);
-        setUpdateCheckError(null);
-        try {
-            const res = await api.checkForUpdates();
-            setUpdateInfo(res);
-            if (res.hasUpdate) {
-                setIsUpdateModalOpen(true);
-            }
-        } catch (err: any) {
-            console.error('Update check failed:', err);
-            if (manual) {
-                setUpdateCheckError(err?.message || String(err));
-            }
-        } finally {
-            setIsCheckingUpdate(false);
-        }
-    };
-
     // Auto-check for updates quietly 3s after startup
     useEffect(() => {
         if (settings && settings.autoCheckUpdates !== false) {
@@ -486,40 +496,25 @@ export const App: React.FC = () => {
         }
     }, [settings?.autoCheckUpdates]);
 
-    // Direct Keyboard Shortcut Recorder Listener
+    // Comprehensive In-App Keyboard Shortcuts & Navigation
     useEffect(() => {
-        if (!recordingShortcutKey || !settings) return;
-
-        const handleRecordKeyDown = (e: KeyboardEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            if (e.key === 'Escape') {
-                setRecordingShortcutKey(null);
-                return;
-            }
-
-            const accel = formatKeyboardEventToAccelerator(e);
-            if (!accel) return;
-
-            void api.updateSettings({
-                shortcuts: {
-                    ...settings.shortcuts,
-                    [recordingShortcutKey]: accel
-                }
-            });
-            setRecordingShortcutKey(null);
-        };
-
-        window.addEventListener('keydown', handleRecordKeyDown, true);
-        return () =>
-            window.removeEventListener('keydown', handleRecordKeyDown, true);
-    }, [recordingShortcutKey, settings]);
-
-    useEffect(() => {
-        const onKeyDown = (e: KeyboardEvent) => {
+        const handleInAppKeyDown = (e: KeyboardEvent) => {
+            // When actively recording a shortcut in Preferences, do not intercept
             if (recordingShortcutKey) return;
+
+            const target = e.target as HTMLElement | null;
+            const isEditingText =
+                target &&
+                (target.tagName === 'INPUT' ||
+                    target.tagName === 'TEXTAREA' ||
+                    target.isContentEditable);
+
+            // Escape closes open modals or clears active search
             if (e.key === 'Escape') {
+                if (isEditingText) {
+                    target.blur();
+                    return;
+                }
                 setIsFormOpen(false);
                 setIsImportExportOpen(false);
                 setIsAddingGroup(false);
@@ -527,11 +522,105 @@ export const App: React.FC = () => {
                 setIsAboutModalOpen(false);
                 setIsQuitConfirmOpen(false);
                 setUpdateInfo(null);
+                setIsScheduleModalOpen(false);
+                setIsUpdateModalOpen(false);
+                setIsOnboardingOpen(false);
+                return;
+            }
+
+            // ⌘F or Ctrl+F (or '/' when not editing text): Focus search
+            if (
+                ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') ||
+                (!isEditingText && e.key === '/' && !e.metaKey && !e.ctrlKey)
+            ) {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+                searchInputRef.current?.select();
+                return;
+            }
+
+            // ⌘, or Ctrl+, : Open Preferences
+            if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+                e.preventDefault();
+                navigateToTab('preferences');
+                return;
+            }
+
+            // ⌘1 to ⌘6: Quick switch tabs
+            if (e.metaKey || e.ctrlKey) {
+                const tabNum = parseInt(e.key, 10);
+                const tabs: ActiveTab[] = [
+                    'stations',
+                    'schedules',
+                    'discover',
+                    'stats',
+                    'preferences',
+                    'about'
+                ];
+                if (!isNaN(tabNum) && tabNum >= 1 && tabNum <= tabs.length) {
+                    e.preventDefault();
+                    navigateToTab(tabs[tabNum - 1]);
+                    return;
+                }
+            }
+
+            // ⌘R or F5: Reconnect stream
+            if (
+                ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'r') ||
+                e.key === 'F5'
+            ) {
+                if (currentStation) {
+                    e.preventDefault();
+                    void api.playStation(currentStation.id);
+                    return;
+                }
+            }
+
+            // The following controls are only active when NOT editing text
+            if (isEditingText) return;
+
+            // Space: Toggle Play/Pause
+            if (e.code === 'Space') {
+                e.preventDefault();
+                void api.togglePlayPause();
+                return;
+            }
+
+            // ArrowRight / ArrowLeft: Next / Prev station
+            if (e.key === 'ArrowRight' || e.key === 'l') {
+                e.preventDefault();
+                void api.nextStation();
+                return;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'h') {
+                e.preventDefault();
+                void api.prevStation();
+                return;
+            }
+
+            // ArrowUp / ArrowDown: Volume adjustments
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                void api.changeVolume(0.05);
+                return;
+            }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                void api.changeVolume(-0.05);
+                return;
+            }
+
+            // 'm' or 'M': Toggle Mute
+            if (e.key.toLowerCase() === 'm') {
+                e.preventDefault();
+                void api.toggleMute();
+                return;
             }
         };
-        window.addEventListener('keydown', onKeyDown);
-        return () => window.removeEventListener('keydown', onKeyDown);
-    }, [recordingShortcutKey]);
+
+        window.addEventListener('keydown', handleInAppKeyDown);
+        return () => window.removeEventListener('keydown', handleInAppKeyDown);
+    }, [recordingShortcutKey, currentStation, navigateToTab, api]);
 
     const isPlaying = playerState === 'playing';
     const isBusy =
@@ -558,7 +647,9 @@ export const App: React.FC = () => {
             case 'reconnecting':
                 return {
                     main: 'RETRY',
-                    sub: t.statusReconnectingSub,
+                    sub: reconnectAttempt
+                        ? `${t.statusReconnectingSub} (${reconnectAttempt})`
+                        : t.statusReconnectingSub,
                     color: '#FF9F0A'
                 };
             case 'paused':
@@ -585,11 +676,6 @@ export const App: React.FC = () => {
 
     const favCount = useMemo(
         () => stations.filter((s) => s.isFavorite).length,
-        [stations]
-    );
-
-    const onlineCount = useMemo(
-        () => stations.filter((s) => s.status === 'online').length,
         [stations]
     );
 
@@ -623,6 +709,9 @@ export const App: React.FC = () => {
 
     const activeChartPoints = useMemo(() => {
         if (!statsSummary) return [];
+        if (statsViewMode === 'daily') {
+            return statsSummary.dailySeries;
+        }
         if (statsViewMode === 'weekly') {
             return statsSummary.weeklySeries;
         }
@@ -636,6 +725,49 @@ export const App: React.FC = () => {
         const maxVal = Math.max(0, ...activeChartPoints.map((p) => p.seconds));
         return maxVal > 0 ? maxVal : 60;
     }, [activeChartPoints]);
+
+    const handleRequestReset = (
+        target: 'settings' | 'stations' | 'schedules' | 'stats' | 'all'
+    ) => {
+        setResetTarget(target);
+        setIsResetConfirmOpen(true);
+    };
+
+    const resetModalMeta = useMemo(() => {
+        switch (resetTarget) {
+            case 'stations':
+                return {
+                    title: t.prefClearStationsConfirmTitle,
+                    description: t.prefClearStationsConfirmDesc,
+                    confirmBtn: t.prefClearStationsBtn
+                };
+            case 'schedules':
+                return {
+                    title: t.prefClearSchedulesConfirmTitle,
+                    description: t.prefClearSchedulesConfirmDesc,
+                    confirmBtn: t.prefClearSchedulesBtn
+                };
+            case 'stats':
+                return {
+                    title: t.prefClearStatsConfirmTitle,
+                    description: t.prefClearStatsConfirmDesc,
+                    confirmBtn: t.prefClearStatsBtn
+                };
+            case 'all':
+                return {
+                    title: t.prefResetAllConfirmTitle,
+                    description: t.prefResetAllConfirmDesc,
+                    confirmBtn: t.prefResetAllBtn
+                };
+            case 'settings':
+            default:
+                return {
+                    title: t.prefResetConfirmTitle,
+                    description: t.prefResetConfirmDesc,
+                    confirmBtn: t.prefResetBtn
+                };
+        }
+    }, [resetTarget, t]);
 
     const openAddStationModal = () => {
         setEditingStation(null);
@@ -699,11 +831,14 @@ export const App: React.FC = () => {
         e.preventDefault();
         if (!formName.trim() || !formUrl.trim()) return;
 
+        const detected = detectStreamTypeFromUrl(formUrl.trim());
+        const finalStreamType = detected || formType;
+
         await api.saveStation({
             id: editingStation?.id,
             name: formName.trim(),
             streamUrl: formUrl.trim(),
-            streamType: formType,
+            streamType: finalStreamType,
             logoUrl: formLogo.trim() || null,
             genre: formGenre.trim() || 'Radio',
             city: formCity.trim() || 'Indonesia',
@@ -759,16 +894,21 @@ export const App: React.FC = () => {
         }
     };
 
-    const handleDiscoverSearch = async (e?: React.FormEvent) => {
+    const handleDiscoverSearch = async (
+        e?: React.FormEvent,
+        overrideCountry?: string
+    ) => {
         if (e) e.preventDefault();
         setIsSearchingOnline(true);
         setDiscError(null);
+        const countryToUse =
+            overrideCountry !== undefined ? overrideCountry : discCountry;
         try {
             const results = await api.searchOnlineStations({
-                countrycode: discCountry,
+                countrycode: countryToUse,
                 name: discName,
                 tag: discTag,
-                limit: 40
+                limit: 60
             });
             const seen = new Set<string>();
             const deduplicated = results.filter((st) => {
@@ -788,6 +928,11 @@ export const App: React.FC = () => {
         } finally {
             setIsSearchingOnline(false);
         }
+    };
+
+    const handleCountryChange = (countryCode: string) => {
+        setDiscCountry(countryCode);
+        void handleDiscoverSearch(undefined, countryCode);
     };
 
     const handleAddFromDiscover = async (
@@ -986,10 +1131,6 @@ export const App: React.FC = () => {
                 streamTitle={streamTitle}
                 isPlaying={isPlaying}
                 isBusy={isBusy}
-                onlineCount={onlineCount}
-                enabledSchedulesCount={
-                    schedules.filter((s) => s.enabled).length
-                }
                 settings={settings}
                 setIsAboutModalOpen={setIsAboutModalOpen}
                 setIsQuitConfirmOpen={setIsQuitConfirmOpen}
@@ -1010,7 +1151,7 @@ export const App: React.FC = () => {
                     handleWindowDragMouseDown={handleWindowDragMouseDown}
                 />
 
-                <main className="flex-1 overflow-y-auto px-6 pt-1 pb-8">
+                <main className="flex-1 overflow-y-auto px-6 pt-1 pb-8 flex flex-col">
                     <SleepCountdownBanner
                         sleepRemainingSec={sleepRemainingSec}
                         api={api}
@@ -1077,6 +1218,7 @@ export const App: React.FC = () => {
                         <DiscoverTab
                             discCountry={discCountry}
                             setDiscCountry={setDiscCountry}
+                            handleCountryChange={handleCountryChange}
                             discCountries={discCountries}
                             discName={discName}
                             setDiscName={setDiscName}
@@ -1108,6 +1250,7 @@ export const App: React.FC = () => {
                             api={api}
                             lang={lang}
                             t={t}
+                            setActiveTab={setActiveTab}
                         />
                     )}
 
@@ -1115,6 +1258,7 @@ export const App: React.FC = () => {
                         <PreferencesTab
                             settings={settings}
                             systemFonts={systemFonts}
+                            isLoadingFonts={isLoadingFonts}
                             lang={lang}
                             recordingShortcutKey={recordingShortcutKey}
                             setRecordingShortcutKey={setRecordingShortcutKey}
@@ -1137,6 +1281,7 @@ export const App: React.FC = () => {
                             diagnosticsText={diagnosticsText}
                             setDiagnosticsText={setDiagnosticsText}
                             setIsResetConfirmOpen={setIsResetConfirmOpen}
+                            onRequestReset={handleRequestReset}
                             api={api}
                             t={t}
                         />
@@ -1205,13 +1350,25 @@ export const App: React.FC = () => {
                 onClose={() => setIsResetConfirmOpen(false)}
                 onConfirm={async () => {
                     setIsResetConfirmOpen(false);
-                    await api.resetSettings();
+                    if (resetTarget === 'stations') {
+                        await api.clearStationsData();
+                    } else if (resetTarget === 'schedules') {
+                        await api.clearSchedulesData();
+                    } else if (resetTarget === 'stats') {
+                        await api.clearListeningStats();
+                    } else if (resetTarget === 'all') {
+                        await api.clearStationsData();
+                        await api.clearSchedulesData();
+                        await api.clearListeningStats();
+                    } else {
+                        await api.resetSettings();
+                    }
                     await refreshAll();
                 }}
-                title={t.prefResetBtn}
-                description={t.prefResetDesc}
+                title={resetModalMeta.title}
+                description={resetModalMeta.description}
                 cancelBtnText={t.cancelBtn}
-                confirmBtnText={t.prefResetBtn}
+                confirmBtnText={resetModalMeta.confirmBtn}
             />
 
             <QuitConfirmModal
@@ -1225,7 +1382,15 @@ export const App: React.FC = () => {
 
             <AboutModal
                 isOpen={isAboutModalOpen}
-                onClose={() => setIsAboutModalOpen(false)}
+                onClose={() => {
+                    setIsAboutModalOpen(false);
+                    if (
+                        window.location.hash === '#about' ||
+                        window.location.hash === '#about-window'
+                    ) {
+                        window.location.hash = '';
+                    }
+                }}
                 appIconDataUrl={appIconDataUrl}
                 tagline={t.aboutTagline}
                 description={t.aboutDescription}
@@ -1262,6 +1427,7 @@ export const App: React.FC = () => {
                 dayLabels={DAY_LABELS}
                 lang={lang}
                 t={t}
+                onResolveLogo={(url) => api.resolveStationLogo(url)}
             />
 
             {settings && (
@@ -1285,6 +1451,9 @@ export const App: React.FC = () => {
                     void api.openExternalUrl(url)
                 }
                 t={t}
+                isChecking={isCheckingUpdate}
+                error={updateCheckError}
+                onCheckAgain={() => void handleCheckForUpdates(true)}
             />
         </div>
     );

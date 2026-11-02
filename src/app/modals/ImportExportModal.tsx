@@ -45,7 +45,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                 onClick={(e) => e.stopPropagation()}
                 className="mac-modal-surface w-full max-w-xl p-6 space-y-4 text-xs"
             >
-                <div className="flex items-center justify-between pb-3 border-b mac-divider">
+                <div className="flex items-center justify-between">
                     <h3 id="ie-modal-title" className="text-[15px] font-bold">
                         {t.importExport}
                     </h3>
@@ -111,7 +111,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                     </div>
                 )}
 
-                <div className="flex justify-between pt-3 border-t mac-divider">
+                <div className="flex justify-between pt-2">
                     <button
                         type="button"
                         onClick={onCopyExport}

@@ -37,7 +37,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({
                         Squelch
                     </h2>
                     <span className="px-2 py-0.5 rounded-[6px] bg-accent/15 text-accent text-[11px] font-bold tabular-nums">
-                        v0.1.1
+                        v0.1.2
                     </span>
                 </div>
                 <div className="text-[13px] font-medium text-accent mt-0.5">

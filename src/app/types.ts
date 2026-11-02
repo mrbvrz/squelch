@@ -5,7 +5,7 @@ import type {
     StreamTestResult,
     DiscoverStationItem,
     RadioBrowserCountry,
-    PlayerState,
+    PlayerStatus,
     ListeningStatsSummary,
     ShowSchedule,
     NewShowScheduleInput
@@ -15,7 +15,7 @@ import type { UpdateCheckResult } from '../components/UpdateModal';
 export type ActiveTab =
     'stations' | 'schedules' | 'discover' | 'stats' | 'preferences' | 'about';
 
-export type StatsPeriodMode = 'weekly' | 'monthly' | 'yearly';
+export type StatsPeriodMode = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export interface DayLabelItem {
     day: number;
@@ -41,16 +41,15 @@ export const CHANGELOG_DOC_URL =
     'https://github.com/mrbvrz/squelch/blob/main/CHANGELOG.md';
 
 export interface SquelchWindowApi {
-    getPlayerStatus: () => Promise<{
-        state: PlayerState;
-        currentStation: Station | null;
-        streamTitle: string | null;
-        sleepTimerMinutes: number | null;
-        sleepTimerRemainingSec: number | null;
-    }>;
+    getPlayerStatus: () => Promise<PlayerStatus>;
     playStation: (stationId: string | Partial<Station>) => Promise<boolean>;
     togglePlayPause: () => Promise<boolean>;
     stopPlayback: () => Promise<boolean>;
+    nextStation: () => Promise<boolean>;
+    prevStation: () => Promise<boolean>;
+    toggleMute: () => Promise<boolean>;
+    changeVolume: (delta: number) => Promise<number>;
+    setVolume: (vol: number) => Promise<number>;
     setSleepTimer: (minutes: number | null) => Promise<boolean>;
     openWindowTab: (
         tab: 'stations' | 'discover' | 'stats' | 'preferences' | 'about'
@@ -124,6 +123,11 @@ export interface SquelchWindowApi {
     getDiagnostics: () => Promise<string>;
     openLogsFolder: () => Promise<boolean>;
     checkForUpdates: () => Promise<UpdateCheckResult>;
+    openUpdateModal?: () => Promise<void>;
+    clearStationsData: () => Promise<void>;
+    clearSchedulesData: () => Promise<void>;
+    clearListeningStats: () => Promise<void>;
+    resetAllData: () => Promise<AppSettings | undefined>;
     sendNotification: (title: string, body: string) => Promise<boolean>;
     requestQuitConfirm?: () => Promise<void>;
     onStateChanged: (cb: (data: unknown) => void) => () => void;

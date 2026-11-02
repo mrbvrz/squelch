@@ -118,19 +118,26 @@ export interface TranslationDictionary {
     discoverPreviewBtn: string;
     discoverAddBtn: string;
     discoverAdded: string;
+    discoverSearchCountryPlaceholder: string;
+    discoverCountriesFound: string;
+    discoverNoCountryMatch: string;
 
-    // Listening Stats Tab (Mingguan, Bulanan, Tahunan)
+    // Listening Stats Tab (Harian, Mingguan, Bulanan, Tahunan)
     statsTitle: string;
     statsSubtitle: string;
+    statsTodayLabel: string;
     statsWeekLabel: string;
     statsMonthLabel: string;
     statsYearLabel: string;
     statsChartTitle: string;
+    statsDailyView: string;
     statsWeeklyView: string;
     statsMonthlyView: string;
     statsYearlyView: string;
     statsTopStationsTitle: string;
+    statsEmptyTitle: string;
     statsEmptyText: string;
+    statsEmptyActionBtn: string;
 
     // Preferences Tab
     prefSubtitle: string;
@@ -145,6 +152,11 @@ export interface TranslationDictionary {
     prefFontFamilyLabel: string;
     prefFontFamilyDesc: string;
     prefFontSystemDefault: string;
+    prefFontSearchPlaceholder: string;
+    prefFontFound: string;
+    prefFontSelected: string;
+    prefFontLoading: string;
+    prefFontNoMatch: string;
     prefGeneral: string;
     prefLanguage: string;
     prefLaunchAtLogin: string;
@@ -181,6 +193,10 @@ export interface TranslationDictionary {
     prefShortcutPlayPause: string;
     prefShortcutNext: string;
     prefShortcutPrev: string;
+    prefShortcutUnassigned: string;
+    prefShortcutClear: string;
+    prefShortcutReset: string;
+    prefShortcutConflict: string;
     prefBackupSection: string;
     prefBackupTitle: string;
     prefBackupDesc: string;
@@ -208,6 +224,34 @@ export interface TranslationDictionary {
     prefResetConfirmTitle: string;
     prefResetConfirmDesc: string;
     prefResetConfirmYes: string;
+
+    prefClearStationsTitle: string;
+    prefClearStationsDesc: string;
+    prefClearStationsBtn: string;
+    prefClearStationsConfirmTitle: string;
+    prefClearStationsConfirmDesc: string;
+
+    prefClearSchedulesTitle: string;
+    prefClearSchedulesDesc: string;
+    prefClearSchedulesBtn: string;
+    prefClearSchedulesConfirmTitle: string;
+    prefClearSchedulesConfirmDesc: string;
+
+    prefClearStatsTitle: string;
+    prefClearStatsDesc: string;
+    prefClearStatsBtn: string;
+    prefClearStatsConfirmTitle: string;
+    prefClearStatsConfirmDesc: string;
+
+    prefClearDropdownLabel: string;
+    prefClearAllDataOption: string;
+    prefClearBtn: string;
+
+    prefResetAllTitle: string;
+    prefResetAllDesc: string;
+    prefResetAllBtn: string;
+    prefResetAllConfirmTitle: string;
+    prefResetAllConfirmDesc: string;
 
     // About & Diagnostics
     aboutTagline: string;
@@ -241,6 +285,7 @@ export interface TranslationDictionary {
     fieldGroup: string;
     fieldTags: string;
     colType: string;
+    typeAutoLocked: string;
     testStreamBtn: string;
     testingStream: string;
     testOkPrefix: string;
@@ -302,7 +347,10 @@ export interface TranslationDictionary {
     updatesCurrentVersion: string;
     updatesCheckBtn: string;
     updatesChecking: string;
+    updatesCheckingTitle: string;
+    updatesCheckingDesc: string;
     updatesUpToDate: string;
+    updatesUpToDateDesc: string;
     updatesAvailable: string;
     updatesAutoCheck: string;
     updatesModalTitle: string;
@@ -312,4 +360,11 @@ export interface TranslationDictionary {
     updatesDismiss: string;
     updatesChangelogLabel: string;
     updatesError: string;
+    updatesRetryBtn: string;
+    updatesDoneBtn: string;
+
+    // System Notifications
+    notifConnectionLostTitle: string;
+    notifReconnectFailedBody: string;
+    notifTimeoutStoppedBody: string;
 }

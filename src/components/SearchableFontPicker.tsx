@@ -1,5 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { IconSearch, IconClose, IconCheck, IconChevronDown } from './Icons';
+import {
+    IconSearch,
+    IconClose,
+    IconCheck,
+    IconChevronDown,
+    IconSpinner
+} from './Icons';
 
 export interface SearchableFontPickerProps {
     value?: string;
@@ -8,7 +14,15 @@ export interface SearchableFontPickerProps {
     onChange: (font: string) => void;
     ariaLabel?: string;
     placeholder?: string;
+    isLoading?: boolean;
+    foundLabel?: string;
+    selectedLabel?: string;
+    loadingLabel?: string;
+    noMatchLabel?: string;
 }
+
+const INITIAL_BATCH_SIZE = 40;
+const SCROLL_BATCH_STEP = 40;
 
 export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
     value = 'system',
@@ -16,25 +30,41 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
     defaultLabel,
     onChange,
     ariaLabel = 'Pilih Font',
-    placeholder = 'Cari font sistem...'
+    placeholder = 'Cari font sistem...',
+    isLoading = false,
+    foundLabel = 'font ditemukan',
+    selectedLabel: _selectedLabel,
+    loadingLabel = 'Memuat font sistem...',
+    noMatchLabel = 'Tidak ada font yang cocok'
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
     const containerRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const listContainerRef = useRef<HTMLDivElement>(null);
 
-    // Auto-focus search input on dropdown open
+    // Auto-focus search input with requestAnimationFrame for instant response
     useEffect(() => {
         if (isOpen) {
-            setTimeout(() => {
+            setVisibleCount(INITIAL_BATCH_SIZE);
+            requestAnimationFrame(() => {
                 searchInputRef.current?.focus();
-            }, 50);
+            });
         } else {
             setSearchQuery('');
         }
     }, [isOpen]);
 
-    // Handle click outside to close dropdown
+    // Reset visible count when search query changes
+    useEffect(() => {
+        setVisibleCount(INITIAL_BATCH_SIZE);
+        if (listContainerRef.current) {
+            listContainerRef.current.scrollTop = 0;
+        }
+    }, [searchQuery]);
+
+    // Handle click outside & escape key to close dropdown
     useEffect(() => {
         if (!isOpen) return;
         const handleClickOutside = (e: MouseEvent) => {
@@ -70,9 +100,26 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
         defaultLabel.toLowerCase().includes(searchQuery.toLowerCase()) ||
         'system'.includes(searchQuery.toLowerCase());
 
+    const totalMatchingCount =
+        filteredFonts.length + (showSystemOption ? 1 : 0);
+
+    const visibleFonts = useMemo(() => {
+        return filteredFonts.slice(0, visibleCount);
+    }, [filteredFonts, visibleCount]);
+
     const handleSelect = (font: string) => {
         onChange(font);
         setIsOpen(false);
+    };
+
+    // Lazy load next batch on scroll
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+        if (scrollTop + clientHeight >= scrollHeight - 100) {
+            setVisibleCount((prev) =>
+                Math.min(prev + SCROLL_BATCH_STEP, filteredFonts.length)
+            );
+        }
     };
 
     return (
@@ -84,7 +131,7 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
                 aria-expanded={isOpen}
                 aria-label={ariaLabel}
                 onClick={() => setIsOpen((prev) => !prev)}
-                className="mac-input px-3 py-1.5 rounded-[7px] text-[12px] w-64 cursor-pointer flex items-center justify-between gap-2 text-left hover:border-accent/40 transition shadow-sm"
+                className="mac-input px-3 rounded-[7px] text-[12px] w-48 h-[30px] cursor-pointer flex items-center justify-between gap-2 text-left hover:border-accent/40 transition shadow-sm"
             >
                 <span
                     className="truncate flex-1 font-medium"
@@ -110,7 +157,7 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
                 <div
                     role="listbox"
                     aria-label={ariaLabel}
-                    className="absolute right-0 top-full mt-1.5 w-72 z-50 mac-modal-surface rounded-xl shadow-2xl p-2 text-xs flex flex-col gap-1.5 backdrop-blur-xl animate-scale-enter"
+                    className="absolute right-0 top-full mt-1.5 w-64 z-50 mac-modal-surface rounded-xl shadow-2xl p-2.5 text-xs flex flex-col gap-2 backdrop-blur-xl animate-scale-enter"
                 >
                     {/* Search Input Box */}
                     <div className="relative flex items-center px-2 py-1 rounded-[7px] mac-input focus-within:border-accent/60 transition">
@@ -137,80 +184,135 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
                         )}
                     </div>
 
-                    {/* Font Count Status */}
-                    <div className="flex items-center justify-between px-1.5 text-[10px] text-secondary tabular-nums">
-                        <span>
-                            {filteredFonts.length + (showSystemOption ? 1 : 0)}{' '}
-                            font ditemukan
+                    {/* Status Bar: Count and Selected Font */}
+                    <div className="flex items-center justify-between px-2 py-1 rounded-[6px] bg-black/5 dark:bg-white/5 text-[10px] tabular-nums">
+                        <div className="flex items-center gap-1 text-secondary">
+                            <span className="font-medium text-foreground">
+                                {isLoading ? '...' : totalMatchingCount}
+                            </span>
+                            <span>{foundLabel}</span>
+                        </div>
+                        <span
+                            className="font-medium text-accent truncate max-w-[130px] text-right"
+                            title={isSystemSelected ? defaultLabel : value}
+                        >
+                            {isSystemSelected ? defaultLabel : value}
                         </span>
-                        {isSystemSelected ? (
-                            <span className="text-accent font-medium">
-                                Sistem
-                            </span>
-                        ) : (
-                            <span className="truncate max-w-[120px] font-medium text-accent">
-                                {value}
-                            </span>
-                        )}
                     </div>
 
-                    {/* Scrollable Font List */}
-                    <div className="max-h-60 overflow-y-auto space-y-0.5 pr-0.5">
-                        {/* System Default Option */}
-                        {showSystemOption && (
-                            <button
-                                type="button"
-                                role="option"
-                                aria-selected={isSystemSelected}
-                                onClick={() => handleSelect('system')}
-                                className={`w-full px-2.5 py-1.5 rounded-[6px] text-left flex items-center justify-between cursor-pointer transition ${
-                                    isSystemSelected
-                                        ? 'bg-accent text-white font-semibold'
-                                        : 'mac-row text-foreground hover:bg-black/5 dark:hover:bg-white/10'
-                                }`}
-                            >
-                                <span className="truncate text-[12px]">
-                                    {defaultLabel}
-                                </span>
-                                {isSystemSelected && <IconCheck size={14} />}
-                            </button>
-                        )}
+                    {/* Dropdown Content Area */}
+                    {isLoading ? (
+                        <div className="py-8 flex flex-col items-center justify-center gap-2 text-secondary">
+                            <IconSpinner
+                                size={20}
+                                className="animate-spin text-accent"
+                            />
+                            <span className="text-[12px] font-medium text-foreground">
+                                {loadingLabel}
+                            </span>
+                            <span className="text-[10px] text-secondary">
+                                Memindai font sistem...
+                            </span>
+                        </div>
+                    ) : (
+                        <div
+                            ref={listContainerRef}
+                            onScroll={handleScroll}
+                            className="max-h-60 overflow-y-auto space-y-0.5 pr-0.5"
+                        >
+                            {/* Pinned Selected Font (if custom font selected & no search) */}
+                            {!isSystemSelected && !searchQuery.trim() && (
+                                <div className="mb-1 pb-1 border-b border-black/5 dark:border-white/10">
+                                    <button
+                                        type="button"
+                                        role="option"
+                                        aria-selected={true}
+                                        onClick={() => handleSelect(value)}
+                                        className="w-full px-2.5 py-1.5 rounded-[6px] text-left flex items-center justify-between cursor-pointer bg-accent text-white font-medium transition shadow-xs"
+                                    >
+                                        <span
+                                            className="truncate text-[12px]"
+                                            style={{
+                                                fontFamily: `"${value}", sans-serif`
+                                            }}
+                                        >
+                                            {value}
+                                        </span>
+                                        <IconCheck
+                                            size={14}
+                                            className="shrink-0"
+                                        />
+                                    </button>
+                                </div>
+                            )}
 
-                        {/* Filtered System Fonts List */}
-                        {filteredFonts.map((fontName) => {
-                            const isSelected = value === fontName;
-                            return (
+                            {/* System Default Option */}
+                            {showSystemOption && (
                                 <button
-                                    key={fontName}
                                     type="button"
                                     role="option"
-                                    aria-selected={isSelected}
-                                    onClick={() => handleSelect(fontName)}
+                                    aria-selected={isSystemSelected}
+                                    onClick={() => handleSelect('system')}
                                     className={`w-full px-2.5 py-1.5 rounded-[6px] text-left flex items-center justify-between cursor-pointer transition ${
-                                        isSelected
-                                            ? 'bg-accent text-white font-semibold'
+                                        isSystemSelected
+                                            ? 'bg-accent text-white font-semibold shadow-xs'
                                             : 'mac-row text-foreground hover:bg-black/5 dark:hover:bg-white/10'
                                     }`}
                                 >
-                                    <span
-                                        className="truncate text-[12px]"
-                                        style={{
-                                            fontFamily: `"${fontName}", sans-serif`
-                                        }}
-                                    >
-                                        {fontName}
+                                    <span className="truncate text-[12px]">
+                                        {defaultLabel}
                                     </span>
-                                    {isSelected && <IconCheck size={14} />}
+                                    {isSystemSelected && (
+                                        <IconCheck
+                                            size={14}
+                                            className="shrink-0"
+                                        />
+                                    )}
                                 </button>
-                            );
-                        })}
+                            )}
 
-                        {filteredFonts.length === 0 && !showSystemOption && (
-                            <div className="py-4 text-center text-secondary text-[11px]">
-                                Tidak ada font yang cocok
-                            </div>
-                        )}
-                    </div>
+                            {/* Progressive System Fonts List */}
+                            {visibleFonts.map((fontName) => {
+                                const isSelected = value === fontName;
+                                return (
+                                    <button
+                                        key={fontName}
+                                        type="button"
+                                        role="option"
+                                        aria-selected={isSelected}
+                                        onClick={() => handleSelect(fontName)}
+                                        className={`w-full px-2.5 py-1.5 rounded-[6px] text-left flex items-center justify-between cursor-pointer transition ${
+                                            isSelected
+                                                ? 'bg-accent text-white font-semibold shadow-xs'
+                                                : 'mac-row text-foreground hover:bg-black/5 dark:hover:bg-white/10'
+                                        }`}
+                                    >
+                                        <span
+                                            className="truncate text-[12px]"
+                                            style={{
+                                                fontFamily: `"${fontName}", sans-serif`
+                                            }}
+                                        >
+                                            {fontName}
+                                        </span>
+                                        {isSelected && (
+                                            <IconCheck
+                                                size={14}
+                                                className="shrink-0"
+                                            />
+                                        )}
+                                    </button>
+                                );
+                            })}
+
+                            {filteredFonts.length === 0 &&
+                                !showSystemOption && (
+                                    <div className="py-6 text-center text-secondary text-[11px]">
+                                        {noMatchLabel}
+                                    </div>
+                                )}
+                        </div>
+                    )}
                 </div>
             )}
         </div>

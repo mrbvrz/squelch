@@ -115,21 +115,28 @@ export const idLocale: TranslationDictionary = {
     discoverPreviewBtn: 'Pratinjau',
     discoverAddBtn: '+ Tambah',
     discoverAdded: 'Tersimpan',
+    discoverSearchCountryPlaceholder: 'Cari negara…',
+    discoverCountriesFound: 'negara ditemukan',
+    discoverNoCountryMatch: 'Tidak ada negara yang cocok',
 
-    // Listening Stats Tab (Mingguan, Bulanan, Tahunan)
+    // Listening Stats Tab (Harian, Mingguan, Bulanan, Tahunan)
     statsTitle: 'Aktivitas Mendengarkan',
     statsSubtitle:
-        'Catatan durasi mendengarkan radio mingguan, bulanan, tahunan, dan stasiun terpopuler Anda.',
+        'Catatan durasi mendengarkan radio harian, mingguan, bulanan, tahunan, dan stasiun terpopuler Anda.',
+    statsTodayLabel: 'Hari Ini',
     statsWeekLabel: 'Minggu Ini',
     statsMonthLabel: 'Bulan Ini',
     statsYearLabel: 'Tahun Ini',
     statsChartTitle: 'Grafik Durasi Mendengarkan',
+    statsDailyView: 'Harian',
     statsWeeklyView: 'Mingguan',
     statsMonthlyView: 'Bulanan',
     statsYearlyView: 'Tahunan',
     statsTopStationsTitle: 'Stasiun Paling Sering Didengar',
+    statsEmptyTitle: 'Belum Ada Riwayat Mendengar',
     statsEmptyText:
         'Belum ada riwayat durasi mendengarkan. Putar stasiun radio untuk mulai mencatat statistik.',
+    statsEmptyActionBtn: 'Putar Radio Sekarang',
 
     // Preferences Tab
     prefSubtitle:
@@ -141,10 +148,15 @@ export const idLocale: TranslationDictionary = {
     prefThemeDark: 'Gelap',
     prefAccentLabel: 'Warna Aksen',
     prefGlassOpacityLabel: 'Ketebalan Latar Glass',
-    prefGlassOpacityDesc: 'Tingkat opasitas jendela dan menu tray (bawaan 90%)',
+    prefGlassOpacityDesc: 'Tingkat opasitas jendela dan menu tray',
     prefFontFamilyLabel: 'Jenis Huruf (Font)',
     prefFontFamilyDesc: 'Gunakan font sistem bawaan atau pilih font terinstal',
-    prefFontSystemDefault: 'Font Sistem Bawaan (SF Pro / Segoe UI)',
+    prefFontSystemDefault: 'Font Sistem Bawaan',
+    prefFontSearchPlaceholder: 'Cari font sistem...',
+    prefFontFound: 'font ditemukan',
+    prefFontSelected: 'Terpilih',
+    prefFontLoading: 'Memuat font sistem...',
+    prefFontNoMatch: 'Tidak ada font yang cocok',
     prefGeneral: 'Umum & Perilaku',
     prefLanguage: 'Bahasa Antarmuka',
     prefLaunchAtLogin: 'Jalankan saat login sistem',
@@ -181,11 +193,15 @@ export const idLocale: TranslationDictionary = {
     prefEqResetBandTooltip: 'Klik ganda untuk reset band ke 0 dB',
     prefShortcuts: 'Pintasan Keyboard Global',
     prefShortcutRecordHint:
-        'Klik tombol pintasan lalu tekan kombinasi tombol baru (Esc untuk batal)',
+        'Kendalikan siaran radio langsung dari aplikasi mana pun di macOS',
     prefShortcutRecording: 'Tekan tombol…',
     prefShortcutPlayPause: 'Putar / Jeda Siaran',
     prefShortcutNext: 'Stasiun Berikutnya',
     prefShortcutPrev: 'Stasiun Sebelumnya',
+    prefShortcutUnassigned: 'Klik untuk atur pintasan',
+    prefShortcutClear: 'Hapus Pintasan',
+    prefShortcutReset: 'Kembalikan Default',
+    prefShortcutConflict: 'Pintasan ini bertabrakan dengan aksi lain',
     prefBackupSection: 'Cadangkan & Pulihkan Data',
     prefBackupTitle: 'Cadangan Stasiun & Pengaturan',
     prefBackupDesc:
@@ -211,7 +227,7 @@ export const idLocale: TranslationDictionary = {
     prefDiagShowBtn: 'Tampilkan Laporan Diagnostik',
     prefDiagHideBtn: 'Sembunyikan Laporan Diagnostik',
     prefDataDirLabel: 'Direktori data',
-    prefDangerSection: 'Atur Ulang Pengaturan',
+    prefDangerSection: 'Pengelolaan Data & Reset',
     prefResetDesc:
         'Kembalikan seluruh preferensi tampilan, jaringan, dan pintasan keyboard ke pengaturan awal.',
     prefResetBtn: 'Kembalikan Bawaan',
@@ -219,6 +235,42 @@ export const idLocale: TranslationDictionary = {
     prefResetConfirmDesc:
         'Semua kustomisasi tema, warna aksen, font, dan pintasan keyboard akan dikembalikan ke nilai bawaan.',
     prefResetConfirmYes: 'Ya, Kembalikan Bawaan',
+
+    prefClearStationsTitle: 'Hapus Semua Stasiun Radio',
+    prefClearStationsDesc:
+        'Hapus seluruh daftar stasiun radio dan kategori yang tersimpan dalam koleksi Anda.',
+    prefClearStationsBtn: 'Hapus Stasiun',
+    prefClearStationsConfirmTitle: 'Hapus Semua Stasiun Radio?',
+    prefClearStationsConfirmDesc:
+        'Tindakan ini akan mengosongkan seluruh stasiun radio dan kategori Anda. Data yang dihapus tidak dapat dipulihkan kecuali Anda memiliki cadangan.',
+
+    prefClearSchedulesTitle: 'Hapus Semua Jadwal Siaran',
+    prefClearSchedulesDesc:
+        'Hapus semua jadwal siaran radio dan pengingat yang telah Anda jadwalkan.',
+    prefClearSchedulesBtn: 'Hapus Jadwal',
+    prefClearSchedulesConfirmTitle: 'Hapus Semua Jadwal Siaran?',
+    prefClearSchedulesConfirmDesc:
+        'Seluruh jadwal siaran radio dan pengingat otomatis akan dihapus permanen.',
+
+    prefClearStatsTitle: 'Hapus Riwayat Statistik',
+    prefClearStatsDesc:
+        'Setel ulang seluruh riwayat durasi mendengarkan harian, mingguan, bulanan, dan stasiun terpopuler.',
+    prefClearStatsBtn: 'Hapus Statistik',
+    prefClearStatsConfirmTitle: 'Hapus Riwayat Statistik Mendengarkan?',
+    prefClearStatsConfirmDesc:
+        'Semua catatan waktu mendengarkan radio akan direset ke angka 0. Tindakan ini tidak dapat dibatalkan.',
+
+    prefClearDropdownLabel: 'Hapus Data',
+    prefClearAllDataOption: 'Semua Data',
+    prefClearBtn: 'Hapus Data',
+
+    prefResetAllTitle: 'Semua Data',
+    prefResetAllDesc:
+        'Hapus seluruh stasiun radio, jadwal siaran, dan riwayat statistik mendengarkan sekaligus tanpa mengubah setelan preferensi aplikasi.',
+    prefResetAllBtn: 'Hapus Semua Data',
+    prefResetAllConfirmTitle: 'Hapus Semua Data?',
+    prefResetAllConfirmDesc:
+        'Seluruh stasiun radio, jadwal siaran, dan riwayat statistik mendengarkan akan dihapus permanen. Setelan preferensi aplikasi Anda akan tetap aman tersimpan.',
 
     // About & Diagnostics
     aboutTagline: 'Pemutar Radio Internet Menu Bar Modern & Ringan',
@@ -253,6 +305,7 @@ export const idLocale: TranslationDictionary = {
     fieldGroup: 'Kategori / Grup',
     fieldTags: 'Tag (pisahkan dengan koma)',
     colType: 'Tipe',
+    typeAutoLocked: 'Otomatis',
     testStreamBtn: 'Uji Stream',
     testingStream: 'Menguji…',
     testOkPrefix: 'Stream aktif',
@@ -332,7 +385,12 @@ export const idLocale: TranslationDictionary = {
     updatesCurrentVersion: 'Versi Terpasang',
     updatesCheckBtn: 'Periksa Pembaruan',
     updatesChecking: 'Memeriksa GitHub…',
+    updatesCheckingTitle: 'Memeriksa Pembaruan...',
+    updatesCheckingDesc:
+        'Menghubungi server GitHub untuk mengecek versi terbaru Squelch.',
     updatesUpToDate: 'Squelch sudah versi terbaru',
+    updatesUpToDateDesc:
+        'Anda telah menggunakan versi terbaru Squelch. Tidak ada tindakan yang diperlukan.',
     updatesAvailable: 'Pembaruan Tersedia',
     updatesAutoCheck: 'Periksa pembaruan otomatis saat aplikasi dibuka',
     updatesModalTitle: 'Pembaruan Baru Tersedia: {ver}',
@@ -342,5 +400,14 @@ export const idLocale: TranslationDictionary = {
     updatesViewNotes: 'Lihat Catatan Rilis di GitHub',
     updatesDismiss: 'Nanti Saja',
     updatesChangelogLabel: 'Catatan Perubahan (Changelog)',
-    updatesError: 'Gagal memeriksa pembaruan'
+    updatesError: 'Gagal memeriksa pembaruan',
+    updatesRetryBtn: 'Coba Lagi',
+    updatesDoneBtn: 'Selesai',
+
+    // System Notifications
+    notifConnectionLostTitle: 'Koneksi Terputus',
+    notifReconnectFailedBody:
+        'Gagal menyambung ulang ke {station} setelah {attempts} percobaan. Pemutaran dihentikan.',
+    notifTimeoutStoppedBody:
+        'Gagal memuat {station} karena kendala jaringan. Pemutaran dihentikan.'
 };

@@ -94,7 +94,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 className="mac-modal-surface w-full max-w-lg rounded-2xl shadow-2xl border border-card-border flex flex-col overflow-hidden text-xs max-h-[90vh]"
             >
                 {/* Top Navigation Bar: Progress Bar & Skip Button */}
-                <div className="px-6 pt-5 pb-3 flex items-center justify-between border-b mac-divider">
+                <div className="px-6 pt-5 pb-3 flex items-center justify-between">
                     {/* Segmented Step Progress Bar */}
                     <div className="flex items-center gap-1.5 flex-1 max-w-[200px]">
                         {Array.from({ length: TOTAL_STEPS }).map((_, idx) => (
@@ -587,7 +587,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 </div>
 
                 {/* Bottom Navigation Buttons */}
-                <div className="px-6 py-4 flex items-center justify-between border-t mac-divider bg-black/5 dark:bg-white/5">
+                <div className="px-6 py-4 flex items-center justify-between bg-black/5 dark:bg-white/5">
                     {step > 0 ? (
                         <button
                             type="button"

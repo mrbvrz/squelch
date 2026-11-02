@@ -257,6 +257,52 @@ pub fn reset_settings(store: State<Arc<AppStore>>) -> Result<Value, String> {
 }
 
 #[tauri::command]
+pub fn clear_stations_data(store: State<Arc<AppStore>>) -> Result<(), String> {
+    let empty_data = json!({
+        "schemaVersion": 1,
+        "stations": [],
+        "groups": [
+            "Pop & Anak Muda",
+            "Nasional & Berita",
+            "Lainnya & Nostalgia"
+        ]
+    });
+    store.write_json("stations.json", &empty_data)
+}
+
+#[tauri::command]
+pub fn clear_schedules_data(store: State<Arc<AppStore>>) -> Result<(), String> {
+    let list = json!({
+        "schemaVersion": 1,
+        "schedules": []
+    });
+    store.write_json("schedules.json", &list)
+}
+
+#[tauri::command]
+pub fn clear_listening_stats(store: State<Arc<AppStore>>) -> Result<(), String> {
+    let stats = json!({
+        "schemaVersion": 1,
+        "dailySeconds": {},
+        "hourlySeconds": {},
+        "monthlySeconds": {},
+        "stationSeconds": {},
+        "stationNames": {},
+        "stationLogos": {},
+        "totalSeconds": 0
+    });
+    store.write_json("stats.json", &stats)
+}
+
+#[tauri::command]
+pub fn reset_all_data(store: State<Arc<AppStore>>) -> Result<Value, String> {
+    clear_stations_data(store.clone())?;
+    clear_schedules_data(store.clone())?;
+    clear_listening_stats(store.clone())?;
+    reset_settings(store)
+}
+
+#[tauri::command]
 pub fn get_schedules(store: State<Arc<AppStore>>) -> Value {
     store.read_json("schedules.json", json!([]))
 }
@@ -552,22 +598,29 @@ pub fn set_tray_state(state_name: String, store: State<Arc<AppStore>>) {
 
 #[tauri::command]
 pub fn open_window_tab(app: AppHandle, tab: String) -> Result<(), String> {
-    if let Some(win) = app.get_webview_window("main") {
-        let _ = win.eval(&format!("window.location.hash = '#{}';", tab));
-        let _ = win.show();
-        let _ = win.unminimize();
-        let _ = win.set_focus();
+    if let Some(win) = crate::show_main_window(&app) {
+        if tab == "updates" {
+            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:check-updates')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:check-updates')); }, 50);");
+            let _ = app.emit("ui:open-update-modal", ());
+        } else if tab == "about" {
+            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);");
+            let _ = app.emit("squelch:open-about", ());
+        } else {
+            let _ = win.eval(&format!("window.location.hash = '#{}';", tab));
+            let _ = win.eval(&format!(
+                "window.dispatchEvent(new CustomEvent('squelch:navigate', {{ detail: '{}' }}));",
+                tab
+            ));
+        }
     }
     Ok(())
 }
 
 #[tauri::command]
 pub fn open_about_window(app: AppHandle) -> Result<(), String> {
-    if let Some(win) = app.get_webview_window("main") {
-        let _ = win.eval("window.location.hash = '#about';");
-        let _ = win.show();
-        let _ = win.unminimize();
-        let _ = win.set_focus();
+    if let Some(win) = crate::show_main_window(&app) {
+        let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);");
+        let _ = app.emit("squelch:open-about", ());
     }
     Ok(())
 }

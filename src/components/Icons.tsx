@@ -23,6 +23,7 @@ import {
     GlobeAltIcon,
     InformationCircleIcon,
     KeyIcon,
+    LockClosedIcon,
     MagnifyingGlassIcon,
     PauseIcon,
     PencilSquareIcon,
@@ -80,6 +81,7 @@ export const IconInfo = wrapHeroicon(InformationCircleIcon);
 export const IconEdit = wrapHeroicon(PencilSquareIcon);
 export const IconTrash = wrapHeroicon(TrashIcon);
 export const IconClose = wrapHeroicon(XMarkIcon);
+export const IconX = IconClose;
 export const IconChevronLeft = wrapHeroicon(ChevronLeftIcon);
 export const IconChevronRight = wrapHeroicon(ChevronRightIcon);
 export const IconChevronDown = wrapHeroicon(ChevronDownIcon);
@@ -88,6 +90,7 @@ export const IconBackup = wrapHeroicon(ArrowDownTrayIcon);
 export const IconArrowDownTray = wrapHeroicon(ArrowDownTrayIcon);
 export const IconRestore = wrapHeroicon(ArrowUpTrayIcon);
 export const IconKey = wrapHeroicon(KeyIcon);
+export const IconLock = wrapHeroicon(LockClosedIcon);
 export const IconWarning = wrapHeroicon(ExclamationTriangleIcon);
 export const IconExternalLink = wrapHeroicon(ArrowTopRightOnSquareIcon);
 export const IconCheck = wrapHeroicon(CheckIcon);

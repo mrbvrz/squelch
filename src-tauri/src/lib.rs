@@ -5,11 +5,12 @@ mod store;
 use std::sync::Arc;
 use store::AppStore;
 use tauri::{
-    Emitter, Manager,
     image::Image,
-    menu::{MenuBuilder, MenuItemBuilder},
+    menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    Emitter, Manager,
 };
+
 use tauri_plugin_positioner::{Position, WindowExt};
 
 static IDLE_ICON: &[u8] = include_bytes!("../icons/tray/tray_idle.png");
@@ -45,11 +46,112 @@ static BUFFERING_ICONS: [&[u8]; 12] = [
     include_bytes!("../icons/tray/tray_buffering_11.png"),
 ];
 
+pub(crate) fn show_main_window(app: &tauri::AppHandle) -> Option<tauri::WebviewWindow> {
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.show();
+        let _ = win.unminimize();
+        let _ = win.set_focus();
+        Some(win)
+    } else {
+        if let Ok(win) = tauri::WebviewWindowBuilder::new(
+            app,
+            "main",
+            tauri::WebviewUrl::App("index.html".into()),
+        )
+        .title("Squelch")
+        .inner_size(980.0, 680.0)
+        .min_inner_size(880.0, 560.0)
+        .resizable(true)
+        .transparent(true)
+        .hidden_title(true)
+        .title_bar_style(tauri::TitleBarStyle::Overlay)
+        .build()
+        {
+            #[cfg(target_os = "macos")]
+            {
+                use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
+                let _ = apply_vibrancy(
+                    &win,
+                    NSVisualEffectMaterial::Sidebar,
+                    None,
+                    Some(18.0),
+                );
+            }
+            let _ = win.show();
+            let _ = win.unminimize();
+            let _ = win.set_focus();
+            Some(win)
+        } else {
+            None
+        }
+    }
+}
+
+fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
+    match id {
+        "play_pause" => {
+            let _ = app.emit(
+                "squelch:action",
+                serde_json::json!({ "action": "toggle-play-pause" }),
+            );
+        }
+        "stop" => {
+            let _ = app.emit(
+                "squelch:action",
+                serde_json::json!({ "action": "stop" }),
+            );
+        }
+        "open_squelch" => {
+            let _ = show_main_window(app);
+        }
+        "stations_squelch" => {
+            if let Some(win) = show_main_window(app) {
+                let _ = win.eval(
+                    "window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'stations' }));",
+                );
+            }
+        }
+        "pref_squelch" => {
+            if let Some(win) = show_main_window(app) {
+                let _ = win.eval(
+                    "window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'preferences' }));",
+                );
+            }
+        }
+        "update_squelch" => {
+            if let Some(win) = show_main_window(app) {
+                let _ = win.eval(
+                    "window.dispatchEvent(new CustomEvent('squelch:check-updates')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:check-updates')); }, 50);",
+                );
+            }
+            let _ = app.emit("ui:open-update-modal", ());
+        }
+        "about_squelch" => {
+            if let Some(win) = show_main_window(app) {
+                let _ = win.eval(
+                    "window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);",
+                );
+            }
+            let _ = app.emit("squelch:open-about", ());
+        }
+        "quit_squelch" => {
+            let _ = app.emit("squelch:confirm-quit", ());
+            if let Some(win) = show_main_window(app) {
+                let _ = win.eval(
+                    "window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));",
+                );
+            }
+        }
+        _ => {}
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_positioner::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -110,6 +212,7 @@ pub fn run() {
             let menu_open = MenuItemBuilder::with_id("open_squelch", "Buka Jendela Utama").build(app)?;
             let menu_stations = MenuItemBuilder::with_id("stations_squelch", "Stasiun Radio").build(app)?;
             let menu_pref = MenuItemBuilder::with_id("pref_squelch", "Pengaturan").build(app)?;
+            let menu_update = MenuItemBuilder::with_id("update_squelch", "Periksa Pembaruan...").build(app)?;
             let menu_about = MenuItemBuilder::with_id("about_squelch", "Tentang Squelch").build(app)?;
             let menu_quit = MenuItemBuilder::with_id("quit_squelch", "Keluar Squelch").build(app)?;
 
@@ -122,10 +225,56 @@ pub fn run() {
                 .item(&menu_open)
                 .item(&menu_stations)
                 .item(&menu_pref)
+                .item(&menu_update)
                 .item(&menu_about)
                 .separator()
                 .item(&menu_quit)
                 .build()?;
+
+            // Build macOS Native Application Menu Bar
+            let app_menu_about = MenuItemBuilder::with_id("about_squelch", "Tentang Squelch").build(app)?;
+            let app_menu_update = MenuItemBuilder::with_id("update_squelch", "Periksa Pembaruan...").build(app)?;
+            let app_menu_pref = MenuItemBuilder::with_id("pref_squelch", "Pengaturan...").accelerator("CmdOrCtrl+,").build(app)?;
+            let app_menu_quit = MenuItemBuilder::with_id("quit_squelch", "Keluar Squelch").accelerator("CmdOrCtrl+Q").build(app)?;
+
+            let app_submenu = SubmenuBuilder::new(app, "Squelch")
+                .item(&app_menu_about)
+                .item(&app_menu_update)
+                .separator()
+                .item(&app_menu_pref)
+                .separator()
+                .item(&PredefinedMenuItem::hide(app, Some("Sembunyikan Squelch"))?)
+                .item(&PredefinedMenuItem::hide_others(app, Some("Sembunyikan Lainnya"))?)
+                .item(&PredefinedMenuItem::show_all(app, Some("Tampilkan Semua"))?)
+                .separator()
+                .item(&app_menu_quit)
+                .build()?;
+
+            let edit_submenu = SubmenuBuilder::new(app, "Edit")
+                .item(&PredefinedMenuItem::undo(app, None)?)
+                .item(&PredefinedMenuItem::redo(app, None)?)
+                .separator()
+                .item(&PredefinedMenuItem::cut(app, None)?)
+                .item(&PredefinedMenuItem::copy(app, None)?)
+                .item(&PredefinedMenuItem::paste(app, None)?)
+                .item(&PredefinedMenuItem::select_all(app, None)?)
+                .build()?;
+
+            let window_submenu = SubmenuBuilder::new(app, "Jendela")
+                .item(&PredefinedMenuItem::minimize(app, None)?)
+                .item(&PredefinedMenuItem::close_window(app, None)?)
+                .build()?;
+
+            let app_menu = MenuBuilder::new(app)
+                .item(&app_submenu)
+                .item(&edit_submenu)
+                .item(&window_submenu)
+                .build()?;
+
+            let _ = app.set_menu(app_menu);
+            app.on_menu_event(move |app, event| {
+                handle_menu_action(app, event.id().as_ref());
+            });
 
             // 6. Build System Tray Icon with Template Icon
             let init_icon = Image::from_bytes(IDLE_ICON).expect("failed to load initial tray icon");
@@ -136,55 +285,8 @@ pub fn run() {
                 .icon_as_template(true)
                 .menu(&tray_menu)
                 .show_menu_on_left_click(false)
-                .on_menu_event(move |app, event| match event.id().as_ref() {
-                    "play_pause" => {
-                        let _ = app.emit("squelch:action", serde_json::json!({ "action": "toggle-play-pause" }));
-                    }
-                    "stop" => {
-                        let _ = app.emit("squelch:action", serde_json::json!({ "action": "stop" }));
-                    }
-                    "open_squelch" => {
-                        if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.show();
-                            let _ = win.unminimize();
-                            let _ = win.set_focus();
-                        }
-                    }
-                    "stations_squelch" => {
-                        if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'stations' }));");
-                            let _ = win.show();
-                            let _ = win.unminimize();
-                            let _ = win.set_focus();
-                        }
-                    }
-                    "pref_squelch" => {
-                        if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'preferences' }));");
-                            let _ = win.show();
-                            let _ = win.unminimize();
-                            let _ = win.set_focus();
-                        }
-                    }
-                    "about_squelch" => {
-                        let _ = app.emit("squelch:open-about", ());
-                        if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.eval("window.location.hash = '#about'; window.dispatchEvent(new CustomEvent('squelch:open-about'));");
-                            let _ = win.show();
-                            let _ = win.unminimize();
-                            let _ = win.set_focus();
-                        }
-                    }
-                    "quit_squelch" => {
-                        let _ = app.emit("squelch:confirm-quit", ());
-                        if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));");
-                            let _ = win.show();
-                            let _ = win.unminimize();
-                            let _ = win.set_focus();
-                        }
-                    }
-                    _ => {}
+                .on_menu_event(move |app, event| {
+                    handle_menu_action(app, event.id().as_ref());
                 })
                 .on_tray_icon_event(|tray, event| {
                     tauri_plugin_positioner::on_tray_event(tray.app_handle(), &event);
@@ -224,7 +326,10 @@ pub fn run() {
                         guard.clone()
                     };
 
-                    if current_state == "playing" || current_state == "buffering" {
+                    if current_state == "playing"
+                        || current_state == "buffering"
+                        || current_state == "reconnecting"
+                    {
                         frame_idx = (frame_idx + 1) % 12;
                         let bytes = if current_state == "playing" {
                             PLAYING_ICONS[frame_idx]
@@ -287,8 +392,20 @@ pub fn run() {
             commands::check_for_updates,
             commands::send_notification,
             commands::get_player_status,
-            commands::update_player_status
+            commands::update_player_status,
+            commands::clear_stations_data,
+            commands::clear_schedules_data,
+            commands::clear_listening_stats,
+            commands::reset_all_data
         ])
+        .on_window_event(|window, event| {
+            if window.label() == "main" {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while building tauri application");
 }

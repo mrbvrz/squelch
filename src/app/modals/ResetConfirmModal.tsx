@@ -51,18 +51,18 @@ export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-2.5 pt-3 border-t mac-divider">
+                <div className="flex justify-end gap-2.5 pt-2">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="mac-glass-pill px-4 py-2 rounded-[7px] font-medium cursor-pointer"
+                        className="mac-glass-pill px-4 h-[30px] rounded-[7px] text-[12px] font-medium cursor-pointer flex items-center justify-center"
                     >
                         {cancelBtnText}
                     </button>
                     <button
                         type="button"
                         onClick={onConfirm}
-                        className="bg-[#FF453A] hover:bg-[#D70015] text-white px-4 py-2 rounded-[7px] font-semibold shadow-sm cursor-pointer transition"
+                        className="bg-[#FF453A] hover:bg-[#D70015] text-white px-4 h-[30px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition flex items-center justify-center"
                     >
                         {confirmBtnText}
                     </button>

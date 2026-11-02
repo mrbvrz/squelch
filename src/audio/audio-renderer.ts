@@ -1,4 +1,5 @@
 import Hls from 'hls.js';
+import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { initTauriBridge } from '../bridge/tauri-bridge';
 
@@ -22,10 +23,13 @@ interface SquelchAudioBridge {
             logoUrl?: string | null;
             bufferLengthSeconds?: number;
             equalizer?: EqualizerPayload;
+            isReconnect?: boolean;
         }) => void
     ) => void;
     notifyPlaying: () => void;
     notifyBuffering: () => void;
+    notifyReconnecting: (attempt: number, maxAttempts: number) => void;
+    notifyStopped: () => void;
     notifyError: (message: string) => void;
     notifyDeviceRemoved: () => void;
     notifyMediaAction: (
@@ -155,9 +159,27 @@ class AudioEqualizerEngine {
     const eqEngine = new AudioEqualizerEngine();
     let currentBufferLengthSeconds = 5;
     let currentEqualizerConfig: EqualizerPayload | null = null;
+    let currentVolume = 1.0;
+    let currentMuted = false;
 
     let hlsInstance: Hls | null = null;
     let currentStationName = 'Squelch';
+
+    // Real-time listener for Volume and Mute updates
+    listen<{ volume?: number; muted?: boolean }>(
+        'squelch:audio:volume',
+        (event) => {
+            const payload = event.payload;
+            if (typeof payload?.volume === 'number') {
+                currentVolume = Math.max(0, Math.min(1, payload.volume));
+                audioEl.volume = currentVolume;
+            }
+            if (typeof payload?.muted === 'boolean') {
+                currentMuted = Boolean(payload.muted);
+                audioEl.muted = currentMuted;
+            }
+        }
+    ).catch(() => {});
 
     // Real-time listener for EQ updates from UI
     listen<EqualizerPayload>('squelch:audio:eq', (event) => {
@@ -253,7 +275,252 @@ class AudioEqualizerEngine {
         });
     }
 
+    let stallTimer: ReturnType<typeof setTimeout> | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let reconnectAttempts = 0;
+    let isHandlingIssue = false;
+    let currentPlayCmd: {
+        type: 'play' | 'pause' | 'stop' | 'metadata';
+        url?: string;
+        isHls?: boolean;
+        stationName?: string;
+        streamTitle?: string | null;
+        logoUrl?: string | null;
+        bufferLengthSeconds?: number;
+        equalizer?: EqualizerPayload;
+        isReconnect?: boolean;
+    } | null = null;
+
+    const clearStallTimer = () => {
+        if (stallTimer) {
+            clearTimeout(stallTimer);
+            stallTimer = null;
+        }
+    };
+
+    const clearReconnectTimer = () => {
+        if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+        }
+    };
+
+    const startStallTimer = async () => {
+        clearStallTimer();
+        if (isHandlingIssue || !currentPlayCmd) return;
+        let timeoutMs = 12000;
+        try {
+            const cfg: any = await invoke('get_settings');
+            if (cfg?.settings?.networkTimeoutMs) {
+                timeoutMs = Number(cfg.settings.networkTimeoutMs) || 12000;
+            }
+        } catch {
+            // fallback to default 12s
+        }
+
+        stallTimer = setTimeout(() => {
+            stallTimer = null;
+            void handleNetworkIssue('Stall timeout exceeded');
+        }, timeoutMs);
+    };
+
+    const stopAndNotify = async (
+        lang: 'id' | 'en',
+        stationName: string,
+        attempts: number,
+        exhausted: boolean
+    ) => {
+        console.warn(
+            `[AudioWorker] Network connection failed. Stopping playback and notifying user.`
+        );
+        isHandlingIssue = false;
+        clearStallTimer();
+        clearReconnectTimer();
+        reconnectAttempts = 0;
+        currentPlayCmd = null;
+
+        destroyHls();
+        audioEl.pause();
+        audioEl.removeAttribute('src');
+        audioEl.load();
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = 'none';
+        }
+
+        bridge.notifyStopped();
+
+        const title = lang === 'id' ? 'Koneksi Terputus' : 'Connection Lost';
+        const body =
+            lang === 'id'
+                ? exhausted
+                    ? `Gagal menyambung ulang ke ${stationName} setelah ${attempts} percobaan. Pemutaran dihentikan.`
+                    : `Gagal memuat ${stationName} karena kendala jaringan. Pemutaran dihentikan.`
+                : exhausted
+                  ? `Failed to reconnect to ${stationName} after ${attempts} attempts. Playback stopped.`
+                  : `Failed to connect to ${stationName} due to network timeout. Playback stopped.`;
+
+        try {
+            await invoke('send_notification', { title, body });
+        } catch (e) {
+            console.error('[AudioWorker] Failed to send notification:', e);
+        }
+    };
+
+    const handleNetworkIssue = async (reason: string) => {
+        if (!currentPlayCmd) return;
+        clearStallTimer();
+        if (isHandlingIssue) return;
+        isHandlingIssue = true;
+
+        let autoReconnect = true;
+        let maxAttempts = 8;
+        let lang: 'id' | 'en' = 'id';
+
+        try {
+            const cfg: any = await invoke('get_settings');
+            if (cfg?.settings) {
+                autoReconnect = cfg.settings.autoReconnect !== false;
+                maxAttempts = Number(cfg.settings.maxReconnectAttempts) || 8;
+                lang = cfg.settings.language === 'en' ? 'en' : 'id';
+            }
+        } catch {
+            // keep defaults
+        }
+
+        const stationName =
+            currentPlayCmd.stationName || currentStationName || 'Radio';
+
+        if (!autoReconnect) {
+            await stopAndNotify(lang, stationName, 0, false);
+            return;
+        }
+
+        if (reconnectAttempts >= maxAttempts) {
+            await stopAndNotify(lang, stationName, maxAttempts, true);
+            return;
+        }
+
+        reconnectAttempts++;
+        console.warn(
+            `[AudioWorker] Network issue (${reason}). Attempting reconnect ${reconnectAttempts}/${maxAttempts}...`
+        );
+
+        bridge.notifyReconnecting(reconnectAttempts, maxAttempts);
+
+        clearReconnectTimer();
+        reconnectTimer = setTimeout(async () => {
+            reconnectTimer = null;
+            if (!currentPlayCmd) {
+                isHandlingIssue = false;
+                return;
+            }
+
+            destroyHls();
+            audioEl.pause();
+            audioEl.removeAttribute('src');
+            audioEl.load();
+
+            void startStallTimer();
+            isHandlingIssue = false;
+            await executePlay(currentPlayCmd, true);
+        }, 2500);
+    };
+
+    const executePlay = async (
+        cmd: typeof currentPlayCmd,
+        isReconnect = false
+    ) => {
+        if (!cmd || !cmd.url) return;
+
+        destroyHls();
+        audioEl.volume = currentVolume;
+        audioEl.muted = currentMuted;
+
+        if (cmd.bufferLengthSeconds) {
+            currentBufferLengthSeconds = Number(cmd.bufferLengthSeconds) || 5;
+        }
+        if (cmd.equalizer) {
+            currentEqualizerConfig = cmd.equalizer;
+        }
+
+        eqEngine.init(audioEl);
+        eqEngine.resume();
+        if (currentEqualizerConfig) {
+            eqEngine.apply(currentEqualizerConfig);
+        }
+
+        updateMediaSession({
+            stationName: cmd.stationName,
+            streamTitle: cmd.streamTitle,
+            logoUrl: cmd.logoUrl
+        });
+
+        const isHlsStream =
+            Boolean(cmd.isHls) || cmd.url.toLowerCase().includes('.m3u8');
+
+        const streamUrl =
+            isReconnect && !isHlsStream
+                ? `${cmd.url}${cmd.url.includes('?') ? '&' : '?'}_t=${Date.now()}`
+                : cmd.url;
+
+        if (isHlsStream && Hls.isSupported()) {
+            hlsInstance = new Hls({
+                enableWorker: false,
+                lowLatencyMode: currentBufferLengthSeconds <= 3,
+                maxBufferLength: currentBufferLengthSeconds,
+                maxMaxBufferLength: currentBufferLengthSeconds * 2,
+                backBufferLength: 30
+            });
+
+            hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                audioEl.muted = true;
+                void audioEl
+                    .play()
+                    .then(() => {
+                        audioEl.muted = false;
+                        eqEngine.resume();
+                    })
+                    .catch((err: unknown) => {
+                        const msg =
+                            err instanceof Error
+                                ? err.message
+                                : 'HLS play failed';
+                        void handleNetworkIssue(msg);
+                    });
+            });
+
+            hlsInstance.on(Hls.Events.ERROR, (_event, data) => {
+                if (data.fatal) {
+                    void handleNetworkIssue(
+                        `HLS ${data.type}: ${data.details}`
+                    );
+                }
+            });
+
+            hlsInstance.loadSource(streamUrl);
+            hlsInstance.attachMedia(audioEl);
+        } else {
+            audioEl.pause();
+            audioEl.src = streamUrl;
+            audioEl.load();
+            try {
+                audioEl.muted = true;
+                await audioEl.play();
+                audioEl.muted = false;
+                eqEngine.resume();
+            } catch (err) {
+                const msg =
+                    err instanceof Error ? err.message : 'Play interrupted';
+                void handleNetworkIssue(msg);
+            }
+        }
+    };
+
     audioEl.addEventListener('playing', () => {
+        clearStallTimer();
+        clearReconnectTimer();
+        reconnectAttempts = 0;
+        isHandlingIssue = false;
         if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'playing';
         }
@@ -262,110 +529,54 @@ class AudioEqualizerEngine {
     });
 
     audioEl.addEventListener('waiting', () => {
-        bridge.notifyBuffering();
+        if (currentPlayCmd) {
+            bridge.notifyBuffering();
+            void startStallTimer();
+        }
     });
 
     audioEl.addEventListener('stalled', () => {
-        bridge.notifyBuffering();
+        if (currentPlayCmd) {
+            bridge.notifyBuffering();
+            void startStallTimer();
+        }
+    });
+
+    audioEl.addEventListener('ended', () => {
+        if (currentPlayCmd && !isHandlingIssue) {
+            void handleNetworkIssue('Stream ended unexpectedly');
+        }
     });
 
     audioEl.addEventListener('error', () => {
         if (hlsInstance) return;
         if (!audioEl.src || audioEl.src === window.location.href) return;
+        if (!currentPlayCmd) return;
         const code = audioEl.error?.code ?? 0;
         const msg = audioEl.error?.message || `MediaError code ${code}`;
-        bridge.notifyError(msg);
+        void handleNetworkIssue(msg);
     });
 
     bridge.onCommand(async (cmd) => {
         switch (cmd.type) {
             case 'play': {
-                destroyHls();
-                audioEl.volume = 1.0;
-                audioEl.muted = false;
-
-                if (cmd.bufferLengthSeconds) {
-                    currentBufferLengthSeconds =
-                        Number(cmd.bufferLengthSeconds) || 5;
+                clearStallTimer();
+                clearReconnectTimer();
+                isHandlingIssue = false;
+                if (!cmd.isReconnect) {
+                    reconnectAttempts = 0;
                 }
-                if (cmd.equalizer) {
-                    currentEqualizerConfig = cmd.equalizer;
-                }
-
-                eqEngine.init(audioEl);
-                eqEngine.resume();
-                if (currentEqualizerConfig) {
-                    eqEngine.apply(currentEqualizerConfig);
-                }
-
-                updateMediaSession({
-                    stationName: cmd.stationName,
-                    streamTitle: cmd.streamTitle,
-                    logoUrl: cmd.logoUrl
-                });
-
-                if (!cmd.url) break;
-
-                const isHlsStream =
-                    Boolean(cmd.isHls) ||
-                    cmd.url.toLowerCase().includes('.m3u8');
-
-                if (isHlsStream && Hls.isSupported()) {
-                    hlsInstance = new Hls({
-                        enableWorker: false,
-                        lowLatencyMode: currentBufferLengthSeconds <= 3,
-                        maxBufferLength: currentBufferLengthSeconds,
-                        maxMaxBufferLength: currentBufferLengthSeconds * 2,
-                        backBufferLength: 30
-                    });
-
-                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                        audioEl.muted = true;
-                        void audioEl
-                            .play()
-                            .then(() => {
-                                audioEl.muted = false;
-                                eqEngine.resume();
-                            })
-                            .catch((err: unknown) => {
-                                const msg =
-                                    err instanceof Error
-                                        ? err.message
-                                        : 'HLS play failed';
-                                bridge.notifyError(msg);
-                            });
-                    });
-
-                    hlsInstance.on(Hls.Events.ERROR, (_event, data) => {
-                        if (data.fatal) {
-                            bridge.notifyError(
-                                `HLS ${data.type}: ${data.details}`
-                            );
-                        }
-                    });
-
-                    hlsInstance.loadSource(cmd.url);
-                    hlsInstance.attachMedia(audioEl);
-                } else {
-                    audioEl.pause();
-                    audioEl.src = cmd.url;
-                    audioEl.load();
-                    try {
-                        audioEl.muted = true;
-                        await audioEl.play();
-                        audioEl.muted = false;
-                        eqEngine.resume();
-                    } catch (err) {
-                        const msg =
-                            err instanceof Error
-                                ? err.message
-                                : 'Play interrupted';
-                        bridge.notifyError(msg);
-                    }
-                }
+                currentPlayCmd = cmd;
+                void startStallTimer();
+                await executePlay(cmd, Boolean(cmd.isReconnect));
                 break;
             }
             case 'pause': {
+                clearStallTimer();
+                clearReconnectTimer();
+                isHandlingIssue = false;
+                reconnectAttempts = 0;
+                currentPlayCmd = null;
                 destroyHls();
                 audioEl.pause();
                 audioEl.removeAttribute('src');
@@ -376,6 +587,11 @@ class AudioEqualizerEngine {
                 break;
             }
             case 'stop': {
+                clearStallTimer();
+                clearReconnectTimer();
+                isHandlingIssue = false;
+                reconnectAttempts = 0;
+                currentPlayCmd = null;
                 destroyHls();
                 audioEl.pause();
                 audioEl.removeAttribute('src');

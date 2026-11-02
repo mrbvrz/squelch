@@ -20,7 +20,14 @@ const ALLOWED_TRANSITIONS: Record<PlayerState, PlayerState[]> = {
         'connecting'
     ],
     paused: ['connecting', 'playing', 'idle'],
-    reconnecting: ['connecting', 'error', 'idle'],
+    reconnecting: [
+        'connecting',
+        'buffering',
+        'playing',
+        'paused',
+        'error',
+        'idle'
+    ],
     error: ['connecting', 'idle']
 };
 

@@ -5,6 +5,7 @@ import type { SquelchWindowApi } from '../types';
 import { DAY_LABELS } from '../types';
 import { StationAvatar } from '../../components/StationAvatar';
 import { MacToggle } from '../../components/MacToggle';
+import { renderFormattedNotes } from '../../utils/text-format';
 import {
     IconBell,
     IconCalendar,
@@ -51,67 +52,73 @@ export const SchedulesTab: React.FC<SchedulesTabProps> = ({
     return (
         <div
             key="tab-schedules"
-            className="max-w-3xl space-y-5 animate-tab-enter text-xs"
+            className={`max-w-3xl animate-tab-enter text-xs ${
+                schedules.length === 0
+                    ? 'flex-1 flex flex-col items-center justify-center min-h-[460px] my-auto'
+                    : 'space-y-5'
+            }`}
         >
-            {/* Header Card */}
-            <div className="mac-settings-card">
-                <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3.5">
-                        <div className="w-10 h-10 rounded-[9px] bg-accent text-white flex items-center justify-center shadow-sm shrink-0">
-                            <IconCalendar size={22} />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-[15px] font-bold">
-                                    {t.schedulesTitle}
-                                </h2>
-                                <span className="px-2 py-0.5 rounded-[6px] bg-accent/15 text-accent text-[11px] font-bold tabular-nums">
-                                    {schedules.length}
-                                </span>
-                            </div>
-                            <p className="text-[11px] text-secondary mt-0.5 leading-relaxed max-w-lg">
-                                {t.schedulesSubtitle}
-                            </p>
-                        </div>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={openAddScheduleModal}
-                        className="bg-accent hover:opacity-90 text-white px-3.5 py-1.5 rounded-[7px] font-medium flex items-center justify-center gap-1.5 shadow-sm cursor-pointer transition shrink-0"
-                    >
-                        <IconPlus size={14} />
-                        <span>{t.addScheduleBtn}</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Schedules List */}
             {schedules.length === 0 ? (
-                <div className="mac-settings-card p-10 text-center flex flex-col items-center justify-center gap-3">
-                    <div className="w-12 h-12 rounded-[10px] bg-black/5 dark:bg-white/5 flex items-center justify-center text-secondary">
-                        <IconCalendar size={24} />
+                /* Empty state without card wrapper; positioned dead-center in the window */
+                <div className="text-center flex flex-col items-center justify-center gap-3 my-auto py-12">
+                    <div className="w-14 h-14 rounded-2xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-secondary">
+                        <IconCalendar size={28} className="opacity-70" />
                     </div>
-                    <div>
-                        <h3 className="text-[14px] font-semibold">
+                    <div className="max-w-sm">
+                        <h3 className="text-[15px] font-bold text-foreground">
                             {t.scheduleEmptyText}
                         </h3>
-                        <p className="text-[12px] text-secondary mt-1">
+                        <p className="text-[12px] text-secondary mt-1 leading-relaxed">
                             {t.schedulesSubtitle}
                         </p>
                     </div>
                     <button
                         type="button"
                         onClick={openAddScheduleModal}
-                        className="mt-2 bg-accent hover:opacity-90 text-white px-4 py-2 rounded-[7px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                        className="mt-2 bg-accent hover:opacity-90 text-white px-4 h-[30px] rounded-[7px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
                     >
                         <IconPlus size={14} />
                         <span>{t.addScheduleBtn}</span>
                     </button>
                 </div>
             ) : (
-                <div className="space-y-3">
-                    {schedules.map((sched) => {
+                <>
+                    {/* Header Card (Only visible when schedules exist) */}
+                    <div className="mac-settings-card">
+                        <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex items-center gap-3.5">
+                                <div className="w-10 h-10 rounded-[9px] bg-accent text-white flex items-center justify-center shadow-sm shrink-0">
+                                    <IconCalendar size={22} />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h2 className="text-[15px] font-bold">
+                                            {t.schedulesTitle}
+                                        </h2>
+                                        <span className="px-2 py-0.5 rounded-[6px] bg-accent/15 text-accent text-[11px] font-bold tabular-nums">
+                                            {schedules.length}
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] text-secondary mt-0.5 leading-relaxed max-w-lg">
+                                        {t.schedulesSubtitle}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={openAddScheduleModal}
+                                className="bg-accent hover:opacity-90 text-white px-3.5 h-[34px] rounded-[7px] font-medium flex items-center justify-center gap-1.5 shadow-sm cursor-pointer transition shrink-0"
+                            >
+                                <IconPlus size={14} />
+                                <span>{t.addScheduleBtn}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Schedules List */}
+                    <div className="space-y-3">
+                        {schedules.map((sched) => {
                         const isOnAir = isScheduleCurrentlyOnAir(sched);
                         const matchedStation = stations.find(
                             (s) => s.id === sched.stationId
@@ -311,14 +318,15 @@ export const SchedulesTab: React.FC<SchedulesTabProps> = ({
                                 </div>
 
                                 {sched.notes && (
-                                    <div className="mt-2 pt-2 border-t mac-divider text-[11px] text-secondary italic">
-                                        “{sched.notes}”
+                                    <div className="mt-2 pt-2 border-t mac-divider text-[11px] text-secondary">
+                                        {renderFormattedNotes(sched.notes)}
                                     </div>
                                 )}
                             </div>
                         );
                     })}
-                </div>
+                    </div>
+                </>
             )}
         </div>
     );

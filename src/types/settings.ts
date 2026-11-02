@@ -182,7 +182,7 @@ export function createDefaultSettings(): AppSettings {
         },
         userAgent: 'Squelch/0.1.0 (macOS)',
         shortcuts: {
-            playPause: 'CommandOrControl+Shift+Space',
+            playPause: 'CommandOrControl+Shift+P',
             nextStation: 'CommandOrControl+Shift+Right',
             prevStation: 'CommandOrControl+Shift+Left'
         }

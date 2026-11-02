@@ -27,7 +27,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({
     isOpen,
     onClose,
     appIconDataUrl,
-    version = 'v0.1.1',
+    version = 'v0.1.2',
     tagline,
     description,
     websiteBtnText,

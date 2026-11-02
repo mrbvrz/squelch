@@ -10,7 +10,7 @@ export default defineConfig({
     strictPort: true
   },
   optimizeDeps: {
-    include: ['react', 'react-dom']
+    include: ['react', 'react-dom', 'recharts', 'react-is']
   },
   build: {
     outDir: 'dist-ui',
@@ -25,6 +25,7 @@ export default defineConfig({
       output: {
         manualChunks: (id) => {
           if (id.includes('hls.js')) return 'vendor-hls';
+          if (id.includes('recharts')) return 'vendor-recharts';
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
             return 'vendor-react';
           }

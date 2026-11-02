@@ -12,7 +12,7 @@ RELEASE_JSON=$(curl -s https://api.github.com/repos/mrbvrz/squelch/releases/late
 DMG_URL=$(echo "$RELEASE_JSON" | grep -o 'https://[^"]*Squelch-[^"]*-arm64\.dmg' | head -n 1)
 
 if [ -z "$DMG_URL" ]; then
-    DMG_URL="https://github.com/mrbvrz/squelch/releases/download/v0.1.1/Squelch-0.1.1-arm64.dmg"
+    DMG_URL="https://github.com/mrbvrz/squelch/releases/download/v0.1.2/Squelch-0.1.2-arm64.dmg"
 fi
 
 TEMP_DMG="/tmp/Squelch-Install.dmg"

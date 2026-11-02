@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { AppSettings } from '../../types';
 import { SUPPORTED_LOCALES, type TranslationDictionary } from '../../i18n';
 import type { SquelchWindowApi } from '../types';
@@ -7,7 +7,13 @@ import { ACCENT_SWATCHES } from '../../utils/appearance';
 import { ThemePreviewCard } from '../../components/ThemePreviewCard';
 import { MacToggle } from '../../components/MacToggle';
 import { SearchableFontPicker } from '../../components/SearchableFontPicker';
+import { MacSelect } from '../../components/MacSelect';
 import { AudioEqualizerCard } from '../../components/AudioEqualizerCard';
+import { KeyboardShortcutRecorder } from '../../components/KeyboardShortcutRecorder';
+import {
+    GLOBAL_SHORTCUT_DEFINITIONS,
+    type ShortcutActionKey
+} from '../../utils/shortcuts';
 import {
     IconArrowDownTray,
     IconBackup,
@@ -18,16 +24,17 @@ import {
     IconCompass,
     IconCopy,
     IconFolder,
-    IconKey,
     IconRestore,
     IconSparkles,
     IconSpinner,
-    IconSwatch
+    IconSwatch,
+    IconTrash
 } from '../../components/Icons';
 
 export interface PreferencesTabProps {
     settings: AppSettings;
     systemFonts: string[];
+    isLoadingFonts?: boolean;
     lang: 'id' | 'en';
     recordingShortcutKey: keyof AppSettings['shortcuts'] | null;
     setRecordingShortcutKey: (
@@ -52,6 +59,9 @@ export interface PreferencesTabProps {
     diagnosticsText: string;
     setDiagnosticsText: (text: string) => void;
     setIsResetConfirmOpen: (open: boolean) => void;
+    onRequestReset?: (
+        target: 'settings' | 'stations' | 'schedules' | 'stats' | 'all'
+    ) => void;
     api: SquelchWindowApi;
     t: TranslationDictionary;
 }
@@ -59,6 +69,7 @@ export interface PreferencesTabProps {
 export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     settings,
     systemFonts,
+    isLoadingFonts = false,
     lang,
     recordingShortcutKey,
     setRecordingShortcutKey,
@@ -81,9 +92,23 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     diagnosticsText,
     setDiagnosticsText,
     setIsResetConfirmOpen,
+    onRequestReset,
     api,
     t
 }) => {
+    const [selectedClearTarget, setSelectedClearTarget] = useState<
+        'stations' | 'schedules' | 'stats' | 'all'
+    >('stations');
+
+    const handleUpdateShortcut = (key: ShortcutActionKey, newAccel: string) => {
+        void api.updateSettings({
+            shortcuts: {
+                ...settings.shortcuts,
+                [key]: newAccel
+            }
+        });
+    };
+
     return (
         <div
             key="tab-preferences"
@@ -96,13 +121,13 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                     <span>{t.prefAppearanceSection}</span>
                 </h2>
                 <div className="mac-settings-card mac-inset-list">
-                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                             <div className="text-[13px] font-medium">
                                 {t.prefThemeLabel}
                             </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                             <ThemePreviewCard
                                 mode="system"
                                 active={
@@ -155,32 +180,35 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                                 accentColor: swatch.hex
                                             })
                                         }
-                                        className={`w-5 h-5 rounded-full cursor-pointer transition-transform flex items-center justify-center ${
+                                        className={`w-[17px] h-[17px] rounded-full cursor-pointer transition-transform flex items-center justify-center shrink-0 ${
                                             selected
-                                                ? 'scale-115 ring-2 ring-white/80'
-                                                : ''
+                                                ? 'scale-110 ring-2 ring-white/90 shadow-xs'
+                                                : 'hover:scale-105 opacity-90 hover:opacity-100'
                                         }`}
                                         style={{
                                             backgroundColor: swatch.hex
                                         }}
                                     >
                                         {selected && (
-                                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
                                         )}
                                     </button>
                                 );
                             })}
-                            <input
-                                type="color"
-                                value={settings.accentColor ?? '#0A84FF'}
-                                aria-label="Custom Accent Color"
-                                onChange={(e) =>
-                                    void api.updateSettings({
-                                        accentColor: e.target.value
-                                    })
-                                }
-                                className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
-                            />
+                            <div className="relative flex items-center ml-0.5">
+                                <input
+                                    type="color"
+                                    value={settings.accentColor ?? '#0A84FF'}
+                                    aria-label="Custom Accent Color"
+                                    title="Custom Color"
+                                    onChange={(e) =>
+                                        void api.updateSettings({
+                                            accentColor: e.target.value
+                                        })
+                                    }
+                                    className="w-[19px] h-[19px] rounded-full cursor-pointer bg-transparent border border-black/15 dark:border-white/20 p-0 overflow-hidden"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -194,7 +222,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                 {t.prefGlassOpacityDesc}
                             </div>
                         </div>
-                        <div className="flex items-center gap-2.5 shrink-0">
+                        <div className="flex items-center gap-3 shrink-0">
                             <input
                                 type="range"
                                 min={40}
@@ -209,32 +237,14 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                         glassOpacity: val
                                     });
                                 }}
-                                className="w-28 cursor-pointer"
+                                className="w-32 cursor-pointer"
                                 style={{
                                     accentColor: 'var(--accent-color)'
                                 }}
                             />
-                            <div className="flex items-center gap-1 p-0.5 rounded-[7px] mac-glass-pill tabular-nums">
-                                {[70, 80, 90, 100].map((pct) => (
-                                    <button
-                                        key={pct}
-                                        type="button"
-                                        onClick={() =>
-                                            void api.updateSettings({
-                                                glassOpacity: pct
-                                            })
-                                        }
-                                        className={`px-2 py-0.5 rounded-[5px] text-[11px] font-medium cursor-pointer transition ${
-                                            (settings.glassOpacity ?? 90) ===
-                                            pct
-                                                ? 'bg-accent text-white'
-                                                : 'text-secondary'
-                                        }`}
-                                    >
-                                        {pct}%
-                                    </button>
-                                ))}
-                            </div>
+                            <span className="text-[12px] font-mono font-medium text-secondary tabular-nums min-w-[36px] text-right">
+                                {settings.glassOpacity ?? 90}%
+                            </span>
                         </div>
                     </div>
 
@@ -251,8 +261,14 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <SearchableFontPicker
                             value={settings.fontFamily ?? 'system'}
                             fonts={systemFonts}
+                            isLoading={isLoadingFonts}
                             defaultLabel={t.prefFontSystemDefault}
                             ariaLabel={t.prefFontFamilyLabel}
+                            placeholder={t.prefFontSearchPlaceholder}
+                            foundLabel={t.prefFontFound}
+                            selectedLabel={t.prefFontSelected}
+                            loadingLabel={t.prefFontLoading}
+                            noMatchLabel={t.prefFontNoMatch}
                             onChange={(selectedFont) => {
                                 void api.updateSettings({
                                     fontFamily: selectedFont
@@ -273,23 +289,25 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <span className="text-[13px] font-medium">
                             {t.prefLanguage}
                         </span>
-                        <select
+                        <MacSelect
                             value={settings.language}
-                            aria-label={t.prefLanguage}
-                            onChange={(e) =>
+                            ariaLabel={t.prefLanguage}
+                            onChange={(nextLang) =>
                                 void api.updateSettings({
-                                    language: e.target
-                                        .value as AppSettings['language']
+                                    language: nextLang as AppSettings['language']
                                 })
                             }
-                            className="mac-input px-3 py-1.5 rounded-[7px] text-[12px] w-56 cursor-pointer"
-                        >
-                            {SUPPORTED_LOCALES.map((loc) => (
-                                <option key={loc.code} value={loc.code}>
-                                    {loc.flag} {loc.nativeName}
-                                </option>
-                            ))}
-                        </select>
+                            options={SUPPORTED_LOCALES.map((loc) => ({
+                                value: loc.code,
+                                label: loc.nativeName,
+                                icon: (
+                                    <span className="text-[13px] shrink-0">
+                                        {loc.flag}
+                                    </span>
+                                )
+                            }))}
+                            widthClass="w-[200px]"
+                        />
                     </div>
 
                     <div className="px-4 py-3 flex items-center justify-between">
@@ -366,7 +384,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <button
                             type="button"
                             onClick={() => setIsOnboardingOpen(true)}
-                            className="mac-glass-pill px-3 py-1.5 rounded-[7px] font-medium flex items-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition"
+                            className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center justify-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition shrink-0"
                         >
                             <IconCompass size={14} />
                             <span>{t.introReopenBtn}</span>
@@ -500,50 +518,35 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
 
             {/* Group 4: Global Shortcuts */}
             <div>
-                <div className="flex items-center justify-between mb-2 px-1">
+                <div className="mb-2 px-1">
                     <h2 className="text-[13px] font-bold">{t.prefShortcuts}</h2>
-                    <span className="text-[11px] text-secondary">
+                    <p className="text-[11px] text-secondary mt-0.5">
                         {t.prefShortcutRecordHint}
-                    </span>
+                    </p>
                 </div>
+
                 <div className="mac-settings-card mac-inset-list">
-                    {(
-                        [
-                            ['playPause', t.prefShortcutPlayPause],
-                            ['nextStation', t.prefShortcutNext],
-                            ['prevStation', t.prefShortcutPrev]
-                        ] as Array<[keyof AppSettings['shortcuts'], string]>
-                    ).map(([key, label]) => {
-                        const isRecording = recordingShortcutKey === key;
+                    {GLOBAL_SHORTCUT_DEFINITIONS.map((def) => {
+                        const isRecording = recordingShortcutKey === def.key;
+                        const currentValue =
+                            settings.shortcuts?.[def.key] ?? '';
                         return (
-                            <div
-                                key={key}
-                                className="px-4 py-3 flex items-center justify-between gap-4"
-                            >
-                                <span className="text-[13px] font-medium">
-                                    {label}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setRecordingShortcutKey(
-                                            isRecording ? null : key
-                                        )
-                                    }
-                                    className={`px-3.5 py-1.5 rounded-[7px] font-mono text-[11px] min-w-[200px] flex items-center justify-center gap-1.5 cursor-pointer transition ${
-                                        isRecording
-                                            ? 'bg-accent text-white ring-2 ring-accent/40 animate-pulse'
-                                            : 'mac-glass-pill'
-                                    }`}
-                                >
-                                    <IconKey size={12} />
-                                    <span>
-                                        {isRecording
-                                            ? t.prefShortcutRecording
-                                            : settings.shortcuts[key]}
-                                    </span>
-                                </button>
-                            </div>
+                            <KeyboardShortcutRecorder
+                                key={def.key}
+                                definition={def}
+                                currentValue={currentValue}
+                                allShortcuts={settings.shortcuts}
+                                isRecording={isRecording}
+                                onStartRecording={() =>
+                                    setRecordingShortcutKey(def.key)
+                                }
+                                onStopRecording={() =>
+                                    setRecordingShortcutKey(null)
+                                }
+                                onChange={handleUpdateShortcut}
+                                lang={lang}
+                                t={t}
+                            />
                         );
                     })}
                 </div>
@@ -572,7 +575,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <button
                             type="button"
                             onClick={() => void handleRestoreData()}
-                            className="mac-glass-pill px-3 py-1.5 rounded-[7px] font-medium flex items-center gap-1.5 cursor-pointer"
+                            className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer"
                         >
                             <IconRestore size={13} />
                             <span>{t.prefRestoreBtn}</span>
@@ -580,7 +583,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <button
                             type="button"
                             onClick={() => void handleBackupData()}
-                            className="bg-accent hover:opacity-90 text-white px-3 py-1.5 rounded-[7px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                            className="bg-accent hover:opacity-90 text-white px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
                         >
                             <IconBackup size={13} />
                             <span>{t.prefBackupBtn}</span>
@@ -636,7 +639,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => setIsUpdateModalOpen(true)}
-                                    className="bg-accent hover:opacity-90 text-white px-3.5 py-1.5 rounded-[7px] text-[12px] font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                                    className="bg-accent hover:opacity-90 text-white px-3.5 h-[30px] rounded-[7px] text-[12px] font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer transition"
                                 >
                                     <IconArrowDownTray size={13} />
                                     <span>{t.updatesDownloadDmg}</span>
@@ -647,7 +650,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                 type="button"
                                 disabled={isCheckingUpdate}
                                 onClick={() => void handleCheckForUpdates(true)}
-                                className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:bg-black/5 dark:hover:bg-white/10 transition"
+                                className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:bg-black/5 dark:hover:bg-white/10 transition"
                             >
                                 {isCheckingUpdate ? (
                                     <>
@@ -753,7 +756,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                     );
                                 }
                             }}
-                            className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition shadow-xs"
+                            className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition shadow-xs"
                         >
                             <IconBell size={13} />
                             <span>{t.prefNotifTestBtn}</span>
@@ -781,7 +784,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                             <button
                                 type="button"
                                 onClick={() => void api.openLogsFolder()}
-                                className="mac-glass-pill px-3 py-1.5 rounded-[7px] font-medium flex items-center gap-1.5 cursor-pointer"
+                                className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer"
                             >
                                 <IconFolder size={13} />
                                 <span>{t.openLogsBtn}</span>
@@ -806,7 +809,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                         2000
                                     );
                                 }}
-                                className="mac-glass-pill px-3 py-1.5 rounded-[7px] font-medium flex items-center gap-1.5 cursor-pointer"
+                                className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer"
                             >
                                 <IconCopy size={13} />
                                 <span>
@@ -817,8 +820,6 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                             </button>
                         </div>
                     </div>
-
-                    <div className="mx-4 border-t mac-divider" />
 
                     <div className="px-4 py-2.5 flex items-center justify-between">
                         <button
@@ -863,27 +864,100 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                 </div>
             </div>
 
-            {/* Group 7: Reset Defaults at Bottom */}
+            {/* Group: Data Management & Reset Options */}
             <div>
-                <h2 className="text-[13px] font-bold mb-2 px-1 text-[#FF453A]">
-                    {t.prefDangerSection}
+                <h2 className="text-[13px] font-bold mb-2 px-1 text-[#FF453A] flex items-center gap-1.5">
+                    <IconTrash size={14} className="text-[#FF453A]" />
+                    <span>{t.prefDangerSection}</span>
                 </h2>
-                <div className="mac-settings-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-[#FF453A]/30">
-                    <div>
-                        <div className="text-[13px] font-medium">
-                            {t.prefResetBtn}
+                <div className="mac-settings-card mac-inset-list border border-[#FF453A]/30 overflow-hidden">
+                    {/* 1. Dropdown Hapus Data Tertentu */}
+                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                            <div className="text-[13px] font-semibold text-foreground">
+                                {t.prefClearDropdownLabel || 'Hapus Data'}
+                            </div>
+                            <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
+                                {selectedClearTarget === 'stations'
+                                    ? t.prefClearStationsDesc
+                                    : selectedClearTarget === 'schedules'
+                                      ? t.prefClearSchedulesDesc
+                                      : selectedClearTarget === 'stats'
+                                        ? t.prefClearStatsDesc
+                                        : t.prefResetAllDesc}
+                            </p>
                         </div>
-                        <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
-                            {t.prefResetDesc}
-                        </p>
+                        <div className="flex items-center gap-2.5 shrink-0">
+                            <MacSelect
+                                value={selectedClearTarget}
+                                ariaLabel={
+                                    t.prefClearDropdownLabel ||
+                                    'Pilih data yang ingin dihapus'
+                                }
+                                onChange={(nextTarget) =>
+                                    setSelectedClearTarget(
+                                        nextTarget as
+                                            | 'stations'
+                                            | 'schedules'
+                                            | 'stats'
+                                            | 'all'
+                                    )
+                                }
+                                options={[
+                                    {
+                                        value: 'all',
+                                        label:
+                                            t.prefClearAllDataOption ||
+                                            'Semua Data'
+                                    },
+                                    {
+                                        value: 'stations',
+                                        label: t.tabStations
+                                    },
+                                    {
+                                        value: 'schedules',
+                                        label: t.tabSchedules
+                                    },
+                                    { value: 'stats', label: t.tabStats }
+                                ]}
+                                widthClass="w-[200px]"
+                            />
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    onRequestReset
+                                        ? onRequestReset(selectedClearTarget)
+                                        : setIsResetConfirmOpen(true)
+                                }
+                                className="mac-glass-pill text-[#FF453A] hover:bg-[#FF453A]/10 px-3.5 h-[30px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition shrink-0"
+                            >
+                                {t.prefClearBtn || 'Hapus Data'}
+                            </button>
+                        </div>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => setIsResetConfirmOpen(true)}
-                        className="bg-[#FF453A] hover:bg-[#D70015] text-white px-4 py-1.5 rounded-[7px] font-semibold shadow-sm cursor-pointer transition shrink-0"
-                    >
-                        {t.prefResetBtn}
-                    </button>
+
+                    {/* 2. Kembali ke Pengaturan Awal */}
+                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                            <div className="text-[13px] font-semibold text-foreground">
+                                {t.prefResetBtn}
+                            </div>
+                            <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
+                                {t.prefResetDesc}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                onRequestReset
+                                    ? onRequestReset('settings')
+                                    : setIsResetConfirmOpen(true)
+                            }
+                            className="bg-[#FF453A] hover:bg-[#D70015] text-white px-3.5 h-[30px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition shrink-0"
+                        >
+                            {t.prefResetBtn}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

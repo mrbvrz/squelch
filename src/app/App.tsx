@@ -679,11 +679,6 @@ export const App: React.FC = () => {
         [stations]
     );
 
-    const onlineCount = useMemo(
-        () => stations.filter((s) => s.status === 'online').length,
-        [stations]
-    );
-
     const filteredStations = useMemo(() => {
         const q = searchQuery.trim().toLowerCase();
         return stations.filter((s) => {
@@ -1136,10 +1131,6 @@ export const App: React.FC = () => {
                 streamTitle={streamTitle}
                 isPlaying={isPlaying}
                 isBusy={isBusy}
-                onlineCount={onlineCount}
-                enabledSchedulesCount={
-                    schedules.filter((s) => s.enabled).length
-                }
                 settings={settings}
                 setIsAboutModalOpen={setIsAboutModalOpen}
                 setIsQuitConfirmOpen={setIsQuitConfirmOpen}

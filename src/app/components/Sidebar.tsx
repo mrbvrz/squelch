@@ -32,8 +32,6 @@ export interface SidebarProps {
     streamTitle: string | null;
     isPlaying: boolean;
     isBusy: boolean;
-    onlineCount: number;
-    enabledSchedulesCount: number;
     settings: AppSettings | null;
     setIsAboutModalOpen: (open: boolean) => void;
     setIsQuitConfirmOpen: (open: boolean) => void;
@@ -55,8 +53,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     streamTitle,
     isPlaying,
     isBusy,
-    onlineCount,
-    enabledSchedulesCount,
     settings,
     setIsAboutModalOpen,
     setIsQuitConfirmOpen,
@@ -137,15 +133,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <span className="truncate flex-1 text-left">
                             {t.tabStations}
                         </span>
-                        <span
-                            className={`px-1.5 py-0.5 rounded-[5px] text-[10px] font-bold tabular-nums leading-none ${
-                                activeTab === 'stations'
-                                    ? 'bg-white/25 text-white'
-                                    : 'bg-[#30D158]/20 text-[#30D158]'
-                            }`}
-                        >
-                            {onlineCount}
-                        </span>
                     </button>
 
                     <button
@@ -162,15 +149,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         </span>
                         <span className="truncate flex-1 text-left">
                             {t.tabSchedules}
-                        </span>
-                        <span
-                            className={`px-1.5 py-0.5 rounded-[5px] text-[10px] font-bold tabular-nums leading-none ${
-                                activeTab === 'schedules'
-                                    ? 'bg-white/25 text-white'
-                                    : 'bg-[#FF9F0A]/20 text-[#FF9F0A]'
-                            }`}
-                        >
-                            {enabledSchedulesCount}
                         </span>
                     </button>
 

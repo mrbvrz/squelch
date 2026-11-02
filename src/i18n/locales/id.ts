@@ -166,7 +166,7 @@ export const idLocale: TranslationDictionary = {
     // Equalizer & Audio Enhancement
     prefEqSection: 'Equalizer & Karakter Suara',
     prefEqDesc:
-        'Sesuaikan respon frekuensi 5-band dan aktifkan kompresor dinamis untuk kejernihan audio maksimal.',
+        'Sesuaikan respon frekuensi 8-band dengan visualizer kurva gelombang dinamis dan kompresor untuk kejernihan audio maksimal.',
     prefEqToggle: 'Aktifkan Audio Equalizer',
     prefEqPresetLabel: 'Preset Karakter Suara',
     prefEqResetBtn: 'Kembalikan EQ Datar',
@@ -175,6 +175,10 @@ export const idLocale: TranslationDictionary = {
         'Membatasi lonjakan audio keras dan mencegah distorsi kliping digital saat menaikkan level frekuensi EQ.',
     prefEqCustomNotice: 'Kustom (Disetel Manual)',
     prefEqBadgeActive: 'EQ Aktif',
+    prefEqWaveVisualizer: 'Wave Equalizer (Kurva Respon Frekuensi)',
+    prefEqWaveInteractiveHint:
+        'Geser titik kurva atau slider untuk mengatur respon nada',
+    prefEqResetBandTooltip: 'Klik ganda untuk reset band ke 0 dB',
     prefShortcuts: 'Pintasan Keyboard Global',
     prefShortcutRecordHint:
         'Klik tombol pintasan lalu tekan kombinasi tombol baru (Esc untuk batal)',

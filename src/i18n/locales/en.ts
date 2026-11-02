@@ -167,7 +167,7 @@ export const enLocale: TranslationDictionary = {
     // Equalizer & Audio Enhancement
     prefEqSection: 'Equalizer & Sound Quality',
     prefEqDesc:
-        'Tailor the 5-band frequency response and engage dynamic limiting for optimal broadcast clarity.',
+        'Tailor the 8-band frequency response with real-time wave curve visualizer and dynamic limiting for optimal broadcast clarity.',
     prefEqToggle: 'Enable Audio Equalizer',
     prefEqPresetLabel: 'Audio Equalizer Preset',
     prefEqResetBtn: 'Reset EQ to Flat',
@@ -176,6 +176,10 @@ export const enLocale: TranslationDictionary = {
         'Tames loud bursts and prevents digital clipping distortion when boosting equalizer frequencies.',
     prefEqCustomNotice: 'Custom (User Adjusted)',
     prefEqBadgeActive: 'EQ Active',
+    prefEqWaveVisualizer: 'Wave Equalizer (Frequency Response Curve)',
+    prefEqWaveInteractiveHint:
+        'Drag curve nodes or sliders to shape tone response',
+    prefEqResetBandTooltip: 'Double-click to reset band to 0 dB',
     prefShortcuts: 'Global Keyboard Shortcuts',
     prefShortcutRecordHint:
         'Click any shortcut button then press new key combination (Esc to cancel)',

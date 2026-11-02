@@ -172,6 +172,9 @@ export interface TranslationDictionary {
     prefEqNormalizationDesc: string;
     prefEqCustomNotice: string;
     prefEqBadgeActive: string;
+    prefEqWaveVisualizer: string;
+    prefEqWaveInteractiveHint: string;
+    prefEqResetBandTooltip: string;
     prefShortcuts: string;
     prefShortcutRecordHint: string;
     prefShortcutRecording: string;

@@ -237,7 +237,7 @@ pub fn reset_settings(store: State<Arc<AppStore>>) -> Result<Value, String> {
         "equalizer": {
             "enabled": false,
             "preset": "flat",
-            "bands": [0, 0, 0, 0, 0],
+            "bands": [0, 0, 0, 0, 0, 0, 0, 0],
             "normalization": true
         },
         "userAgent": "Squelch/0.1.0 (macOS; InternetRadio)",

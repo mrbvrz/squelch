@@ -7,7 +7,7 @@ initTauriBridge();
 export interface EqualizerPayload {
     enabled: boolean;
     preset?: string;
-    bands: [number, number, number, number, number];
+    bands: [number, number, number, number, number, number, number, number];
     normalization?: boolean;
 }
 
@@ -62,17 +62,20 @@ class AudioEqualizerEngine {
             this.ctx = new AudioContextClass();
             this.source = this.ctx.createMediaElementSource(audioEl);
 
-            // 5 Bands: 60Hz (lowshelf), 250Hz (peaking), 1kHz (peaking), 4kHz (peaking), 12kHz (highshelf)
+            // 8 Bands: 32Hz, 64Hz, 125Hz, 250Hz, 500Hz, 1kHz, 4kHz, 16kHz
             const specs: Array<{
                 f: number;
                 type: BiquadFilterType;
                 q?: number;
             }> = [
-                { f: 60, type: 'lowshelf' },
-                { f: 250, type: 'peaking', q: 1.0 },
-                { f: 1000, type: 'peaking', q: 1.0 },
-                { f: 4000, type: 'peaking', q: 1.0 },
-                { f: 12000, type: 'highshelf' }
+                { f: 32, type: 'lowshelf' },
+                { f: 64, type: 'peaking', q: 1.2 },
+                { f: 125, type: 'peaking', q: 1.2 },
+                { f: 250, type: 'peaking', q: 1.2 },
+                { f: 500, type: 'peaking', q: 1.2 },
+                { f: 1000, type: 'peaking', q: 1.2 },
+                { f: 4000, type: 'peaking', q: 1.2 },
+                { f: 16000, type: 'highshelf' }
             ];
 
             this.filters = specs.map((spec) => {
@@ -119,11 +122,11 @@ class AudioEqualizerEngine {
     }
 
     apply(config?: EqualizerPayload | null) {
-        if (!config || !this.ctx || this.filters.length !== 5) return;
+        if (!config || !this.ctx || this.filters.length !== 8) return;
         const now = this.ctx.currentTime;
         const isEnabled = Boolean(config.enabled);
 
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 8; i++) {
             const rawVal = config.bands?.[i] ?? 0;
             const clamped = Math.max(-12, Math.min(12, rawVal));
             const targetGain = isEnabled ? clamped : 0;

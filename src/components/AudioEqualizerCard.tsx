@@ -4,6 +4,7 @@ import { EQUALIZER_BANDS_META, EQUALIZER_PRESETS } from '../types';
 import type { TranslationDictionary } from '../i18n';
 import { MacToggle } from './MacToggle';
 import { IconEqualizer, IconRestore } from './Icons';
+import { WaveEqualizerVisualizer } from './WaveEqualizerVisualizer';
 
 export interface AudioEqualizerCardProps {
     equalizer: EqualizerConfig | undefined;
@@ -16,7 +17,7 @@ export const AudioEqualizerCard: React.FC<AudioEqualizerCardProps> = ({
     equalizer = {
         enabled: false,
         preset: 'flat',
-        bands: [0, 0, 0, 0, 0],
+        bands: [0, 0, 0, 0, 0, 0, 0, 0],
         normalization: true
     },
     onUpdateEqualizer,
@@ -25,10 +26,44 @@ export const AudioEqualizerCard: React.FC<AudioEqualizerCardProps> = ({
 }) => {
     const isEnabled = equalizer.enabled;
 
+    // Safely normalize 8-band array even if stored settings had 5 bands previously
+    const currentBands: [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number
+    ] =
+        Array.isArray(equalizer?.bands) && equalizer.bands.length === 8
+            ? (equalizer.bands as [
+                  number,
+                  number,
+                  number,
+                  number,
+                  number,
+                  number,
+                  number,
+                  number
+              ])
+            : [
+                  equalizer?.bands?.[0] ?? 0,
+                  equalizer?.bands?.[1] ?? 0,
+                  equalizer?.bands?.[2] ?? 0,
+                  equalizer?.bands?.[3] ?? 0,
+                  equalizer?.bands?.[4] ?? 0,
+                  equalizer?.bands?.[5] ?? 0,
+                  equalizer?.bands?.[6] ?? 0,
+                  equalizer?.bands?.[7] ?? 0
+              ];
+
     const handleToggleEnable = (next: boolean) => {
         onUpdateEqualizer({
             ...equalizer,
-            enabled: next
+            enabled: next,
+            bands: currentBands
         });
     };
 
@@ -36,7 +71,8 @@ export const AudioEqualizerCard: React.FC<AudioEqualizerCardProps> = ({
         if (presetId === 'custom') {
             onUpdateEqualizer({
                 ...equalizer,
-                preset: 'custom'
+                preset: 'custom',
+                bands: currentBands
             });
             return;
         }
@@ -52,9 +88,16 @@ export const AudioEqualizerCard: React.FC<AudioEqualizerCardProps> = ({
     };
 
     const handleBandChange = (index: number, newDb: number) => {
-        const nextBands: [number, number, number, number, number] = [
-            ...equalizer.bands
-        ];
+        const nextBands: [
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number
+        ] = [...currentBands];
         nextBands[index] = newDb;
 
         // Determine if matches an existing preset
@@ -83,7 +126,8 @@ export const AudioEqualizerCard: React.FC<AudioEqualizerCardProps> = ({
     const handleToggleNormalization = (next: boolean) => {
         onUpdateEqualizer({
             ...equalizer,
-            normalization: next
+            normalization: next,
+            bands: currentBands
         });
     };
 
@@ -163,11 +207,22 @@ export const AudioEqualizerCard: React.FC<AudioEqualizerCardProps> = ({
                             </div>
                         </div>
 
-                        {/* 5-Band Equalizer Sliders Deck */}
-                        <div className="px-4 py-3 bg-black/5 dark:bg-white/5">
-                            <div className="grid grid-cols-5 gap-2 sm:gap-3 py-2">
+                        {/* Interactive Wave Equalizer Visualizer */}
+                        <div className="px-4 py-2">
+                            <WaveEqualizerVisualizer
+                                bands={currentBands}
+                                onChangeBand={handleBandChange}
+                                enabled={isEnabled}
+                                lang={lang}
+                                hintText={t.prefEqWaveInteractiveHint}
+                            />
+                        </div>
+
+                        {/* 8-Band Equalizer Sliders Deck */}
+                        <div className="px-4 py-3 bg-black/5 dark:bg-white/5 border-t mac-divider">
+                            <div className="grid grid-cols-8 gap-1 sm:gap-2 py-2">
                                 {EQUALIZER_BANDS_META.map((meta, idx) => {
-                                    const gainVal = equalizer.bands[idx] ?? 0;
+                                    const gainVal = currentBands[idx] ?? 0;
                                     const isPositive = gainVal > 0;
                                     const isNegative = gainVal < 0;
 
@@ -177,8 +232,13 @@ export const AudioEqualizerCard: React.FC<AudioEqualizerCardProps> = ({
                                             className="flex flex-col items-center gap-1.5"
                                         >
                                             {/* Gain Value readout */}
-                                            <span
-                                                className={`text-[11px] font-mono font-bold tabular-nums ${
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    handleBandChange(idx, 0)
+                                                }
+                                                title={t.prefEqResetBandTooltip}
+                                                className={`text-[10px] sm:text-[11px] font-mono font-bold tabular-nums cursor-pointer transition hover:opacity-80 ${
                                                     isPositive
                                                         ? 'text-accent'
                                                         : isNegative
@@ -190,7 +250,7 @@ export const AudioEqualizerCard: React.FC<AudioEqualizerCardProps> = ({
                                                     ? `+${gainVal}`
                                                     : gainVal}{' '}
                                                 dB
-                                            </span>
+                                            </button>
 
                                             {/* Slider Track */}
                                             <div className="w-full h-28 flex items-center justify-center py-1">
@@ -209,6 +269,9 @@ export const AudioEqualizerCard: React.FC<AudioEqualizerCardProps> = ({
                                                             ) || 0
                                                         )
                                                     }
+                                                    onDoubleClick={() =>
+                                                        handleBandChange(idx, 0)
+                                                    }
                                                     aria-label={`${meta.label} Equalizer Band`}
                                                     className="w-24 -rotate-90 cursor-pointer"
                                                     style={{
@@ -219,11 +282,11 @@ export const AudioEqualizerCard: React.FC<AudioEqualizerCardProps> = ({
                                             </div>
 
                                             {/* Frequency & Description Label */}
-                                            <div className="text-center">
-                                                <div className="text-[11px] font-bold tracking-tight">
+                                            <div className="text-center w-full">
+                                                <div className="text-[10px] sm:text-[11px] font-bold tracking-tight truncate">
                                                     {meta.label}
                                                 </div>
-                                                <div className="text-[9px] text-secondary truncate max-w-[56px] leading-tight mt-0.5">
+                                                <div className="text-[8px] sm:text-[9px] text-secondary truncate max-w-full leading-tight mt-0.5">
                                                     {lang === 'id'
                                                         ? meta.descId
                                                         : meta.descEn}

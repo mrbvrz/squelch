@@ -13,7 +13,7 @@ export type EqualizerPresetId =
 export interface EqualizerConfig {
     enabled: boolean;
     preset: EqualizerPresetId;
-    bands: [number, number, number, number, number]; // 60Hz, 250Hz, 1kHz, 4kHz, 12kHz in dB (-12 to +12)
+    bands: [number, number, number, number, number, number, number, number]; // 32Hz, 64Hz, 125Hz, 250Hz, 500Hz, 1kHz, 4kHz, 16kHz in dB (-12 to +12)
     normalization: boolean;
 }
 
@@ -22,66 +22,87 @@ export const EQUALIZER_PRESETS: Record<
     {
         labelId: string;
         labelEn: string;
-        bands: [number, number, number, number, number];
+        bands: [number, number, number, number, number, number, number, number];
     }
 > = {
     flat: {
         labelId: 'Datar (Flat)',
         labelEn: 'Flat',
-        bands: [0, 0, 0, 0, 0]
+        bands: [0, 0, 0, 0, 0, 0, 0, 0]
     },
     'bass-boost': {
         labelId: 'Bass Mantap',
         labelEn: 'Bass Boost',
-        bands: [5, 3, 0, 0, 0]
+        bands: [6, 5, 4, 2, 0, 0, 0, 0]
     },
     vocal: {
         labelId: 'Vokal & Talk Show',
         labelEn: 'Vocal / Talk',
-        bands: [-2, 1, 4, 3, 1]
+        bands: [-3, -1, 0, 1, 3, 5, 3, 1]
     },
     'treble-boost': {
         labelId: 'Treble Jernih',
         labelEn: 'Treble Boost',
-        bands: [0, 0, 1, 4, 6]
+        bands: [0, 0, 0, 0, 1, 2, 5, 7]
     },
     acoustic: {
         labelId: 'Akustik Hangat',
         labelEn: 'Acoustic',
-        bands: [3, 2, 1, 2, 3]
+        bands: [3, 4, 3, 1, 1, 2, 3, 4]
     },
     rock: {
         labelId: 'Rock & Dinamis',
         labelEn: 'Rock & Energy',
-        bands: [4, 2, -1, 2, 4]
+        bands: [5, 4, 2, -1, 0, 2, 4, 5]
     },
     electronic: {
         labelId: 'Elektronik / EDM',
         labelEn: 'Electronic',
-        bands: [5, 3, 0, 2, 4]
+        bands: [6, 6, 3, 0, 1, 2, 4, 6]
     }
 };
 
 export const EQUALIZER_BANDS_META = [
     {
-        freq: 60,
+        freq: 32,
         type: 'lowshelf' as const,
-        label: '60 Hz',
+        label: '32 Hz',
         descId: 'Sub-Bass',
         descEn: 'Sub-Bass'
+    },
+    {
+        freq: 64,
+        type: 'peaking' as const,
+        label: '64 Hz',
+        descId: 'Bass',
+        descEn: 'Bass'
+    },
+    {
+        freq: 125,
+        type: 'peaking' as const,
+        label: '125 Hz',
+        descId: 'Bass Rendah',
+        descEn: 'Low-Mid'
     },
     {
         freq: 250,
         type: 'peaking' as const,
         label: '250 Hz',
-        descId: 'Bass Rendah',
-        descEn: 'Low-Mid'
+        descId: 'Hangat',
+        descEn: 'Warmth'
+    },
+    {
+        freq: 500,
+        type: 'peaking' as const,
+        label: '500 Hz',
+        descId: 'Karakter',
+        descEn: 'Body'
     },
     {
         freq: 1000,
         type: 'peaking' as const,
         label: '1 kHz',
-        descId: 'Vokal Tengah',
+        descId: 'Vokal',
         descEn: 'Midrange'
     },
     {
@@ -92,9 +113,9 @@ export const EQUALIZER_BANDS_META = [
         descEn: 'Presence'
     },
     {
-        freq: 12000,
+        freq: 16000,
         type: 'highshelf' as const,
-        label: '12 kHz',
+        label: '16 kHz',
         descId: 'Treble Udara',
         descEn: 'Air / Treble'
     }
@@ -156,7 +177,7 @@ export function createDefaultSettings(): AppSettings {
         equalizer: {
             enabled: false,
             preset: 'flat',
-            bands: [0, 0, 0, 0, 0],
+            bands: [0, 0, 0, 0, 0, 0, 0, 0],
             normalization: true
         },
         userAgent: 'Squelch/0.1.0 (macOS)',

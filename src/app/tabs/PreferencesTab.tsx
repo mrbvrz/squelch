@@ -513,11 +513,11 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
 
             {/* Group 4: Global Shortcuts */}
             <div>
-                <div className="flex items-center justify-between mb-2 px-1">
+                <div className="mb-2 px-1">
                     <h2 className="text-[13px] font-bold">{t.prefShortcuts}</h2>
-                    <span className="text-[11px] text-secondary">
+                    <p className="text-[11px] text-secondary mt-0.5">
                         {t.prefShortcutRecordHint}
-                    </span>
+                    </p>
                 </div>
 
                 <div className="mac-settings-card mac-inset-list rounded-xl overflow-hidden divide-y mac-divider">

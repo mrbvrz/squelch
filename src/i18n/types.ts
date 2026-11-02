@@ -145,6 +145,11 @@ export interface TranslationDictionary {
     prefFontFamilyLabel: string;
     prefFontFamilyDesc: string;
     prefFontSystemDefault: string;
+    prefFontSearchPlaceholder: string;
+    prefFontFound: string;
+    prefFontSelected: string;
+    prefFontLoading: string;
+    prefFontNoMatch: string;
     prefGeneral: string;
     prefLanguage: string;
     prefLaunchAtLogin: string;

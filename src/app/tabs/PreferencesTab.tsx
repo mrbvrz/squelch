@@ -32,6 +32,7 @@ import {
 export interface PreferencesTabProps {
     settings: AppSettings;
     systemFonts: string[];
+    isLoadingFonts?: boolean;
     lang: 'id' | 'en';
     recordingShortcutKey: keyof AppSettings['shortcuts'] | null;
     setRecordingShortcutKey: (
@@ -63,6 +64,7 @@ export interface PreferencesTabProps {
 export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     settings,
     systemFonts,
+    isLoadingFonts = false,
     lang,
     recordingShortcutKey,
     setRecordingShortcutKey,
@@ -249,8 +251,14 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <SearchableFontPicker
                             value={settings.fontFamily ?? 'system'}
                             fonts={systemFonts}
+                            isLoading={isLoadingFonts}
                             defaultLabel={t.prefFontSystemDefault}
                             ariaLabel={t.prefFontFamilyLabel}
+                            placeholder={t.prefFontSearchPlaceholder}
+                            foundLabel={t.prefFontFound}
+                            selectedLabel={t.prefFontSelected}
+                            loadingLabel={t.prefFontLoading}
+                            noMatchLabel={t.prefFontNoMatch}
                             onChange={(selectedFont) => {
                                 void api.updateSettings({
                                     fontFamily: selectedFont

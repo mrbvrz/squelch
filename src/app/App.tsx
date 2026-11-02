@@ -116,6 +116,7 @@ export const App: React.FC = () => {
     const [settings, setSettings] = useState<AppSettings | null>(null);
     const [dataDir, setDataDir] = useState<string>('');
     const [systemFonts, setSystemFonts] = useState<string[]>([]);
+    const [isLoadingFonts, setIsLoadingFonts] = useState<boolean>(true);
     const [appIconDataUrl, setAppIconDataUrl] = useState<string | null>(null);
     const [statsSummary, setStatsSummary] =
         useState<ListeningStatsSummary | null>(null);
@@ -250,6 +251,7 @@ export const App: React.FC = () => {
     };
 
     const loadAvailableSystemFonts = async () => {
+        setIsLoadingFonts(true);
         try {
             const mainFonts = await api.getSystemFonts();
             if (typeof window.queryLocalFonts === 'function') {
@@ -272,6 +274,8 @@ export const App: React.FC = () => {
             setSystemFonts(mainFonts);
         } catch {
             setSystemFonts([]);
+        } finally {
+            setIsLoadingFonts(false);
         }
     };
 
@@ -1161,6 +1165,7 @@ export const App: React.FC = () => {
                         <PreferencesTab
                             settings={settings}
                             systemFonts={systemFonts}
+                            isLoadingFonts={isLoadingFonts}
                             lang={lang}
                             recordingShortcutKey={recordingShortcutKey}
                             setRecordingShortcutKey={setRecordingShortcutKey}

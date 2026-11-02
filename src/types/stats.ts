@@ -1,6 +1,7 @@
 export interface ListeningStatsSchema {
     schemaVersion: number;
     dailySeconds: Record<string, number>;
+    hourlySeconds?: Record<string, number>;
     monthlySeconds: Record<string, number>;
     stationSeconds: Record<string, number>;
     stationNames?: Record<string, string>;

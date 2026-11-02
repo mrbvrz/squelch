@@ -57,12 +57,12 @@ export const StatsTab: React.FC<StatsTabProps> = ({
         if (active && payload && payload.length) {
             const data = payload[0].payload;
             return (
-                <div className="mac-modal-surface px-3 py-2 rounded-xl shadow-xl border border-card-border backdrop-blur-xl text-xs space-y-1">
-                    <div className="font-semibold text-foreground text-[11px]">
+                <div className="mac-modal-surface px-3 py-2 rounded-xl shadow-2xl border border-card-border backdrop-blur-2xl text-xs space-y-1">
+                    <div className="font-semibold text-secondary text-[11px] flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-gradient-to-r from-[#0A84FF] to-[#FF375F]" />
                         {data.name}
                     </div>
-                    <div className="text-accent font-bold text-[13px] tabular-nums flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-accent inline-block" />
+                    <div className="font-extrabold text-[14px] tabular-nums bg-gradient-to-r from-[#0A84FF] via-[#BF5AF2] to-[#FF375F] bg-clip-text text-transparent">
                         {data.formatted}
                     </div>
                 </div>
@@ -70,6 +70,7 @@ export const StatsTab: React.FC<StatsTabProps> = ({
         }
         return null;
     };
+
     return (
         <div
             key="tab-stats"
@@ -95,13 +96,29 @@ export const StatsTab: React.FC<StatsTabProps> = ({
 
                 <div className="mx-4 border-t mac-divider" />
 
-                {/* 3 KPI Summary Metrics: Minggu Ini, Bulan Ini, Tahun Ini */}
-                <div className="grid grid-cols-3 divide-x mac-divider px-2 py-3">
+                {/* 4 KPI Summary Metrics: Hari Ini, Minggu Ini, Bulan Ini, Tahun Ini */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 divide-x mac-divider px-2 py-3">
                     <div className="px-3">
-                        <div className="text-[11px] text-secondary">
-                            {t.statsWeekLabel}
+                        <div className="text-[11px] text-secondary flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#0A84FF]" />
+                            <span>
+                                {t.statsTodayLabel ||
+                                    (lang === 'id' ? 'Hari Ini' : 'Today')}
+                            </span>
                         </div>
-                        <div className="text-[18px] font-bold tabular-nums mt-0.5 text-accent">
+                        <div className="text-[18px] font-bold tabular-nums mt-0.5 text-[#0A84FF]">
+                            {formatDurationCompact(
+                                statsSummary.todaySeconds,
+                                lang
+                            )}
+                        </div>
+                    </div>
+                    <div className="px-3">
+                        <div className="text-[11px] text-secondary flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
+                            <span>{t.statsWeekLabel}</span>
+                        </div>
+                        <div className="text-[18px] font-bold tabular-nums mt-0.5 text-[#30D158]">
                             {formatDurationCompact(
                                 statsSummary.thisWeekSeconds,
                                 lang
@@ -109,10 +126,11 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                         </div>
                     </div>
                     <div className="px-3">
-                        <div className="text-[11px] text-secondary">
-                            {t.statsMonthLabel}
+                        <div className="text-[11px] text-secondary flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#FF9F0A]" />
+                            <span>{t.statsMonthLabel}</span>
                         </div>
-                        <div className="text-[18px] font-bold tabular-nums mt-0.5">
+                        <div className="text-[18px] font-bold tabular-nums mt-0.5 text-[#FF9F0A]">
                             {formatDurationCompact(
                                 statsSummary.thisMonthSeconds,
                                 lang
@@ -120,10 +138,11 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                         </div>
                     </div>
                     <div className="px-3">
-                        <div className="text-[11px] text-secondary">
-                            {t.statsYearLabel}
+                        <div className="text-[11px] text-secondary flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#BF5AF2]" />
+                            <span>{t.statsYearLabel}</span>
                         </div>
-                        <div className="text-[18px] font-bold tabular-nums mt-0.5">
+                        <div className="text-[18px] font-bold tabular-nums mt-0.5 text-[#BF5AF2]">
                             {formatDurationCompact(
                                 statsSummary.thisYearSeconds,
                                 lang
@@ -133,15 +152,46 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                 </div>
             </div>
 
-            {/* Interactive Bar Graph Card (Mingguan / Bulanan / Tahunan) */}
+            {/* Interactive Graph Card (Harian / Mingguan / Bulanan / Tahunan) */}
             <div>
-                <div className="flex items-center justify-between mb-2 px-1">
-                    <h2 className="text-[13px] font-bold">
-                        {t.statsChartTitle}
-                    </h2>
+                <div className="flex items-center justify-between mb-2 px-1 flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-[13px] font-bold">
+                            {t.statsChartTitle}
+                        </h2>
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-[10px] text-secondary select-none">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#0A84FF]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#5E5CE6]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#BF5AF2]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#FF375F]" />
+                            <span className="text-[10px] font-medium ml-0.5">
+                                {statsViewMode === 'daily'
+                                    ? lang === 'id'
+                                        ? '24 Jam'
+                                        : '24 Hours'
+                                    : statsViewMode === 'weekly'
+                                      ? lang === 'id'
+                                          ? '7 Hari'
+                                          : '7 Days'
+                                      : statsViewMode === 'monthly'
+                                        ? lang === 'id'
+                                            ? '30 Hari'
+                                            : '30 Days'
+                                        : lang === 'id'
+                                          ? '12 Bulan'
+                                          : '12 Months'}
+                            </span>
+                        </div>
+                    </div>
+
                     <div className="flex items-center gap-1 p-0.5 rounded-[7px] mac-glass-pill">
                         {(
                             [
+                                [
+                                    'daily',
+                                    t.statsDailyView ||
+                                        (lang === 'id' ? 'Harian' : 'Daily')
+                                ],
                                 ['weekly', t.statsWeeklyView],
                                 ['monthly', t.statsMonthlyView],
                                 ['yearly', t.statsYearlyView]
@@ -153,8 +203,8 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                                 onClick={() => setStatsViewMode(mode)}
                                 className={`px-3 py-1 rounded-[5px] text-[11px] font-medium cursor-pointer transition ${
                                     statsViewMode === mode
-                                        ? 'bg-accent text-white'
-                                        : 'text-secondary'
+                                        ? 'bg-accent text-white shadow-xs'
+                                        : 'text-secondary hover:text-foreground'
                                 }`}
                             >
                                 {label}
@@ -164,7 +214,7 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                 </div>
 
                 <div className="mac-settings-card p-4 pt-5">
-                    <div className="h-48 w-full">
+                    <div className="h-52 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart
                                 data={chartData}
@@ -176,24 +226,75 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                                 }}
                             >
                                 <defs>
+                                    {/* Horizontal flowing spectrum gradient for the line curve */}
                                     <linearGradient
-                                        id="statsGradient"
+                                        id="strokeGradient"
+                                        x1="0"
+                                        y1="0"
+                                        x2="1"
+                                        y2="0"
+                                    >
+                                        <stop offset="0%" stopColor="#0A84FF" />
+                                        <stop
+                                            offset="30%"
+                                            stopColor="#5E5CE6"
+                                        />
+                                        <stop
+                                            offset="65%"
+                                            stopColor="#BF5AF2"
+                                        />
+                                        <stop
+                                            offset="100%"
+                                            stopColor="#FF375F"
+                                        />
+                                    </linearGradient>
+
+                                    {/* Vertical ambient glow area fill */}
+                                    <linearGradient
+                                        id="areaGradient"
                                         x1="0"
                                         y1="0"
                                         x2="0"
                                         y2="1"
                                     >
                                         <stop
-                                            offset="5%"
-                                            stopColor="var(--accent-color)"
-                                            stopOpacity={0.4}
+                                            offset="0%"
+                                            stopColor="#5E5CE6"
+                                            stopOpacity={0.45}
                                         />
                                         <stop
-                                            offset="95%"
-                                            stopColor="var(--accent-color)"
+                                            offset="35%"
+                                            stopColor="#BF5AF2"
+                                            stopOpacity={0.22}
+                                        />
+                                        <stop
+                                            offset="70%"
+                                            stopColor="#0A84FF"
+                                            stopOpacity={0.06}
+                                        />
+                                        <stop
+                                            offset="100%"
+                                            stopColor="#0A84FF"
                                             stopOpacity={0.0}
                                         />
                                     </linearGradient>
+
+                                    {/* Subtle drop shadow glow for the curve */}
+                                    <filter
+                                        id="chartLineGlow"
+                                        x="-20%"
+                                        y="-20%"
+                                        width="140%"
+                                        height="140%"
+                                    >
+                                        <feDropShadow
+                                            dx="0"
+                                            dy="2"
+                                            stdDeviation="3"
+                                            floodColor="#5E5CE6"
+                                            floodOpacity={0.4}
+                                        />
+                                    </filter>
                                 </defs>
                                 <CartesianGrid
                                     strokeDasharray="3 3"
@@ -209,7 +310,11 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                                         fill: 'var(--ink-secondary)'
                                     }}
                                     interval={
-                                        statsViewMode === 'monthly' ? 4 : 0
+                                        statsViewMode === 'daily'
+                                            ? 3
+                                            : statsViewMode === 'monthly'
+                                              ? 4
+                                              : 0
                                     }
                                 />
                                 <YAxis
@@ -227,7 +332,7 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                                 <Tooltip
                                     content={<CustomTooltip />}
                                     cursor={{
-                                        stroke: 'var(--accent-color)',
+                                        stroke: '#BF5AF2',
                                         strokeWidth: 1,
                                         strokeDasharray: '3 3',
                                         strokeOpacity: 0.6
@@ -236,15 +341,16 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                                 <Area
                                     type="monotone"
                                     dataKey="seconds"
-                                    stroke="var(--accent-color)"
-                                    strokeWidth={2.5}
+                                    stroke="url(#strokeGradient)"
+                                    strokeWidth={3}
                                     fillOpacity={1}
-                                    fill="url(#statsGradient)"
+                                    fill="url(#areaGradient)"
+                                    filter="url(#chartLineGlow)"
                                     activeDot={{
-                                        r: 5,
-                                        fill: 'var(--accent-color)',
+                                        r: 6,
+                                        fill: '#FF375F',
                                         stroke: '#ffffff',
-                                        strokeWidth: 2
+                                        strokeWidth: 2.5
                                     }}
                                 />
                             </AreaChart>
@@ -327,7 +433,7 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                                             </div>
                                             <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
                                                 <div
-                                                    className="h-full rounded-full bg-accent transition-all duration-300"
+                                                    className="h-full rounded-full bg-gradient-to-r from-[#0A84FF] via-[#5E5CE6] to-[#FF375F] transition-all duration-300"
                                                     style={{
                                                         width: `${pct}%`
                                                     }}

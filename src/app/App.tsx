@@ -710,6 +710,9 @@ export const App: React.FC = () => {
 
     const activeChartPoints = useMemo(() => {
         if (!statsSummary) return [];
+        if (statsViewMode === 'daily') {
+            return statsSummary.dailySeries;
+        }
         if (statsViewMode === 'weekly') {
             return statsSummary.weeklySeries;
         }

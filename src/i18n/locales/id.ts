@@ -119,14 +119,16 @@ export const idLocale: TranslationDictionary = {
     discoverCountriesFound: 'negara ditemukan',
     discoverNoCountryMatch: 'Tidak ada negara yang cocok',
 
-    // Listening Stats Tab (Mingguan, Bulanan, Tahunan)
+    // Listening Stats Tab (Harian, Mingguan, Bulanan, Tahunan)
     statsTitle: 'Aktivitas Mendengarkan',
     statsSubtitle:
-        'Catatan durasi mendengarkan radio mingguan, bulanan, tahunan, dan stasiun terpopuler Anda.',
+        'Catatan durasi mendengarkan radio harian, mingguan, bulanan, tahunan, dan stasiun terpopuler Anda.',
+    statsTodayLabel: 'Hari Ini',
     statsWeekLabel: 'Minggu Ini',
     statsMonthLabel: 'Bulan Ini',
     statsYearLabel: 'Tahun Ini',
     statsChartTitle: 'Grafik Durasi Mendengarkan',
+    statsDailyView: 'Harian',
     statsWeeklyView: 'Mingguan',
     statsMonthlyView: 'Bulanan',
     statsYearlyView: 'Tahunan',

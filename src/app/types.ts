@@ -15,7 +15,7 @@ import type { UpdateCheckResult } from '../components/UpdateModal';
 export type ActiveTab =
     'stations' | 'schedules' | 'discover' | 'stats' | 'preferences' | 'about';
 
-export type StatsPeriodMode = 'weekly' | 'monthly' | 'yearly';
+export type StatsPeriodMode = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export interface DayLabelItem {
     day: number;

@@ -44,6 +44,7 @@ function syncPlayerStatusToRust() {
 interface ListeningStatsSchema {
     schemaVersion: number;
     dailySeconds: Record<string, number>;
+    hourlySeconds?: Record<string, number>;
     monthlySeconds: Record<string, number>;
     stationSeconds: Record<string, number>;
     stationNames?: Record<string, string>;
@@ -82,6 +83,7 @@ interface ListeningStatsSummary {
 let statsData: ListeningStatsSchema = {
     schemaVersion: 1,
     dailySeconds: {},
+    hourlySeconds: {},
     monthlySeconds: {},
     stationSeconds: {},
     stationNames: {},
@@ -164,6 +166,7 @@ function recordListeningTick(now = new Date()): void {
     lastTickTimeMs += elapsedSec * 1000;
 
     const dayKey = formatDateKey(now);
+    const hourKey = `${dayKey}-${String(now.getHours()).padStart(2, '0')}`;
     const monthKey = formatMonthKey(now);
     const stationId = playerStatus.currentStation?.id;
     const stationName = playerStatus.currentStation?.name;
@@ -171,6 +174,9 @@ function recordListeningTick(now = new Date()): void {
 
     statsData.dailySeconds[dayKey] =
         (statsData.dailySeconds[dayKey] ?? 0) + elapsedSec;
+    if (!statsData.hourlySeconds) statsData.hourlySeconds = {};
+    statsData.hourlySeconds[hourKey] =
+        (statsData.hourlySeconds[hourKey] ?? 0) + elapsedSec;
     statsData.monthlySeconds[monthKey] =
         (statsData.monthlySeconds[monthKey] ?? 0) + elapsedSec;
     if (stationId) {
@@ -214,21 +220,31 @@ function buildListeningStatsSummary(
         weeklySeries.push({ key, date: key, label: dayLabel, seconds: sec });
     }
 
-    // 2. Daily series (Last 14 days)
+    // 2. Daily series (24 Hours of Today: 00:00 - 23:00)
     const dailySeries: StatSeriesPoint[] = [];
-    for (let i = 13; i >= 0; i--) {
-        const d = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() - i
-        );
-        const key = formatDateKey(d);
-        const dayLabel = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const currentHour = now.getHours();
+    for (let h = 0; h < 24; h++) {
+        const hourStr = String(h).padStart(2, '0');
+        const key = `${todayKey}-${hourStr}`;
+        const label = `${hourStr}:00`;
+        let sec = data.hourlySeconds?.[key] ?? 0;
+        if (sec === 0 && h === currentHour && data.dailySeconds[todayKey]) {
+            const recordedHourly = Object.entries(data.hourlySeconds || {})
+                .filter(([k]) => k.startsWith(todayKey))
+                .reduce((acc, [, val]) => acc + (val as number), 0);
+            const remainder = Math.max(
+                0,
+                (data.dailySeconds[todayKey] ?? 0) - recordedHourly
+            );
+            if (remainder > 0) {
+                sec = remainder;
+            }
+        }
         dailySeries.push({
             key,
-            date: key,
-            label: dayLabel,
-            seconds: data.dailySeconds[key] ?? 0
+            date: todayKey,
+            label,
+            seconds: sec
         });
     }
 

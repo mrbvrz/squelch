@@ -119,14 +119,16 @@ export const enLocale: TranslationDictionary = {
     discoverCountriesFound: 'countries found',
     discoverNoCountryMatch: 'No matching country',
 
-    // Listening Stats Tab (Weekly, Monthly, Yearly)
+    // Listening Stats Tab (Daily, Weekly, Monthly, Yearly)
     statsTitle: 'Listening Activity',
     statsSubtitle:
-        'Weekly, monthly, and yearly listening duration history along with your most played stations.',
+        'Daily, weekly, monthly, and yearly listening duration history along with your most played stations.',
+    statsTodayLabel: 'Today',
     statsWeekLabel: 'This Week',
     statsMonthLabel: 'This Month',
     statsYearLabel: 'This Year',
     statsChartTitle: 'Listening Duration Graph',
+    statsDailyView: 'Daily',
     statsWeeklyView: 'Weekly',
     statsMonthlyView: 'Monthly',
     statsYearlyView: 'Yearly',

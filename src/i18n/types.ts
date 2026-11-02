@@ -122,13 +122,15 @@ export interface TranslationDictionary {
     discoverCountriesFound: string;
     discoverNoCountryMatch: string;
 
-    // Listening Stats Tab (Mingguan, Bulanan, Tahunan)
+    // Listening Stats Tab (Harian, Mingguan, Bulanan, Tahunan)
     statsTitle: string;
     statsSubtitle: string;
+    statsTodayLabel: string;
     statsWeekLabel: string;
     statsMonthLabel: string;
     statsYearLabel: string;
     statsChartTitle: string;
+    statsDailyView: string;
     statsWeeklyView: string;
     statsMonthlyView: string;
     statsYearlyView: string;

@@ -2,7 +2,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { emit, listen } from '@tauri-apps/api/event';
 import {
     applyAppearanceVariables,
-    countryCodeToFlag
+    countryCodeToFlag,
+    getFriendlyCountryName
 } from '../utils/appearance';
 import {
     exportToM3u,
@@ -1169,12 +1170,15 @@ export function initTauriBridge() {
                     const list: any[] = await res.json();
                     return list
                         .filter((c) => c.iso_3166_1 && c.stationcount > 0)
-                        .map((c) => ({
-                            code: c.iso_3166_1,
-                            name: c.name,
-                            stationCount: c.stationcount,
-                            flag: countryCodeToFlag(c.iso_3166_1)
-                        }))
+                        .map((c) => {
+                            const code = c.iso_3166_1.toUpperCase();
+                            return {
+                                code,
+                                name: getFriendlyCountryName(code, c.name),
+                                stationCount: c.stationcount,
+                                flag: countryCodeToFlag(code)
+                            };
+                        })
                         .sort((a, b) => b.stationCount - a.stationCount);
                 } catch {
                     return [];
@@ -1184,16 +1188,36 @@ export function initTauriBridge() {
             searchOnlineStations: async (query: any) => {
                 try {
                     const params = new URLSearchParams();
-                    if (query.name) params.set('name', query.name);
-                    if (query.countrycode)
-                        params.set('countrycode', query.countrycode);
-                    if (query.tag) params.set('tag', query.tag);
-                    params.set('limit', String(query.limit || 40));
+                    if (query.name && query.name.trim()) {
+                        params.set('name', query.name.trim());
+                    }
+                    if (query.countrycode && query.countrycode.trim()) {
+                        params.set(
+                            'countrycode',
+                            query.countrycode.trim().toUpperCase()
+                        );
+                    }
+                    if (query.tag && query.tag.trim()) {
+                        params.set('tag', query.tag.trim());
+                    }
+
+                    // Order by popularity (votes) descending & filter out dead streams,
+                    // identical to https://www.radio-browser.info/search
+                    params.set('hidebroken', 'true');
+                    params.set('order', 'votes');
+                    params.set('reverse', 'true');
+                    params.set('limit', String(query.limit || 60));
 
                     const res = await fetch(
                         `https://de1.api.radio-browser.info/json/stations/search?${params.toString()}`
                     );
                     const list: any[] = await res.json();
+                    if (!Array.isArray(list)) return [];
+
+                    const targetCountry = query.countrycode
+                        ? query.countrycode.trim().toUpperCase()
+                        : '';
+
                     const seen = new Set<string>();
                     const deduplicated = [];
                     for (const s of list) {
@@ -1203,27 +1227,54 @@ export function initTauriBridge() {
                         const id = s.stationuuid;
                         const key = url || id;
                         if (!key || seen.has(key)) continue;
+
+                        // Ensure country filter matches strictly if provided
+                        if (
+                            targetCountry &&
+                            s.countrycode &&
+                            s.countrycode.trim().toUpperCase() !== targetCountry
+                        ) {
+                            continue;
+                        }
+
                         seen.add(key);
                         deduplicated.push(s);
                     }
-                    return deduplicated.map((s) => ({
-                        id: s.stationuuid,
-                        name: s.name,
-                        streamUrl: s.url_resolved || s.url,
-                        streamType: (s.url_resolved || s.url).includes('.m3u8')
-                            ? 'hls'
-                            : 'mp3',
-                        logoUrl: s.favicon || null,
-                        genre: s.tags || 'General',
-                        city: s.state || '',
-                        country: s.countrycode || '',
-                        tags: (s.tags || '')
+
+                    return deduplicated.map((s) => {
+                        // Sanitize station name by trimming leading/trailing spaces and tabs
+                        const cleanName =
+                            (s.name || '')
+                                .replace(/^[\s\t\r\n]+/, '')
+                                .replace(/[\s\t\r\n]+$/, '')
+                                .replace(/\s+/g, ' ')
+                                .trim() || 'Radio Stream';
+
+                        const rawUrl = (s.url_resolved || s.url || '').trim();
+                        const tags = (s.tags || '')
                             .split(',')
                             .map((t: string) => t.trim())
-                            .filter(Boolean),
-                        bitrate: s.bitrate || 128,
-                        votes: s.votes || 0
-                    }));
+                            .filter(Boolean);
+
+                        return {
+                            id: s.stationuuid,
+                            name: cleanName,
+                            streamUrl: rawUrl,
+                            streamType: rawUrl.includes('.m3u8')
+                                ? ('hls' as const)
+                                : ('mp3' as const),
+                            logoUrl:
+                                s.favicon && s.favicon.trim()
+                                    ? s.favicon.trim()
+                                    : null,
+                            genre: tags[0] || 'General',
+                            city: (s.state || '').trim(),
+                            country: (s.countrycode || '').trim().toUpperCase(),
+                            tags,
+                            bitrate: s.bitrate || 128,
+                            votes: s.votes || 0
+                        };
+                    });
                 } catch {
                     return [];
                 }

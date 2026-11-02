@@ -24,6 +24,34 @@ export function countryCodeToFlag(isoCode: string): string {
     return String.fromCodePoint(first, second);
 }
 
+export const FRIENDLY_COUNTRY_NAMES: Record<string, string> = {
+    US: 'United States',
+    GB: 'United Kingdom',
+    RU: 'Russia',
+    KR: 'South Korea',
+    KP: 'North Korea',
+    CD: 'DR Congo',
+    CG: 'Congo',
+    IR: 'Iran',
+    SY: 'Syria',
+    VE: 'Venezuela',
+    BO: 'Bolivia',
+    TZ: 'Tanzania',
+    VN: 'Vietnam',
+    LA: 'Laos',
+    TW: 'Taiwan',
+    PS: 'Palestine',
+    VA: 'Vatican City'
+};
+
+export function getFriendlyCountryName(code: string, rawName?: string): string {
+    const cleanCode = (code || '').trim().toUpperCase();
+    if (FRIENDLY_COUNTRY_NAMES[cleanCode]) {
+        return FRIENDLY_COUNTRY_NAMES[cleanCode];
+    }
+    return (rawName || '').replace(/^The\s+/i, '').trim();
+}
+
 export const FALLBACK_COUNTRIES: RadioBrowserCountry[] = [
     { code: 'ID', name: 'Indonesia', stationCount: 380, flag: '🇮🇩' },
     { code: 'MY', name: 'Malaysia', stationCount: 140, flag: '🇲🇾' },

@@ -21,6 +21,7 @@ import {
 export interface DiscoverTabProps {
     discCountry: string;
     setDiscCountry: (code: string) => void;
+    handleCountryChange?: (country: string) => void;
     discCountries: RadioBrowserCountry[];
     discName: string;
     setDiscName: (name: string) => void;
@@ -45,6 +46,7 @@ export interface DiscoverTabProps {
 export const DiscoverTab: React.FC<DiscoverTabProps> = ({
     discCountry,
     setDiscCountry,
+    handleCountryChange,
     discCountries,
     discName,
     setDiscName,
@@ -89,13 +91,19 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
                     <select
                         value={discCountry}
                         aria-label="Country Filter"
-                        onChange={(e) => setDiscCountry(e.target.value)}
-                        className="mac-input px-2.5 h-8 rounded-[7px] text-xs w-36 sm:w-40 shrink-0 cursor-pointer"
+                        onChange={(e) => {
+                            const newCountry = e.target.value;
+                            setDiscCountry(newCountry);
+                            if (handleCountryChange) {
+                                handleCountryChange(newCountry);
+                            }
+                        }}
+                        className="mac-input px-2.5 h-8 rounded-[7px] text-xs w-36 sm:w-44 shrink-0 cursor-pointer"
                     >
                         <option value="">🌐 {t.discoverGlobalFilter}</option>
                         {discCountries.map((c) => (
                             <option key={c.code} value={c.code}>
-                                {c.flag || '🌐'} {c.name} ({c.stationCount})
+                                {c.flag || '🌐'} {c.name}
                             </option>
                         ))}
                     </select>

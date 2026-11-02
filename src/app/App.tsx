@@ -809,16 +809,21 @@ export const App: React.FC = () => {
         }
     };
 
-    const handleDiscoverSearch = async (e?: React.FormEvent) => {
+    const handleDiscoverSearch = async (
+        e?: React.FormEvent,
+        overrideCountry?: string
+    ) => {
         if (e) e.preventDefault();
         setIsSearchingOnline(true);
         setDiscError(null);
+        const countryToUse =
+            overrideCountry !== undefined ? overrideCountry : discCountry;
         try {
             const results = await api.searchOnlineStations({
-                countrycode: discCountry,
+                countrycode: countryToUse,
                 name: discName,
                 tag: discTag,
-                limit: 40
+                limit: 60
             });
             const seen = new Set<string>();
             const deduplicated = results.filter((st) => {
@@ -838,6 +843,11 @@ export const App: React.FC = () => {
         } finally {
             setIsSearchingOnline(false);
         }
+    };
+
+    const handleCountryChange = (countryCode: string) => {
+        setDiscCountry(countryCode);
+        void handleDiscoverSearch(undefined, countryCode);
     };
 
     const handleAddFromDiscover = async (
@@ -1127,6 +1137,7 @@ export const App: React.FC = () => {
                         <DiscoverTab
                             discCountry={discCountry}
                             setDiscCountry={setDiscCountry}
+                            handleCountryChange={handleCountryChange}
                             discCountries={discCountries}
                             discName={discName}
                             setDiscName={setDiscName}

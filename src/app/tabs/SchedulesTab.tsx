@@ -52,11 +52,15 @@ export const SchedulesTab: React.FC<SchedulesTabProps> = ({
     return (
         <div
             key="tab-schedules"
-            className="max-w-3xl space-y-5 animate-tab-enter text-xs"
+            className={`max-w-3xl animate-tab-enter text-xs ${
+                schedules.length === 0
+                    ? 'flex-1 flex flex-col items-center justify-center min-h-[460px] my-auto'
+                    : 'space-y-5'
+            }`}
         >
             {schedules.length === 0 ? (
-                /* Empty state without card wrapper; header card with badge is hidden */
-                <div className="py-20 text-center flex flex-col items-center justify-center gap-3">
+                /* Empty state without card wrapper; positioned dead-center in the window */
+                <div className="text-center flex flex-col items-center justify-center gap-3 my-auto py-12">
                     <div className="w-14 h-14 rounded-2xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-secondary">
                         <IconCalendar size={28} className="opacity-70" />
                     </div>

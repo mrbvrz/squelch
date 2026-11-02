@@ -953,7 +953,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                     ? onRequestReset('settings')
                                     : setIsResetConfirmOpen(true)
                             }
-                            className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 transition cursor-pointer shrink-0"
+                            className="bg-[#FF453A] hover:bg-[#D70015] text-white px-3.5 h-[30px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition shrink-0"
                         >
                             {t.prefResetBtn}
                         </button>

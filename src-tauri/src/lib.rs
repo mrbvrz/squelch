@@ -46,6 +46,47 @@ static BUFFERING_ICONS: [&[u8]; 12] = [
     include_bytes!("../icons/tray/tray_buffering_11.png"),
 ];
 
+pub(crate) fn show_main_window(app: &tauri::AppHandle) -> Option<tauri::WebviewWindow> {
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.show();
+        let _ = win.unminimize();
+        let _ = win.set_focus();
+        Some(win)
+    } else {
+        if let Ok(win) = tauri::WebviewWindowBuilder::new(
+            app,
+            "main",
+            tauri::WebviewUrl::App("index.html".into()),
+        )
+        .title("Squelch")
+        .inner_size(980.0, 680.0)
+        .min_inner_size(880.0, 560.0)
+        .resizable(true)
+        .transparent(true)
+        .hidden_title(true)
+        .title_bar_style(tauri::TitleBarStyle::Overlay)
+        .build()
+        {
+            #[cfg(target_os = "macos")]
+            {
+                use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
+                let _ = apply_vibrancy(
+                    &win,
+                    NSVisualEffectMaterial::Sidebar,
+                    None,
+                    Some(18.0),
+                );
+            }
+            let _ = win.show();
+            let _ = win.unminimize();
+            let _ = win.set_focus();
+            Some(win)
+        } else {
+            None
+        }
+    }
+}
+
 fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
     match id {
         "play_pause" => {
@@ -61,63 +102,44 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
             );
         }
         "open_squelch" => {
-            if let Some(win) = app.get_webview_window("main") {
-                let _ = win.show();
-                let _ = win.unminimize();
-                let _ = win.set_focus();
-            }
+            let _ = show_main_window(app);
         }
         "stations_squelch" => {
-            if let Some(win) = app.get_webview_window("main") {
+            if let Some(win) = show_main_window(app) {
                 let _ = win.eval(
                     "window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'stations' }));",
                 );
-                let _ = win.show();
-                let _ = win.unminimize();
-                let _ = win.set_focus();
             }
         }
         "pref_squelch" => {
-            if let Some(win) = app.get_webview_window("main") {
+            if let Some(win) = show_main_window(app) {
                 let _ = win.eval(
                     "window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'preferences' }));",
                 );
-                let _ = win.show();
-                let _ = win.unminimize();
-                let _ = win.set_focus();
             }
         }
         "update_squelch" => {
-            let _ = app.emit("ui:open-update-modal", ());
-            if let Some(win) = app.get_webview_window("main") {
+            if let Some(win) = show_main_window(app) {
                 let _ = win.eval(
-                    "window.dispatchEvent(new CustomEvent('squelch:check-updates'));",
+                    "window.dispatchEvent(new CustomEvent('squelch:check-updates')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:check-updates')); }, 50);",
                 );
-                let _ = win.show();
-                let _ = win.unminimize();
-                let _ = win.set_focus();
             }
+            let _ = app.emit("ui:open-update-modal", ());
         }
         "about_squelch" => {
-            let _ = app.emit("squelch:open-about", ());
-            if let Some(win) = app.get_webview_window("main") {
+            if let Some(win) = show_main_window(app) {
                 let _ = win.eval(
-                    "window.location.hash = '#about'; window.dispatchEvent(new CustomEvent('squelch:open-about'));",
+                    "window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);",
                 );
-                let _ = win.show();
-                let _ = win.unminimize();
-                let _ = win.set_focus();
             }
+            let _ = app.emit("squelch:open-about", ());
         }
         "quit_squelch" => {
             let _ = app.emit("squelch:confirm-quit", ());
-            if let Some(win) = app.get_webview_window("main") {
+            if let Some(win) = show_main_window(app) {
                 let _ = win.eval(
                     "window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));",
                 );
-                let _ = win.show();
-                let _ = win.unminimize();
-                let _ = win.set_focus();
             }
         }
         _ => {}
@@ -376,6 +398,14 @@ pub fn run() {
             commands::clear_listening_stats,
             commands::reset_all_data
         ])
+        .on_window_event(|window, event| {
+            if window.label() == "main" {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while building tauri application");
 }

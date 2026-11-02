@@ -1054,12 +1054,12 @@ export function initTauriBridge() {
 
             openAboutWindow: async () => {
                 window.dispatchEvent(new CustomEvent('squelch:open-about'));
-                await emit('squelch:navigate', { action: 'about' });
+                await invoke('open_about_window');
             },
 
             openUpdateModal: async () => {
                 window.dispatchEvent(new CustomEvent('squelch:check-updates'));
-                await emit('ui:open-update-modal', {});
+                await invoke('open_window_tab', { tab: 'updates' });
             },
 
             openExternalUrl: async (url: string) => {

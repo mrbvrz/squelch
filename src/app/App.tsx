@@ -1388,7 +1388,15 @@ export const App: React.FC = () => {
 
             <AboutModal
                 isOpen={isAboutModalOpen}
-                onClose={() => setIsAboutModalOpen(false)}
+                onClose={() => {
+                    setIsAboutModalOpen(false);
+                    if (
+                        window.location.hash === '#about' ||
+                        window.location.hash === '#about-window'
+                    ) {
+                        window.location.hash = '';
+                    }
+                }}
                 appIconDataUrl={appIconDataUrl}
                 tagline={t.aboutTagline}
                 description={t.aboutDescription}

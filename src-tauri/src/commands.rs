@@ -598,27 +598,29 @@ pub fn set_tray_state(state_name: String, store: State<Arc<AppStore>>) {
 
 #[tauri::command]
 pub fn open_window_tab(app: AppHandle, tab: String) -> Result<(), String> {
-    if let Some(win) = app.get_webview_window("main") {
+    if let Some(win) = crate::show_main_window(&app) {
         if tab == "updates" {
-            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:check-updates'));");
+            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:check-updates')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:check-updates')); }, 50);");
             let _ = app.emit("ui:open-update-modal", ());
+        } else if tab == "about" {
+            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);");
+            let _ = app.emit("squelch:open-about", ());
         } else {
             let _ = win.eval(&format!("window.location.hash = '#{}';", tab));
+            let _ = win.eval(&format!(
+                "window.dispatchEvent(new CustomEvent('squelch:navigate', {{ detail: '{}' }}));",
+                tab
+            ));
         }
-        let _ = win.show();
-        let _ = win.unminimize();
-        let _ = win.set_focus();
     }
     Ok(())
 }
 
 #[tauri::command]
 pub fn open_about_window(app: AppHandle) -> Result<(), String> {
-    if let Some(win) = app.get_webview_window("main") {
-        let _ = win.eval("window.location.hash = '#about';");
-        let _ = win.show();
-        let _ = win.unminimize();
-        let _ = win.set_focus();
+    if let Some(win) = crate::show_main_window(&app) {
+        let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);");
+        let _ = app.emit("squelch:open-about", ());
     }
     Ok(())
 }

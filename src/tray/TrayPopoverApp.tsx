@@ -21,6 +21,8 @@ import {
     IconSearch,
     IconSliders,
     IconSparkles,
+    IconSpeaker,
+    IconSpeakerMute,
     IconStar,
     IconStop,
     IconTimer
@@ -32,6 +34,8 @@ interface SquelchTrayPopoverApi {
     playStation: (stationId: string) => Promise<boolean>;
     togglePlayPause: () => Promise<boolean>;
     stopPlayback: () => Promise<boolean>;
+    setVolume?: (vol: number) => Promise<number>;
+    toggleMute?: () => Promise<boolean>;
     setSleepTimer: (minutes: number | null) => Promise<boolean>;
     openWindowTab: (
         tab:
@@ -68,6 +72,8 @@ export const TrayPopoverApp: React.FC = () => {
     const [sleepRemainingSec, setSleepRemainingSec] = useState<number | null>(
         null
     );
+    const [volume, setVolume] = useState<number>(1.0);
+    const [isMuted, setIsMuted] = useState<boolean>(false);
 
     const [stations, setStations] = useState<Station[]>([]);
     const [groups, setGroups] = useState<string[]>([]);
@@ -136,6 +142,12 @@ export const TrayPopoverApp: React.FC = () => {
         setStreamTitle(status.streamTitle);
         setSleepMinutes(status.sleepTimerMinutes);
         setSleepRemainingSec(status.sleepTimerRemainingSec);
+        if (typeof status.volume === 'number') {
+            setVolume(status.volume);
+        }
+        if (typeof status.isMuted === 'boolean') {
+            setIsMuted(status.isMuted);
+        }
         setStations(stData.stations);
         setGroups(stData.groups);
         if (cfg?.settings) {
@@ -431,6 +443,54 @@ export const TrayPopoverApp: React.FC = () => {
                                 </button>
                             );
                         })}
+                    </div>
+                </div>
+
+                {/* Tertiary Row: Quick Volume & Mute Slider */}
+                <div className="flex items-center gap-2 pt-2 border-t mac-divider">
+                    <button
+                        type="button"
+                        onClick={async () => {
+                            if (api.toggleMute) {
+                                const muted = await api.toggleMute();
+                                setIsMuted(muted);
+                            }
+                        }}
+                        className={`w-5 h-5 rounded-[4px] flex items-center justify-center transition cursor-pointer shrink-0 ${
+                            isMuted
+                                ? 'text-[#FF453A] bg-[#FF453A]/15'
+                                : 'text-secondary hover:text-foreground'
+                        }`}
+                        title={isMuted ? 'Bunyikan (Unmute)' : 'Bisukan (Mute)'}
+                        aria-label={isMuted ? 'Unmute' : 'Mute'}
+                    >
+                        {isMuted ? (
+                            <IconSpeakerMute size={12} />
+                        ) : (
+                            <IconSpeaker size={12} />
+                        )}
+                    </button>
+
+                    <div className="flex-1 flex items-center gap-2 min-w-0">
+                        <input
+                            type="range"
+                            min={0}
+                            max={100}
+                            value={isMuted ? 0 : Math.round(volume * 100)}
+                            onChange={(e) => {
+                                const newVol = Number(e.target.value) / 100;
+                                setVolume(newVol);
+                                setIsMuted(false);
+                                if (api.setVolume) {
+                                    void api.setVolume(newVol);
+                                }
+                            }}
+                            className="w-full h-1.5 rounded-full bg-black/10 dark:bg-white/10 appearance-none cursor-pointer accent-accent transition-all"
+                            aria-label="Volume"
+                        />
+                        <span className="text-[10px] text-secondary font-mono tabular-nums shrink-0 w-7 text-right">
+                            {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
+                        </span>
                     </div>
                 </div>
             </div>

@@ -32,6 +32,7 @@ import {
     PowerIcon,
     SignalIcon,
     SpeakerWaveIcon,
+    SpeakerXMarkIcon,
     StarIcon as StarSolidIcon,
     StopIcon,
     SwatchIcon,
@@ -120,6 +121,7 @@ export const IconGitHub: React.FC<IconProps> = ({
 
 export const IconEqualizer = wrapHeroicon(AdjustmentsVerticalIcon);
 export const IconSpeaker = wrapHeroicon(SpeakerWaveIcon);
+export const IconSpeakerMute = wrapHeroicon(SpeakerXMarkIcon);
 
 export const IconStar: React.FC<IconProps & { filled?: boolean }> = ({
     size = 15,

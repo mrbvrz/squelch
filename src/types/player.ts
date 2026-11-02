@@ -42,4 +42,6 @@ export interface PlayerStatus {
     sleepTimerMinutes: number | null;
     sleepTimerRemainingSec: number | null;
     reconnectAttempt?: number | null;
+    volume?: number;
+    isMuted?: boolean;
 }

@@ -36,9 +36,13 @@ let currentAudioVolume = 1.0;
 let isAudioMuted = false;
 
 function syncPlayerStatusToRust() {
-    void invoke('update_player_status', { status: playerStatus }).catch(
-        () => {}
-    );
+    void invoke('update_player_status', {
+        status: {
+            ...playerStatus,
+            volume: currentAudioVolume,
+            isMuted: isAudioMuted
+        }
+    }).catch(() => {});
 }
 
 interface ListeningStatsSchema {
@@ -347,7 +351,17 @@ export function initTauriBridge() {
         const payload = event.payload as any;
         if (payload && typeof payload === 'object') {
             playerStatus = { ...playerStatus, ...payload };
-            emit('ui:state-changed', { ...playerStatus });
+            if (typeof payload.volume === 'number') {
+                currentAudioVolume = payload.volume;
+            }
+            if (typeof payload.isMuted === 'boolean') {
+                isAudioMuted = payload.isMuted;
+            }
+            emit('ui:state-changed', {
+                ...playerStatus,
+                volume: currentAudioVolume,
+                isMuted: isAudioMuted
+            });
         }
     });
 
@@ -691,11 +705,21 @@ export function initTauriBridge() {
                     const remote: any = await invoke('get_player_status');
                     if (remote && typeof remote === 'object') {
                         playerStatus = { ...playerStatus, ...remote };
+                        if (typeof remote.volume === 'number') {
+                            currentAudioVolume = remote.volume;
+                        }
+                        if (typeof remote.isMuted === 'boolean') {
+                            isAudioMuted = remote.isMuted;
+                        }
                     }
                 } catch {
                     // ignore
                 }
-                return { ...playerStatus };
+                return {
+                    ...playerStatus,
+                    volume: currentAudioVolume,
+                    isMuted: isAudioMuted
+                };
             },
 
             playStation: async (stationIdOrObj: string | any) => {

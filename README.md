@@ -29,9 +29,9 @@
 <table align="center" style="border: none;">
   <tr>
     <td align="center" width="50%" style="border: none; vertical-align: top;">
-      <strong>Main Station Management Window</strong><br />
-      <sub>Full-featured broadcast directory, schedules, listening analytics & preferences</sub><br /><br />
-      <img src="docs/screenshots/squelch-main-window.png" width="98%" alt="Squelch Main Management Window" />
+      <strong>Main Station Management</strong><br />
+      <sub>Full-featured broadcast directory & preferences</sub><br /><br />
+      <img src="docs/screenshots/squelch-main-window.png" width="98%" alt="Squelch Main Management" />
     </td>
     <td align="center" width="50%" style="border: none; vertical-align: top;">
       <strong>About Squelch</strong><br />

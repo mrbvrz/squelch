@@ -1,6 +1,7 @@
 import React from 'react';
 import {
     AdjustmentsHorizontalIcon,
+    AdjustmentsVerticalIcon,
     ArrowDownTrayIcon,
     ArrowPathIcon,
     ArrowsUpDownIcon,
@@ -29,6 +30,7 @@ import {
     PlusIcon,
     PowerIcon,
     SignalIcon,
+    SpeakerWaveIcon,
     StarIcon as StarSolidIcon,
     StopIcon,
     SwatchIcon,
@@ -112,6 +114,9 @@ export const IconGitHub: React.FC<IconProps> = ({
         />
     </svg>
 );
+
+export const IconEqualizer = wrapHeroicon(AdjustmentsVerticalIcon);
+export const IconSpeaker = wrapHeroicon(SpeakerWaveIcon);
 
 export const IconStar: React.FC<IconProps & { filled?: boolean }> = ({
     size = 15,

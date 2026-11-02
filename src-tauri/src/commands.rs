@@ -233,6 +233,13 @@ pub fn reset_settings(store: State<Arc<AppStore>>) -> Result<Value, String> {
         "fontFamily": "system",
         "glassOpacity": 90,
         "networkTimeoutMs": 12000,
+        "bufferLengthSeconds": 5,
+        "equalizer": {
+            "enabled": false,
+            "preset": "flat",
+            "bands": [0, 0, 0, 0, 0],
+            "normalization": true
+        },
         "userAgent": "Squelch/0.1.0 (macOS; InternetRadio)",
         "shortcuts": {
             "playPause": "CommandOrControl+Shift+P",

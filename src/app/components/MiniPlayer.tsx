@@ -16,6 +16,7 @@ export interface MiniPlayerProps {
     streamTitle: string | null;
     isPlaying: boolean;
     isBusy: boolean;
+    eqActive?: boolean;
     api: SquelchWindowApi;
     t: TranslationDictionary;
 }
@@ -27,6 +28,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
     streamTitle,
     isPlaying,
     isBusy,
+    eqActive = false,
     api,
     t
 }) => {
@@ -45,8 +47,15 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                     onResolveLogo={(url) => api.resolveStationLogo(url)}
                 />
                 <div className="min-w-0 flex-1">
-                    <div className="text-[12px] font-bold truncate leading-tight">
-                        {currentStation ? currentStation.name : 'Squelch'}
+                    <div className="flex items-center gap-1.5 truncate">
+                        <span className="text-[12px] font-bold truncate leading-tight">
+                            {currentStation ? currentStation.name : 'Squelch'}
+                        </span>
+                        {eqActive && (
+                            <span className="px-1 rounded-[3px] bg-accent/20 text-accent text-[9px] font-bold leading-tight">
+                                EQ
+                            </span>
+                        )}
                     </div>
                     <div className="text-[10px] text-secondary truncate mt-0.5 flex items-center gap-1">
                         <span

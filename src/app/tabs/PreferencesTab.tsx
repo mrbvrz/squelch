@@ -7,6 +7,7 @@ import { ACCENT_SWATCHES } from '../../utils/appearance';
 import { ThemePreviewCard } from '../../components/ThemePreviewCard';
 import { MacToggle } from '../../components/MacToggle';
 import { SearchableFontPicker } from '../../components/SearchableFontPicker';
+import { AudioEqualizerCard } from '../../components/AudioEqualizerCard';
 import {
     IconArrowDownTray,
     IconBackup,
@@ -446,8 +447,56 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                             ))}
                         </div>
                     </div>
+
+                    {/* Buffer Length Selector */}
+                    <div className="px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                            <div className="text-[13px] font-medium">
+                                {t.prefBufferLabel}
+                            </div>
+                            <div className="text-[12px] text-secondary mt-0.5 leading-relaxed">
+                                {t.prefBufferDesc}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-1 p-0.5 rounded-[7px] mac-glass-pill tabular-nums shrink-0 self-start sm:self-auto">
+                            {[
+                                { sec: 3, label: '3s' },
+                                { sec: 5, label: '5s' },
+                                { sec: 10, label: '10s' },
+                                { sec: 15, label: '15s' }
+                            ].map(({ sec, label }) => (
+                                <button
+                                    key={sec}
+                                    type="button"
+                                    onClick={() =>
+                                        void api.updateSettings({
+                                            bufferLengthSeconds: sec
+                                        })
+                                    }
+                                    className={`px-3 py-1 rounded-[5px] text-[11px] font-medium cursor-pointer transition ${
+                                        (settings.bufferLengthSeconds ?? 5) ===
+                                        sec
+                                            ? 'bg-accent text-white shadow-xs'
+                                            : 'text-secondary hover:text-foreground'
+                                    }`}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            {/* Audio Equalizer & Sound Quality */}
+            <AudioEqualizerCard
+                equalizer={settings.equalizer}
+                onUpdateEqualizer={(eq) =>
+                    void api.updateSettings({ equalizer: eq })
+                }
+                lang={lang}
+                t={t}
+            />
 
             {/* Group 4: Global Shortcuts */}
             <div>

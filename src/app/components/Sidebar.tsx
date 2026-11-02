@@ -115,6 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     streamTitle={streamTitle}
                     isPlaying={isPlaying}
                     isBusy={isBusy}
+                    eqActive={Boolean(settings?.equalizer?.enabled)}
                     api={api}
                     t={t}
                 />

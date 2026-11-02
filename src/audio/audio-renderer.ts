@@ -1,7 +1,15 @@
 import Hls from 'hls.js';
+import { listen } from '@tauri-apps/api/event';
 import { initTauriBridge } from '../bridge/tauri-bridge';
 
 initTauriBridge();
+
+export interface EqualizerPayload {
+    enabled: boolean;
+    preset?: string;
+    bands: [number, number, number, number, number];
+    normalization?: boolean;
+}
 
 interface SquelchAudioBridge {
     onCommand: (
@@ -12,6 +20,8 @@ interface SquelchAudioBridge {
             stationName?: string;
             streamTitle?: string | null;
             logoUrl?: string | null;
+            bufferLengthSeconds?: number;
+            equalizer?: EqualizerPayload;
         }) => void
     ) => void;
     notifyPlaying: () => void;
@@ -30,6 +40,104 @@ declare global {
     }
 }
 
+class AudioEqualizerEngine {
+    private ctx: AudioContext | null = null;
+    private source: MediaElementAudioSourceNode | null = null;
+    private filters: BiquadFilterNode[] = [];
+    private compressor: DynamicsCompressorNode | null = null;
+    private isInitialized = false;
+
+    init(audioEl: HTMLAudioElement) {
+        if (this.isInitialized) return;
+        try {
+            const AudioContextClass =
+                window.AudioContext ||
+                (
+                    window as unknown as {
+                        webkitAudioContext?: typeof AudioContext;
+                    }
+                ).webkitAudioContext;
+            if (!AudioContextClass) return;
+
+            this.ctx = new AudioContextClass();
+            this.source = this.ctx.createMediaElementSource(audioEl);
+
+            // 5 Bands: 60Hz (lowshelf), 250Hz (peaking), 1kHz (peaking), 4kHz (peaking), 12kHz (highshelf)
+            const specs: Array<{
+                f: number;
+                type: BiquadFilterType;
+                q?: number;
+            }> = [
+                { f: 60, type: 'lowshelf' },
+                { f: 250, type: 'peaking', q: 1.0 },
+                { f: 1000, type: 'peaking', q: 1.0 },
+                { f: 4000, type: 'peaking', q: 1.0 },
+                { f: 12000, type: 'highshelf' }
+            ];
+
+            this.filters = specs.map((spec) => {
+                const node = this.ctx!.createBiquadFilter();
+                node.type = spec.type;
+                node.frequency.value = spec.f;
+                if (spec.q) node.Q.value = spec.q;
+                node.gain.value = 0;
+                return node;
+            });
+
+            // Dynamics compressor acting as soft limiter / volume normalizer
+            this.compressor = this.ctx.createDynamicsCompressor();
+            this.compressor.threshold.setValueAtTime(
+                -1.5,
+                this.ctx.currentTime
+            );
+            this.compressor.knee.setValueAtTime(12, this.ctx.currentTime);
+            this.compressor.ratio.setValueAtTime(4, this.ctx.currentTime);
+            this.compressor.attack.setValueAtTime(0.003, this.ctx.currentTime);
+            this.compressor.release.setValueAtTime(0.25, this.ctx.currentTime);
+
+            let previousNode: AudioNode = this.source;
+            for (const filter of this.filters) {
+                previousNode.connect(filter);
+                previousNode = filter;
+            }
+            previousNode.connect(this.compressor);
+            this.compressor.connect(this.ctx.destination);
+
+            this.isInitialized = true;
+        } catch (e) {
+            console.warn(
+                '[AudioEqualizer] Web Audio API init skipped or failed:',
+                e
+            );
+        }
+    }
+
+    resume() {
+        if (this.ctx && this.ctx.state === 'suspended') {
+            void this.ctx.resume();
+        }
+    }
+
+    apply(config?: EqualizerPayload | null) {
+        if (!config || !this.ctx || this.filters.length !== 5) return;
+        const now = this.ctx.currentTime;
+        const isEnabled = Boolean(config.enabled);
+
+        for (let i = 0; i < 5; i++) {
+            const rawVal = config.bands?.[i] ?? 0;
+            const clamped = Math.max(-12, Math.min(12, rawVal));
+            const targetGain = isEnabled ? clamped : 0;
+            this.filters[i].gain.setTargetAtTime(targetGain, now, 0.04);
+        }
+
+        if (this.compressor) {
+            const useNormalization = config.normalization !== false;
+            const targetRatio = isEnabled && useNormalization ? 4 : 1;
+            this.compressor.ratio.setTargetAtTime(targetRatio, now, 0.04);
+        }
+    }
+}
+
 (function initAudioWorker() {
     const audioEl = document.getElementById(
         'radio-audio'
@@ -41,8 +149,33 @@ declare global {
     audioEl.volume = 1.0;
     audioEl.muted = false;
 
+    const eqEngine = new AudioEqualizerEngine();
+    let currentBufferLengthSeconds = 5;
+    let currentEqualizerConfig: EqualizerPayload | null = null;
+
     let hlsInstance: Hls | null = null;
     let currentStationName = 'Squelch';
+
+    // Real-time listener for EQ updates from UI
+    listen<EqualizerPayload>('squelch:audio:eq', (event) => {
+        currentEqualizerConfig = event.payload;
+        eqEngine.init(audioEl);
+        eqEngine.resume();
+        eqEngine.apply(currentEqualizerConfig);
+    }).catch(() => {});
+
+    // Real-time listener for Buffer length updates from UI
+    listen<{ bufferLengthSeconds: number }>('squelch:audio:buffer', (event) => {
+        const val = Number(event.payload?.bufferLengthSeconds);
+        if (!isNaN(val) && val >= 2 && val <= 30) {
+            currentBufferLengthSeconds = val;
+            if (hlsInstance) {
+                hlsInstance.config.maxBufferLength = currentBufferLengthSeconds;
+                hlsInstance.config.maxMaxBufferLength =
+                    currentBufferLengthSeconds * 2;
+            }
+        }
+    }).catch(() => {});
 
     const destroyHls = () => {
         if (hlsInstance) {
@@ -121,6 +254,7 @@ declare global {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'playing';
         }
+        eqEngine.resume();
         bridge.notifyPlaying();
     });
 
@@ -147,6 +281,20 @@ declare global {
                 audioEl.volume = 1.0;
                 audioEl.muted = false;
 
+                if (cmd.bufferLengthSeconds) {
+                    currentBufferLengthSeconds =
+                        Number(cmd.bufferLengthSeconds) || 5;
+                }
+                if (cmd.equalizer) {
+                    currentEqualizerConfig = cmd.equalizer;
+                }
+
+                eqEngine.init(audioEl);
+                eqEngine.resume();
+                if (currentEqualizerConfig) {
+                    eqEngine.apply(currentEqualizerConfig);
+                }
+
                 updateMediaSession({
                     stationName: cmd.stationName,
                     streamTitle: cmd.streamTitle,
@@ -162,7 +310,9 @@ declare global {
                 if (isHlsStream && Hls.isSupported()) {
                     hlsInstance = new Hls({
                         enableWorker: false,
-                        lowLatencyMode: false,
+                        lowLatencyMode: currentBufferLengthSeconds <= 3,
+                        maxBufferLength: currentBufferLengthSeconds,
+                        maxMaxBufferLength: currentBufferLengthSeconds * 2,
                         backBufferLength: 30
                     });
 
@@ -172,6 +322,7 @@ declare global {
                             .play()
                             .then(() => {
                                 audioEl.muted = false;
+                                eqEngine.resume();
                             })
                             .catch((err: unknown) => {
                                 const msg =
@@ -200,6 +351,7 @@ declare global {
                         audioEl.muted = true;
                         await audioEl.play();
                         audioEl.muted = false;
+                        eqEngine.resume();
                     } catch (err) {
                         const msg =
                             err instanceof Error

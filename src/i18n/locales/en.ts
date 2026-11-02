@@ -156,6 +156,26 @@ export const enLocale: TranslationDictionary = {
     prefAutoReconnect: 'Auto-reconnect when network stream drops',
     prefMaxRetries: 'Max reconnect attempts',
     prefTimeout: 'Network timeout',
+    prefBufferLabel: 'Streaming Buffer Length',
+    prefBufferDesc:
+        'A longer buffer avoids audio stuttering on tethering or unstable cellular network connections.',
+    prefBufferUltraLow: '3 sec (Ultra-low latency)',
+    prefBufferBalanced: '5 sec (Balanced & Recommended)',
+    prefBufferCellular: '10 sec (Stable Cellular / Tethering)',
+    prefBufferHigh: '15 sec (Anti-stutter Weak Signal)',
+
+    // Equalizer & Audio Enhancement
+    prefEqSection: 'Equalizer & Sound Quality',
+    prefEqDesc:
+        'Tailor the 5-band frequency response and engage dynamic limiting for optimal broadcast clarity.',
+    prefEqToggle: 'Enable Audio Equalizer',
+    prefEqPresetLabel: 'Audio Equalizer Preset',
+    prefEqResetBtn: 'Reset EQ to Flat',
+    prefEqNormalizationLabel: 'Volume Normalization & Anti-Clipping',
+    prefEqNormalizationDesc:
+        'Tames loud bursts and prevents digital clipping distortion when boosting equalizer frequencies.',
+    prefEqCustomNotice: 'Custom (User Adjusted)',
+    prefEqBadgeActive: 'EQ Active',
     prefShortcuts: 'Global Keyboard Shortcuts',
     prefShortcutRecordHint:
         'Click any shortcut button then press new key combination (Esc to cancel)',

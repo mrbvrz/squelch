@@ -580,6 +580,14 @@ export function initTauriBridge() {
                 const port: number = await invoke('get_proxy_port');
                 const proxyUrl = `http://127.0.0.1:${port}/proxy?url=${encodeURIComponent(station.streamUrl)}`;
 
+                let settingsSnapshot: any = null;
+                try {
+                    const cfg: any = await invoke('get_settings');
+                    settingsSnapshot = cfg?.settings;
+                } catch {
+                    // ignore
+                }
+
                 playerStatus = {
                     ...playerStatus,
                     state: 'buffering',
@@ -602,7 +610,10 @@ export function initTauriBridge() {
                         station.streamUrl.includes('.m3u8'),
                     stationName: station.name,
                     streamTitle: null,
-                    logoUrl: station.logoUrl
+                    logoUrl: station.logoUrl,
+                    bufferLengthSeconds:
+                        settingsSnapshot?.bufferLengthSeconds ?? 5,
+                    equalizer: settingsSnapshot?.equalizer
                 });
 
                 await emit('ui:state-changed', { ...playerStatus });
@@ -1045,6 +1056,15 @@ export function initTauriBridge() {
                 const res: any = await invoke('update_settings', { partial });
                 if (res?.settings) {
                     applyAppearanceVariables(res.settings);
+                    if (partial?.equalizer !== undefined) {
+                        void emit('squelch:audio:eq', res.settings.equalizer);
+                    }
+                    if (partial?.bufferLengthSeconds !== undefined) {
+                        void emit('squelch:audio:buffer', {
+                            bufferLengthSeconds:
+                                res.settings.bufferLengthSeconds
+                        });
+                    }
                 }
                 await emit('ui:state-changed', { type: 'settings', ...res });
                 return res?.settings;
@@ -1054,6 +1074,10 @@ export function initTauriBridge() {
                 const res: any = await invoke('reset_settings');
                 if (res?.settings) {
                     applyAppearanceVariables(res.settings);
+                    void emit('squelch:audio:eq', res.settings.equalizer);
+                    void emit('squelch:audio:buffer', {
+                        bufferLengthSeconds: res.settings.bufferLengthSeconds
+                    });
                 }
                 await emit('ui:state-changed', { type: 'settings', ...res });
                 return res?.settings;

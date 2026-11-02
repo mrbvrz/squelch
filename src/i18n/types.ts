@@ -155,6 +155,23 @@ export interface TranslationDictionary {
     prefAutoReconnect: string;
     prefMaxRetries: string;
     prefTimeout: string;
+    prefBufferLabel: string;
+    prefBufferDesc: string;
+    prefBufferUltraLow: string;
+    prefBufferBalanced: string;
+    prefBufferCellular: string;
+    prefBufferHigh: string;
+
+    // Equalizer & Audio Enhancement
+    prefEqSection: string;
+    prefEqDesc: string;
+    prefEqToggle: string;
+    prefEqPresetLabel: string;
+    prefEqResetBtn: string;
+    prefEqNormalizationLabel: string;
+    prefEqNormalizationDesc: string;
+    prefEqCustomNotice: string;
+    prefEqBadgeActive: string;
     prefShortcuts: string;
     prefShortcutRecordHint: string;
     prefShortcutRecording: string;

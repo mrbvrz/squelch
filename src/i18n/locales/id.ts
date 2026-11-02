@@ -155,6 +155,26 @@ export const idLocale: TranslationDictionary = {
     prefAutoReconnect: 'Sambung ulang otomatis saat jaringan terputus',
     prefMaxRetries: 'Batas percobaan rekoneksi',
     prefTimeout: 'Batas waktu jaringan (Timeout)',
+    prefBufferLabel: 'Durasi Buffer Streaming',
+    prefBufferDesc:
+        'Buffer lebih panjang mencegah audio tersendat pada tethering atau jaringan seluler yang tidak stabil.',
+    prefBufferUltraLow: '3 detik (Latensi Ultra-rendah)',
+    prefBufferBalanced: '5 detik (Seimbang & Rekomendasi)',
+    prefBufferCellular: '10 detik (Stabil Seluler / Tethering)',
+    prefBufferHigh: '15 detik (Anti-stutter Sinyal Lemah)',
+
+    // Equalizer & Audio Enhancement
+    prefEqSection: 'Equalizer & Karakter Suara',
+    prefEqDesc:
+        'Sesuaikan respon frekuensi 5-band dan aktifkan kompresor dinamis untuk kejernihan audio maksimal.',
+    prefEqToggle: 'Aktifkan Audio Equalizer',
+    prefEqPresetLabel: 'Preset Karakter Suara',
+    prefEqResetBtn: 'Kembalikan EQ Datar',
+    prefEqNormalizationLabel: 'Penstabil Volume & Anti-Kliping',
+    prefEqNormalizationDesc:
+        'Membatasi lonjakan audio keras dan mencegah distorsi kliping digital saat menaikkan level frekuensi EQ.',
+    prefEqCustomNotice: 'Kustom (Disetel Manual)',
+    prefEqBadgeActive: 'EQ Aktif',
     prefShortcuts: 'Pintasan Keyboard Global',
     prefShortcutRecordHint:
         'Klik tombol pintasan lalu tekan kombinasi tombol baru (Esc untuk batal)',

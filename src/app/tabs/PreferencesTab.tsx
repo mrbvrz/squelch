@@ -150,7 +150,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <span className="text-[13px] font-medium">
                             {t.prefAccentLabel}
                         </span>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                             {ACCENT_SWATCHES.map((swatch) => {
                                 const selected =
                                     (
@@ -168,32 +168,35 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                                 accentColor: swatch.hex
                                             })
                                         }
-                                        className={`w-5 h-5 rounded-full cursor-pointer transition-transform flex items-center justify-center ${
+                                        className={`w-3.5 h-3.5 rounded-full cursor-pointer transition-transform flex items-center justify-center shrink-0 ${
                                             selected
-                                                ? 'scale-115 ring-2 ring-white/80'
-                                                : ''
+                                                ? 'scale-115 ring-2 ring-white/90 shadow-xs'
+                                                : 'hover:scale-105 opacity-90 hover:opacity-100'
                                         }`}
                                         style={{
                                             backgroundColor: swatch.hex
                                         }}
                                     >
                                         {selected && (
-                                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                            <span className="w-1 h-1 rounded-full bg-white shadow-xs" />
                                         )}
                                     </button>
                                 );
                             })}
-                            <input
-                                type="color"
-                                value={settings.accentColor ?? '#0A84FF'}
-                                aria-label="Custom Accent Color"
-                                onChange={(e) =>
-                                    void api.updateSettings({
-                                        accentColor: e.target.value
-                                    })
-                                }
-                                className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
-                            />
+                            <div className="relative flex items-center ml-1">
+                                <input
+                                    type="color"
+                                    value={settings.accentColor ?? '#0A84FF'}
+                                    aria-label="Custom Accent Color"
+                                    title="Custom Color"
+                                    onChange={(e) =>
+                                        void api.updateSettings({
+                                            accentColor: e.target.value
+                                        })
+                                    }
+                                    className="w-4 h-4 rounded-full cursor-pointer bg-transparent border border-black/15 dark:border-white/20 p-0 overflow-hidden"
+                                />
+                            </div>
                         </div>
                     </div>
 

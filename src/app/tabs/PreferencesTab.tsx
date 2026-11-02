@@ -23,7 +23,6 @@ import {
     IconCompass,
     IconCopy,
     IconFolder,
-    IconKey,
     IconRestore,
     IconSparkles,
     IconSpinner,
@@ -515,10 +514,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
             {/* Group 4: Global Shortcuts */}
             <div>
                 <div className="flex items-center justify-between mb-2 px-1">
-                    <h2 className="text-[13px] font-bold flex items-center gap-1.5">
-                        <IconKey size={14} className="text-accent" />
-                        <span>{t.prefShortcuts}</span>
-                    </h2>
+                    <h2 className="text-[13px] font-bold">{t.prefShortcuts}</h2>
                     <span className="text-[11px] text-secondary">
                         {t.prefShortcutRecordHint}
                     </span>

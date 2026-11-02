@@ -9,7 +9,7 @@ import {
     isModifierOnlyKey
 } from '../utils/shortcuts';
 import { ShortcutKeyBadge } from './ShortcutKeyBadge';
-import { IconKey, IconRestore, IconX } from './Icons';
+import { IconRestore } from './Icons';
 
 export interface KeyboardShortcutRecorderProps {
     definition: ShortcutDefinition;
@@ -94,11 +94,6 @@ export const KeyboardShortcutRecorder: React.FC<
         };
     }, [isRecording, definition.key, onChange, onStopRecording]);
 
-    const handleClear = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onChange(definition.key, '');
-    };
-
     const handleResetDefault = (e: React.MouseEvent) => {
         e.stopPropagation();
         onChange(definition.key, definition.defaultAccelerator);
@@ -131,7 +126,7 @@ export const KeyboardShortcutRecorder: React.FC<
                 <button
                     type="button"
                     onClick={isRecording ? onStopRecording : onStartRecording}
-                    className={`px-3 py-1.5 rounded-[7px] text-[11px] min-w-[160px] flex items-center justify-center gap-2 cursor-pointer transition select-none ${
+                    className={`px-3 py-1.5 rounded-[7px] text-[11px] min-w-[160px] flex items-center justify-center cursor-pointer transition select-none ${
                         isRecording
                             ? 'bg-accent/15 text-accent border border-accent ring-2 ring-accent/30 animate-pulse'
                             : 'mac-glass-pill hover:bg-black/8 dark:hover:bg-white/10'
@@ -142,13 +137,6 @@ export const KeyboardShortcutRecorder: React.FC<
                             : 'Click to record new keyboard shortcut'
                     }
                 >
-                    <IconKey
-                        size={12}
-                        className={
-                            isRecording ? 'text-accent' : 'text-secondary'
-                        }
-                    />
-
                     {isRecording ? (
                         liveModifiers.length > 0 ? (
                             <div className="flex items-center gap-1">
@@ -183,18 +171,6 @@ export const KeyboardShortcutRecorder: React.FC<
                         className="p-1.5 rounded-[6px] text-secondary hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
                     >
                         <IconRestore size={12} />
-                    </button>
-                )}
-
-                {/* Clear Shortcut Button (if not empty) */}
-                {Boolean(currentValue) && (
-                    <button
-                        type="button"
-                        onClick={handleClear}
-                        title={t.prefShortcutClear}
-                        className="p-1.5 rounded-[6px] text-secondary hover:text-red-500 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
-                    >
-                        <IconX size={12} />
                     </button>
                 )}
             </div>

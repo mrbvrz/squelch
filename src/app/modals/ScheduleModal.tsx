@@ -9,6 +9,7 @@ import {
     IconCheck
 } from '../../components/Icons';
 import { MacToggle } from '../../components/MacToggle';
+import { MacSelect } from '../../components/MacSelect';
 import { StationAvatar } from '../../components/StationAvatar';
 import { markdownToHtml, htmlToMarkdown } from '../../utils/text-format';
 
@@ -552,21 +553,22 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                         <span className="font-semibold text-[12px]">
                             {t.scheduleReminder}
                         </span>
-                        <select
-                            value={schedReminderMinutes}
-                            onChange={(e) =>
-                                setSchedReminderMinutes(
-                                    parseInt(e.target.value, 10)
-                                )
+                        <MacSelect
+                            value={String(schedReminderMinutes)}
+                            ariaLabel={t.scheduleReminder}
+                            onChange={(val) =>
+                                setSchedReminderMinutes(parseInt(val, 10))
                             }
-                            className="mac-input w-[200px] px-3 h-[30px] rounded-[7px] text-[12px] font-medium cursor-pointer"
-                        >
-                            <option value={0}>
-                                {t.scheduleReminderAtStart}
-                            </option>
-                            <option value={5}>{t.scheduleReminder5m}</option>
-                            <option value={10}>{t.scheduleReminder10m}</option>
-                        </select>
+                            options={[
+                                {
+                                    value: '0',
+                                    label: t.scheduleReminderAtStart
+                                },
+                                { value: '5', label: t.scheduleReminder5m },
+                                { value: '10', label: t.scheduleReminder10m }
+                            ]}
+                            widthClass="w-[200px]"
+                        />
                     </div>
                 </div>
 

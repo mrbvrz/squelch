@@ -7,6 +7,7 @@ import { ACCENT_SWATCHES } from '../../utils/appearance';
 import { ThemePreviewCard } from '../../components/ThemePreviewCard';
 import { MacToggle } from '../../components/MacToggle';
 import { SearchableFontPicker } from '../../components/SearchableFontPicker';
+import { MacSelect } from '../../components/MacSelect';
 import { AudioEqualizerCard } from '../../components/AudioEqualizerCard';
 import { KeyboardShortcutRecorder } from '../../components/KeyboardShortcutRecorder';
 import {
@@ -288,23 +289,25 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <span className="text-[13px] font-medium">
                             {t.prefLanguage}
                         </span>
-                        <select
+                        <MacSelect
                             value={settings.language}
-                            aria-label={t.prefLanguage}
-                            onChange={(e) =>
+                            ariaLabel={t.prefLanguage}
+                            onChange={(nextLang) =>
                                 void api.updateSettings({
-                                    language: e.target
-                                        .value as AppSettings['language']
+                                    language: nextLang as AppSettings['language']
                                 })
                             }
-                            className="mac-input px-3 rounded-[7px] text-[12px] w-[200px] h-[30px] cursor-pointer hover:border-accent/40 transition shadow-sm font-medium"
-                        >
-                            {SUPPORTED_LOCALES.map((loc) => (
-                                <option key={loc.code} value={loc.code}>
-                                    {loc.flag} {loc.nativeName}
-                                </option>
-                            ))}
-                        </select>
+                            options={SUPPORTED_LOCALES.map((loc) => ({
+                                value: loc.code,
+                                label: loc.nativeName,
+                                icon: (
+                                    <span className="text-[13px] shrink-0">
+                                        {loc.flag}
+                                    </span>
+                                )
+                            }))}
+                            widthClass="w-[200px]"
+                        />
                     </div>
 
                     <div className="px-4 py-3 flex items-center justify-between">
@@ -885,36 +888,40 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                             </p>
                         </div>
                         <div className="flex items-center gap-2.5 shrink-0">
-                            <select
+                            <MacSelect
                                 value={selectedClearTarget}
-                                aria-label={
+                                ariaLabel={
                                     t.prefClearDropdownLabel ||
                                     'Pilih data yang ingin dihapus'
                                 }
-                                onChange={(e) =>
+                                onChange={(nextTarget) =>
                                     setSelectedClearTarget(
-                                        e.target.value as
+                                        nextTarget as
                                             | 'stations'
                                             | 'schedules'
                                             | 'stats'
                                             | 'all'
                                     )
                                 }
-                                className="mac-input px-3 w-[200px] h-[30px] rounded-[7px] text-[12px] cursor-pointer hover:border-accent/40 transition shadow-sm font-medium"
-                            >
-                                <option value="stations">
-                                    {t.tabStations}
-                                </option>
-                                <option value="schedules">
-                                    {t.tabSchedules}
-                                </option>
-                                <option value="stats">
-                                    {t.tabStats}
-                                </option>
-                                <option value="all">
-                                    {t.prefClearAllDataOption || 'Semua Data'}
-                                </option>
-                            </select>
+                                options={[
+                                    {
+                                        value: 'all',
+                                        label:
+                                            t.prefClearAllDataOption ||
+                                            'Semua Data'
+                                    },
+                                    {
+                                        value: 'stations',
+                                        label: t.tabStations
+                                    },
+                                    {
+                                        value: 'schedules',
+                                        label: t.tabSchedules
+                                    },
+                                    { value: 'stats', label: t.tabStats }
+                                ]}
+                                widthClass="w-[200px]"
+                            />
                             <button
                                 type="button"
                                 onClick={() =>

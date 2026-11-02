@@ -126,6 +126,10 @@ export interface TranslationDictionary {
     discoverSortDefault: string;
     discoverSortBitrate: string;
     discoverSortName: string;
+    discoverLoadingHeader: string;
+    discoverLoadingSub: string;
+    discoverNoResultsTitle: string;
+    discoverNoResultsHint: string;
 
     // Listening Stats Tab (Harian, Mingguan, Bulanan, Tahunan)
     statsTitle: string;

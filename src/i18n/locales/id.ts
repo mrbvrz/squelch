@@ -123,6 +123,12 @@ export const idLocale: TranslationDictionary = {
     discoverSortDefault: 'Urutan Bawaan',
     discoverSortBitrate: 'Bitrate Tertinggi',
     discoverSortName: 'Nama (A-Z)',
+    discoverLoadingHeader: 'Mencari Stasiun Radio...',
+    discoverLoadingSub:
+        'Menghubungkan ke direktori online publik Radio-Browser...',
+    discoverNoResultsTitle: 'Tidak ada stasiun radio yang ditemukan',
+    discoverNoResultsHint:
+        'Coba ubah filter negara, kata kunci pencarian, atau sesuaikan filter bitrate.',
 
     // Listening Stats Tab (Harian, Mingguan, Bulanan, Tahunan)
     statsTitle: 'Aktivitas Mendengarkan',

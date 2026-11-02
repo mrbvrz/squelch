@@ -123,6 +123,12 @@ export const enLocale: TranslationDictionary = {
     discoverSortDefault: 'Default Order',
     discoverSortBitrate: 'Highest Bitrate',
     discoverSortName: 'Name (A-Z)',
+    discoverLoadingHeader: 'Searching Radio Stations...',
+    discoverLoadingSub:
+        'Querying public Radio-Browser online directory...',
+    discoverNoResultsTitle: 'No radio stations found',
+    discoverNoResultsHint:
+        'Try changing the country filter, search query, or adjusting the bitrate filter.',
 
     // Listening Stats Tab (Daily, Weekly, Monthly, Yearly)
     statsTitle: 'Listening Activity',

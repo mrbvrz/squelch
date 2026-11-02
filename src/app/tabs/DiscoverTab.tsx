@@ -207,121 +207,150 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
                 </div>
 
                 <div className="mac-settings-card mac-inset-list overflow-hidden">
-                    {displayedResults.map((item) => {
-                        const alreadyAdded = stations.some(
-                            (s) =>
-                                s.streamUrl.toLowerCase() ===
-                                item.streamUrl.toLowerCase()
-                        );
-                        const isItemPlaying =
-                            (currentStation?.streamUrl === item.streamUrl ||
-                                currentStation?.id === item.id) &&
-                            (isPlaying || isBusy);
-                        return (
-                            <div
-                                key={item.id}
-                                className="mac-row flex items-center justify-between px-4 py-3 text-xs"
-                            >
-                                <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                                    <StationAvatar
-                                        logoUrl={item.logoUrl}
-                                        size="sm"
-                                        onResolveLogo={(url) =>
-                                            api.resolveStationLogo(url)
-                                        }
-                                    />
-                                    <div className="min-w-0 flex-1">
-                                        <div className="font-medium text-[13px] truncate">
-                                            {item.name}
-                                        </div>
-                                        <div className="text-secondary text-[12px] truncate tabular-nums mt-0.5">
-                                            {countryCodeToFlag(item.country)}{' '}
-                                            {item.city}, {item.country}
-                                            {item.bitrate
-                                                ? ` · ${item.bitrate} kbps`
-                                                : ''}
-                                            {item.tags.length > 0
-                                                ? ` · ${item.tags.slice(0, 3).join(', ')}`
-                                                : ''}
+                    {isSearchingOnline ? (
+                        <div className="py-12 px-4 flex flex-col items-center justify-center text-center">
+                            <div className="w-10 h-10 rounded-full mac-glass-pill flex items-center justify-center mb-3 shadow-xs">
+                                <IconSpinner
+                                    size={20}
+                                    className="animate-spin text-accent"
+                                />
+                            </div>
+                            <div className="text-[13px] font-semibold text-foreground">
+                                {t.discoverLoadingHeader}
+                            </div>
+                            <p className="text-[12px] text-secondary mt-1 max-w-[320px] leading-relaxed">
+                                {t.discoverLoadingSub}
+                            </p>
+                        </div>
+                    ) : displayedResults.length === 0 ? (
+                        <div className="py-12 px-4 flex flex-col items-center justify-center text-center text-secondary">
+                            <div className="w-10 h-10 rounded-full mac-glass-pill flex items-center justify-center mb-3 opacity-60">
+                                <IconCompass size={20} />
+                            </div>
+                            <div className="text-[13px] font-medium text-foreground">
+                                {t.discoverNoResultsTitle}
+                            </div>
+                            <p className="text-[11px] text-secondary mt-1 max-w-[320px] leading-relaxed">
+                                {t.discoverNoResultsHint}
+                            </p>
+                        </div>
+                    ) : (
+                        displayedResults.map((item) => {
+                            const alreadyAdded = stations.some(
+                                (s) =>
+                                    s.streamUrl.toLowerCase() ===
+                                    item.streamUrl.toLowerCase()
+                            );
+                            const isItemPlaying =
+                                (currentStation?.streamUrl === item.streamUrl ||
+                                    currentStation?.id === item.id) &&
+                                (isPlaying || isBusy);
+                            return (
+                                <div
+                                    key={item.id}
+                                    className="mac-row flex items-center justify-between px-4 py-3 text-xs"
+                                >
+                                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                        <StationAvatar
+                                            logoUrl={item.logoUrl}
+                                            size="sm"
+                                            onResolveLogo={(url) =>
+                                                api.resolveStationLogo(url)
+                                            }
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-medium text-[13px] truncate">
+                                                {item.name}
+                                            </div>
+                                            <div className="text-secondary text-[12px] truncate tabular-nums mt-0.5">
+                                                {countryCodeToFlag(item.country)}{' '}
+                                                {item.city}, {item.country}
+                                                {item.bitrate
+                                                    ? ` · ${item.bitrate} kbps`
+                                                    : ''}
+                                                {item.tags.length > 0
+                                                    ? ` · ${item.tags.slice(0, 3).join(', ')}`
+                                                    : ''}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="flex items-center gap-1.5 shrink-0 ml-3">
-                                    <button
-                                        type="button"
-                                        title={
-                                            isItemPlaying
-                                                ? t.stop
-                                                : t.discoverPreviewBtn
-                                        }
-                                        aria-label={
-                                            isItemPlaying
-                                                ? t.stop
-                                                : t.discoverPreviewBtn
-                                        }
-                                        onClick={() => {
-                                            if (isItemPlaying) {
-                                                void api.stopPlayback();
-                                            } else {
-                                                void api.playStation({
-                                                    id:
-                                                        item.id ||
-                                                        `preview-${Date.now()}`,
-                                                    name: item.name,
-                                                    streamUrl: item.streamUrl,
-                                                    streamType: item.streamType,
-                                                    logoUrl: item.logoUrl,
-                                                    genre: item.genre,
-                                                    city: item.city,
-                                                    country: item.country,
-                                                    tags: item.tags,
-                                                    group: 'Discover'
-                                                });
+                                    <div className="flex items-center gap-1.5 shrink-0 ml-3">
+                                        <button
+                                            type="button"
+                                            title={
+                                                isItemPlaying
+                                                    ? t.stop
+                                                    : t.discoverPreviewBtn
                                             }
-                                        }}
-                                        className={`w-7 h-7 rounded-[7px] flex items-center justify-center cursor-pointer transition ${
-                                            isItemPlaying
-                                                ? 'bg-[#30D158] text-white shadow-sm'
-                                                : 'mac-glass-pill hover:bg-white/15'
-                                        }`}
-                                    >
-                                        {isItemPlaying ? (
-                                            <IconStop size={12} />
+                                            aria-label={
+                                                isItemPlaying
+                                                    ? t.stop
+                                                    : t.discoverPreviewBtn
+                                            }
+                                            onClick={() => {
+                                                if (isItemPlaying) {
+                                                    void api.stopPlayback();
+                                                } else {
+                                                    void api.playStation({
+                                                        id:
+                                                            item.id ||
+                                                            `preview-${Date.now()}`,
+                                                        name: item.name,
+                                                        streamUrl: item.streamUrl,
+                                                        streamType: item.streamType,
+                                                        logoUrl: item.logoUrl,
+                                                        genre: item.genre,
+                                                        city: item.city,
+                                                        country: item.country,
+                                                        tags: item.tags,
+                                                        group: 'Discover'
+                                                    });
+                                                }
+                                            }}
+                                            className={`w-7 h-7 rounded-[7px] flex items-center justify-center cursor-pointer transition ${
+                                                isItemPlaying
+                                                    ? 'bg-[#30D158] text-white shadow-sm'
+                                                    : 'mac-glass-pill hover:bg-white/15'
+                                            }`}
+                                        >
+                                            {isItemPlaying ? (
+                                                <IconStop size={12} />
+                                            ) : (
+                                                <IconPlay size={12} />
+                                            )}
+                                        </button>
+                                        {alreadyAdded ? (
+                                            <button
+                                                type="button"
+                                                disabled
+                                                title={t.discoverAdded}
+                                                aria-label={t.discoverAdded}
+                                                className="w-7 h-7 rounded-[7px] flex items-center justify-center bg-[#30D158]/20 text-[#30D158] opacity-80 cursor-default"
+                                            >
+                                                <IconCheck size={13} />
+                                            </button>
                                         ) : (
-                                            <IconPlay size={12} />
+                                            <button
+                                                type="button"
+                                                title={t.discoverAddBtn}
+                                                aria-label={t.discoverAddBtn}
+                                                onClick={() =>
+                                                    void handleAddFromDiscover(
+                                                        item,
+                                                        false
+                                                    )
+                                                }
+                                                className="bg-accent hover:opacity-90 text-white w-7 h-7 rounded-[7px] flex items-center justify-center shadow-sm cursor-pointer transition"
+                                            >
+                                                <IconPlus size={13} />
+                                            </button>
                                         )}
-                                    </button>
-                                    {alreadyAdded ? (
-                                        <button
-                                            type="button"
-                                            disabled
-                                            title={t.discoverAdded}
-                                            aria-label={t.discoverAdded}
-                                            className="w-7 h-7 rounded-[7px] flex items-center justify-center bg-[#30D158]/20 text-[#30D158] opacity-80 cursor-default"
-                                        >
-                                            <IconCheck size={13} />
-                                        </button>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            title={t.discoverAddBtn}
-                                            aria-label={t.discoverAddBtn}
-                                            onClick={() =>
-                                                void handleAddFromDiscover(
-                                                    item,
-                                                    false
-                                                )
-                                            }
-                                            className="bg-accent hover:opacity-90 text-white w-7 h-7 rounded-[7px] flex items-center justify-center shadow-sm cursor-pointer transition"
-                                        >
-                                            <IconPlus size={13} />
-                                        </button>
-                                    )}
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })
+                    )}
                 </div>
             </div>
         </div>

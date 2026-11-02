@@ -184,7 +184,7 @@ pub fn get_settings(store: State<Arc<AppStore>>) -> Value {
             "fontFamily": "system",
             "glassOpacity": 90,
             "networkTimeoutMs": 12000,
-            "userAgent": "Squelch/0.1.0 (macOS; InternetRadio)",
+            "userAgent": format!("Squelch/{} (macOS; InternetRadio)", env!("CARGO_PKG_VERSION")),
             "shortcuts": {
                 "playPause": "CommandOrControl+Shift+P",
                 "nextStation": "CommandOrControl+Shift+Right",
@@ -242,7 +242,7 @@ pub fn reset_settings(store: State<Arc<AppStore>>) -> Result<Value, String> {
             "bands": [0, 0, 0, 0, 0, 0, 0, 0],
             "normalization": true
         },
-        "userAgent": "Squelch/0.1.0 (macOS; InternetRadio)",
+        "userAgent": format!("Squelch/{} (macOS; InternetRadio)", env!("CARGO_PKG_VERSION")),
         "shortcuts": {
             "playPause": "CommandOrControl+Shift+P",
             "nextStation": "CommandOrControl+Shift+Right",
@@ -450,7 +450,10 @@ pub async fn test_stream_url(url: String) -> serde_json::Value {
     let start = std::time::Instant::now();
     let client = match reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(8))
-        .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Squelch/0.1.0")
+        .user_agent(format!(
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Squelch/{}",
+            env!("CARGO_PKG_VERSION")
+        ))
         .build()
     {
         Ok(c) => c,

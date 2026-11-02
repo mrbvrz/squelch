@@ -59,7 +59,10 @@ async fn handle_proxy(
         .client
         .get(&target_url)
         .header("Icy-MetaData", "1")
-        .header("User-Agent", "Squelch/0.1.0 (Tauri; macOS)")
+        .header(
+            "User-Agent",
+            format!("Squelch/{} (Tauri; macOS)", env!("CARGO_PKG_VERSION")),
+        )
         .send()
         .await
     {

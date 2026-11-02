@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { AppSettings } from '../../types';
 import { SUPPORTED_LOCALES, type TranslationDictionary } from '../../i18n';
 import type { SquelchWindowApi } from '../types';
-import type { UpdateCheckResult } from '../../components/UpdateModal';
+import type { UpdateCheckResult, UpdateDownloadProgress } from '../../components/UpdateModal';
 import { ACCENT_SWATCHES } from '../../utils/appearance';
 import { ThemePreviewCard } from '../../components/ThemePreviewCard';
 import { MacToggle } from '../../components/MacToggle';
@@ -46,6 +46,7 @@ export interface PreferencesTabProps {
     updateInfo: UpdateCheckResult | null;
     updateCheckError: string | null;
     isCheckingUpdate: boolean;
+    updateDownloadProgress?: UpdateDownloadProgress | null;
     handleCheckForUpdates: (manual?: boolean) => Promise<void>;
     setIsUpdateModalOpen: (open: boolean) => void;
     setIsOnboardingOpen: (open: boolean) => void;
@@ -79,6 +80,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     updateInfo,
     updateCheckError,
     isCheckingUpdate,
+    updateDownloadProgress,
     handleCheckForUpdates,
     setIsUpdateModalOpen,
     setIsOnboardingOpen,
@@ -606,7 +608,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                     Squelch
                                 </div>
                                 <span className="px-2 py-0.5 rounded-[5px] bg-accent/15 text-accent text-[11px] font-mono font-bold tabular-nums">
-                                    v{updateInfo?.currentVersion || '0.1.0'}
+                                    v{updateInfo?.currentVersion || '0.1.2'}
                                 </span>
                                 {updateInfo?.hasUpdate ? (
                                     <span className="px-2 py-0.5 rounded-full bg-[#FF9F0A]/15 text-[#FF9F0A] text-[11px] font-semibold flex items-center gap-1">
@@ -641,8 +643,35 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                     onClick={() => setIsUpdateModalOpen(true)}
                                     className="bg-accent hover:opacity-90 text-white px-3.5 h-[30px] rounded-[7px] text-[12px] font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer transition"
                                 >
-                                    <IconArrowDownTray size={13} />
-                                    <span>{t.updatesDownloadDmg}</span>
+                                    {updateDownloadProgress?.status ===
+                                    'downloading' ? (
+                                        <>
+                                            <IconSpinner
+                                                size={13}
+                                                className="animate-spin"
+                                            />
+                                            <span>
+                                                {t.updatesDownloadingBadge} (
+                                                {updateDownloadProgress.percent.toFixed(
+                                                    0
+                                                )}
+                                                %)
+                                            </span>
+                                        </>
+                                    ) : updateDownloadProgress?.status ===
+                                      'completed' ? (
+                                        <>
+                                            <IconCheck size={13} />
+                                            <span>{t.updatesInstallBtn}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <IconArrowDownTray size={13} />
+                                            <span>
+                                                {t.updatesDownloadBackground}
+                                            </span>
+                                        </>
+                                    )}
                                 </button>
                             )}
 

@@ -397,6 +397,23 @@ export const idLocale: TranslationDictionary = {
     updatesModalSubtitle:
         'Versi baru Squelch siap diunduh dengan peningkatan performa dan fitur terbaru.',
     updatesDownloadDmg: 'Unduh Pembaruan (.dmg)',
+    updatesDownloadBackground: 'Unduh di Latar Belakang',
+    updatesDownloading: 'Mengunduh di latar belakang…',
+    updatesDownloadDesc: 'Mengunduh installer versi terbaru di latar belakang.',
+    updatesBackgroundNote:
+        'Anda dapat menutup jendela ini. Pemutaran radio akan tetap berjalan normal.',
+    updatesCancelDownload: 'Batalkan Unduhan',
+    updatesKeepInBackground: 'Lanjutkan di Latar Belakang',
+    updatesReadyTitle: 'Pembaruan Siap Dipasang',
+    updatesReadySubtitle:
+        'Installer pembaruan telah selesai diunduh di latar belakang. Buka installer untuk memperbarui aplikasi.',
+    updatesInstallBtn: 'Buka Installer & Pasang',
+    updatesRevealFinderBtn: 'Tampilkan di Finder',
+    updatesDownloadError: 'Gagal mengunduh berkas pembaruan.',
+    updatesRetryDownload: 'Coba Unduh Lagi',
+    updatesFallbackBrowser: 'Unduh Manual via Browser',
+    updatesDownloadedBadge: 'Pembaruan Siap Dipasang',
+    updatesDownloadingBadge: 'Mengunduh Pembaruan',
     updatesViewNotes: 'Lihat Catatan Rilis di GitHub',
     updatesDismiss: 'Nanti Saja',
     updatesChangelogLabel: 'Catatan Perubahan (Changelog)',

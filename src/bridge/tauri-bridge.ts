@@ -1050,6 +1050,34 @@ export function initTauriBridge() {
                 return await invoke('check_for_updates');
             },
 
+            startDownloadUpdate: async (url: string, filename?: string) => {
+                await invoke('start_download_update', { url, filename });
+            },
+
+            cancelDownloadUpdate: async () => {
+                await invoke('cancel_update_download');
+            },
+
+            openUpdateInstaller: async (filePath: string) => {
+                await invoke('open_update_installer', { filePath });
+            },
+
+            revealUpdateInFinder: async (filePath: string) => {
+                await invoke('reveal_update_in_finder', { filePath });
+            },
+
+            onUpdateDownloadProgress: (cb: (progress: any) => void) => {
+                let unlisten: (() => void) | null = null;
+                listen('squelch:update-download-progress', (event) => {
+                    cb(event.payload);
+                }).then((u) => {
+                    unlisten = u;
+                });
+                return () => {
+                    if (unlisten) unlisten();
+                };
+            },
+
             getAppIconDataUrl: async () => null,
 
             openAboutWindow: async () => {

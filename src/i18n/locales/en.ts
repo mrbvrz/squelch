@@ -397,6 +397,23 @@ export const enLocale: TranslationDictionary = {
     updatesModalSubtitle:
         'A new version of Squelch is ready to download with performance improvements and new features.',
     updatesDownloadDmg: 'Download Update (.dmg)',
+    updatesDownloadBackground: 'Download in Background',
+    updatesDownloading: 'Downloading in background…',
+    updatesDownloadDesc: 'Downloading latest installer in the background.',
+    updatesBackgroundNote:
+        'You can close this window. Radio playback will continue seamlessly.',
+    updatesCancelDownload: 'Cancel Download',
+    updatesKeepInBackground: 'Run in Background',
+    updatesReadyTitle: 'Update Ready to Install',
+    updatesReadySubtitle:
+        'The update installer has been downloaded in the background. Open installer to update Squelch.',
+    updatesInstallBtn: 'Open Installer & Install',
+    updatesRevealFinderBtn: 'Reveal in Finder',
+    updatesDownloadError: 'Failed to download update file.',
+    updatesRetryDownload: 'Retry Download',
+    updatesFallbackBrowser: 'Download Manually via Browser',
+    updatesDownloadedBadge: 'Update Ready to Install',
+    updatesDownloadingBadge: 'Downloading Update',
     updatesViewNotes: 'View Release Notes on GitHub',
     updatesDismiss: 'Later',
     updatesChangelogLabel: 'Release Notes',

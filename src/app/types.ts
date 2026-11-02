@@ -10,7 +10,7 @@ import type {
     ShowSchedule,
     NewShowScheduleInput
 } from '../types';
-import type { UpdateCheckResult } from '../components/UpdateModal';
+import type { UpdateCheckResult, UpdateDownloadProgress } from '../components/UpdateModal';
 
 export type ActiveTab =
     'stations' | 'schedules' | 'discover' | 'stats' | 'preferences' | 'about';
@@ -123,6 +123,11 @@ export interface SquelchWindowApi {
     getDiagnostics: () => Promise<string>;
     openLogsFolder: () => Promise<boolean>;
     checkForUpdates: () => Promise<UpdateCheckResult>;
+    startDownloadUpdate?: (url: string, filename?: string) => Promise<void>;
+    cancelDownloadUpdate?: () => Promise<void>;
+    openUpdateInstaller?: (filePath: string) => Promise<void>;
+    revealUpdateInFinder?: (filePath: string) => Promise<void>;
+    onUpdateDownloadProgress?: (cb: (progress: UpdateDownloadProgress) => void) => () => void;
     openUpdateModal?: () => Promise<void>;
     clearStationsData: () => Promise<void>;
     clearSchedulesData: () => Promise<void>;

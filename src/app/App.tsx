@@ -24,7 +24,12 @@ import {
 } from '../utils/appearance';
 import { detectStreamTypeFromUrl } from '../utils/stream';
 import { OnboardingModal } from '../components/OnboardingModal';
-import { UpdateModal, type UpdateCheckResult } from '../components/UpdateModal';
+import {
+    UpdateModal,
+    type UpdateCheckResult,
+    type UpdateDownloadProgress
+} from '../components/UpdateModal';
+import { IconSpinner, IconCheck } from '../components/Icons';
 
 import type { ActiveTab, SquelchWindowApi, StatsPeriodMode } from './types';
 import { DAY_LABELS } from './types';
@@ -212,7 +217,71 @@ export const App: React.FC = () => {
         null
     );
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
+    const [updateDownloadProgress, setUpdateDownloadProgress] =
+        useState<UpdateDownloadProgress | null>(null);
     const [notifTestSuccess, setNotifTestSuccess] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (api.onUpdateDownloadProgress) {
+            const unsub = api.onUpdateDownloadProgress((progress) => {
+                setUpdateDownloadProgress(progress);
+            });
+            return () => {
+                unsub();
+            };
+        }
+    }, [api]);
+
+    const handleStartDownloadUpdate = useCallback(
+        async (url: string, filename?: string) => {
+            if (api.startDownloadUpdate) {
+                setUpdateDownloadProgress({
+                    status: 'downloading',
+                    transferred: 0,
+                    total: 0,
+                    percent: 0,
+                    fileName: filename
+                });
+                try {
+                    await api.startDownloadUpdate(url, filename);
+                } catch (err: any) {
+                    setUpdateDownloadProgress({
+                        status: 'error',
+                        transferred: 0,
+                        total: 0,
+                        percent: 0,
+                        error: err?.message || String(err)
+                    });
+                }
+            }
+        },
+        [api]
+    );
+
+    const handleCancelDownloadUpdate = useCallback(async () => {
+        if (api.cancelDownloadUpdate) {
+            await api.cancelDownloadUpdate();
+            setUpdateDownloadProgress(null);
+        }
+    }, [api]);
+
+    const handleInstallUpdate = useCallback(
+        async (filePath: string) => {
+            if (api.openUpdateInstaller) {
+                await api.openUpdateInstaller(filePath);
+            }
+        },
+        [api]
+    );
+
+    const handleRevealUpdateInFinder = useCallback(
+        async (filePath: string) => {
+            if (api.revealUpdateInFinder) {
+                await api.revealUpdateInFinder(filePath);
+            }
+        },
+        [api]
+    );
 
     const handleCheckForUpdates = useCallback(
         async (manual = true) => {
@@ -1268,6 +1337,7 @@ export const App: React.FC = () => {
                             updateInfo={updateInfo}
                             updateCheckError={updateCheckError}
                             isCheckingUpdate={isCheckingUpdate}
+                            updateDownloadProgress={updateDownloadProgress}
                             handleCheckForUpdates={handleCheckForUpdates}
                             setIsUpdateModalOpen={setIsUpdateModalOpen}
                             setIsOnboardingOpen={setIsOnboardingOpen}
@@ -1454,7 +1524,61 @@ export const App: React.FC = () => {
                 isChecking={isCheckingUpdate}
                 error={updateCheckError}
                 onCheckAgain={() => void handleCheckForUpdates(true)}
+                downloadProgress={updateDownloadProgress}
+                onStartDownload={handleStartDownloadUpdate}
+                onCancelDownload={handleCancelDownloadUpdate}
+                onInstallUpdate={handleInstallUpdate}
+                onRevealInFinder={handleRevealUpdateInFinder}
             />
+
+            {/* Non-intrusive floating indicator when downloading in background and modal is closed */}
+            {updateDownloadProgress?.status === 'downloading' &&
+                !isUpdateModalOpen && (
+                    <button
+                        type="button"
+                        onClick={() => setIsUpdateModalOpen(true)}
+                        className="fixed bottom-4 right-4 z-40 mac-modal-surface shadow-2xl border border-accent/40 rounded-xl px-4 py-2.5 flex items-center gap-3 animate-fade-in hover:scale-[1.02] transition cursor-pointer text-xs"
+                        title="Klik untuk membuka jendela pembaruan"
+                    >
+                        <div className="w-6 h-6 rounded-full bg-accent/15 text-accent flex items-center justify-center shrink-0">
+                            <IconSpinner size={13} className="animate-spin" />
+                        </div>
+                        <div className="text-left">
+                            <div className="font-semibold text-foreground flex items-center gap-2">
+                                <span>{t.updatesDownloadingBadge}</span>
+                                <span className="font-mono text-accent text-[11px] font-bold tabular-nums">
+                                    {updateDownloadProgress.percent.toFixed(0)}%
+                                </span>
+                            </div>
+                            <div className="text-[10px] text-secondary">
+                                {t.updatesBackgroundNote}
+                            </div>
+                        </div>
+                    </button>
+                )}
+
+            {/* Non-intrusive floating indicator when download completed and modal is closed */}
+            {updateDownloadProgress?.status === 'completed' &&
+                !isUpdateModalOpen && (
+                    <button
+                        type="button"
+                        onClick={() => setIsUpdateModalOpen(true)}
+                        className="fixed bottom-4 right-4 z-40 mac-modal-surface shadow-2xl border border-[#30D158]/50 rounded-xl px-4 py-2.5 flex items-center gap-3 animate-fade-in hover:scale-[1.02] transition cursor-pointer text-xs"
+                        title="Klik untuk memasang pembaruan"
+                    >
+                        <div className="w-6 h-6 rounded-full bg-[#30D158]/20 text-[#30D158] flex items-center justify-center shrink-0">
+                            <IconCheck size={14} />
+                        </div>
+                        <div className="text-left">
+                            <div className="font-semibold text-foreground">
+                                {t.updatesDownloadedBadge}
+                            </div>
+                            <div className="text-[10px] text-secondary">
+                                {t.updatesReadySubtitle}
+                            </div>
+                        </div>
+                    </button>
+                )}
         </div>
     );
 };

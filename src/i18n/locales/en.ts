@@ -258,16 +258,17 @@ export const enLocale: TranslationDictionary = {
     prefClearStatsConfirmDesc:
         'All listening duration logs will be reset to 0. This action cannot be undone.',
 
-    prefClearDropdownLabel: 'Delete Specific Data',
-    prefClearBtn: 'Delete...',
+    prefClearDropdownLabel: 'Delete Data',
+    prefClearAllDataOption: 'All Data (Stations, Schedules, & Stats)',
+    prefClearBtn: 'Delete Data',
 
-    prefResetAllTitle: 'Delete All Data (Factory Reset)',
+    prefResetAllTitle: 'All Data',
     prefResetAllDesc:
-        'Restore Squelch to original factory condition. All stations, schedules, statistics, and preferences will be erased.',
-    prefResetAllBtn: 'Reset All Data',
-    prefResetAllConfirmTitle: 'Factory Reset Squelch?',
+        'Delete all radio stations, show schedules, and listening statistics simultaneously without resetting app preferences.',
+    prefResetAllBtn: 'Delete All Data',
+    prefResetAllConfirmTitle: 'Delete All Data?',
     prefResetAllConfirmDesc:
-        'WARNING: This will permanently erase ALL data including stations, schedules, listening statistics, and settings back to a fresh install.',
+        'All radio stations, broadcast schedules, and listening history will be permanently deleted. Your app preferences will remain saved.',
 
     // About & Diagnostics
     aboutTagline: 'Modern & Lightweight Menu Bar Internet Radio Receiver',

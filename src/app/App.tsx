@@ -1365,7 +1365,9 @@ export const App: React.FC = () => {
                     } else if (resetTarget === 'stats') {
                         await api.clearListeningStats();
                     } else if (resetTarget === 'all') {
-                        await api.resetAllData();
+                        await api.clearStationsData();
+                        await api.clearSchedulesData();
+                        await api.clearListeningStats();
                     } else {
                         await api.resetSettings();
                     }

@@ -258,16 +258,17 @@ export const idLocale: TranslationDictionary = {
     prefClearStatsConfirmDesc:
         'Semua catatan waktu mendengarkan radio akan direset ke angka 0. Tindakan ini tidak dapat dibatalkan.',
 
-    prefClearDropdownLabel: 'Hapus Data Tertentu',
-    prefClearBtn: 'Hapus...',
+    prefClearDropdownLabel: 'Hapus Data',
+    prefClearAllDataOption: 'Semua Data (Stasiun, Jadwal, & Statistik)',
+    prefClearBtn: 'Hapus Data',
 
-    prefResetAllTitle: 'Hapus Semua Data (Setel Ulang Total)',
+    prefResetAllTitle: 'Semua Data',
     prefResetAllDesc:
-        'Kembalikan Squelch ke kondisi awal pabrik. Semua stasiun radio, jadwal, statistik, dan preferensi akan dihapus total.',
+        'Hapus seluruh stasiun radio, jadwal siaran, dan riwayat statistik mendengarkan sekaligus tanpa mengubah setelan preferensi aplikasi.',
     prefResetAllBtn: 'Hapus Semua Data',
-    prefResetAllConfirmTitle: 'Setel Ulang Total Aplikasi?',
+    prefResetAllConfirmTitle: 'Hapus Semua Data?',
     prefResetAllConfirmDesc:
-        'PERINGATAN: Tindakan ini akan menghapus SEMUA data termasuk stasiun radio, jadwal siaran, riwayat statistik, dan setelan preferensi kembali ke kondisi awal saat baru dipasang.',
+        'Seluruh stasiun radio, jadwal siaran, dan riwayat statistik mendengarkan akan dihapus permanen. Setelan preferensi aplikasi Anda akan tetap aman tersimpan.',
 
     // About & Diagnostics
     aboutTagline: 'Pemutar Radio Internet Menu Bar Modern & Ringan',

@@ -242,6 +242,7 @@ export interface TranslationDictionary {
     prefClearStatsConfirmDesc: string;
 
     prefClearDropdownLabel: string;
+    prefClearAllDataOption: string;
     prefClearBtn: string;
 
     prefResetAllTitle: string;

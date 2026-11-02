@@ -522,7 +522,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                     </p>
                 </div>
 
-                <div className="mac-settings-card rounded-xl overflow-hidden">
+                <div className="mac-settings-card mac-inset-list">
                     {GLOBAL_SHORTCUT_DEFINITIONS.map((def) => {
                         const isRecording = recordingShortcutKey === def.key;
                         const currentValue =
@@ -867,12 +867,12 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                     <IconTrash size={14} className="text-[#FF453A]" />
                     <span>{t.prefDangerSection}</span>
                 </h2>
-                <div className="mac-settings-card border border-[#FF453A]/30 overflow-hidden p-4 space-y-4">
+                <div className="mac-settings-card mac-inset-list border border-[#FF453A]/30 overflow-hidden">
                     {/* 1. Dropdown Hapus Data Tertentu */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
                             <div className="text-[13px] font-semibold text-foreground">
-                                {t.prefClearDropdownLabel || 'Hapus Data Tertentu'}
+                                {t.prefClearDropdownLabel || 'Hapus Data'}
                             </div>
                             <p className="text-[12px] text-secondary mt-0.5 leading-relaxed">
                                 {selectedClearTarget === 'stations'
@@ -912,7 +912,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                     {t.tabStats}
                                 </option>
                                 <option value="all">
-                                    {t.prefResetAllTitle}
+                                    {t.prefClearAllDataOption || 'Semua Data'}
                                 </option>
                             </select>
                             <button
@@ -922,19 +922,15 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                         ? onRequestReset(selectedClearTarget)
                                         : setIsResetConfirmOpen(true)
                                 }
-                                className={`px-3.5 h-[34px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition shrink-0 ${
-                                    selectedClearTarget === 'all'
-                                        ? 'bg-[#FF453A] hover:bg-[#D70015] text-white'
-                                        : 'mac-glass-pill text-[#FF453A] hover:bg-[#FF453A]/10'
-                                }`}
+                                className="mac-glass-pill text-[#FF453A] hover:bg-[#FF453A]/10 px-3.5 h-[34px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition shrink-0"
                             >
-                                {t.prefClearBtn || 'Hapus...'}
+                                {t.prefClearBtn || 'Hapus Data'}
                             </button>
                         </div>
                     </div>
 
                     {/* 2. Kembali ke Pengaturan Awal */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
                             <div className="text-[13px] font-semibold text-foreground">
                                 {t.prefResetBtn}

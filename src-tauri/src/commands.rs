@@ -57,6 +57,41 @@ pub fn update_player_status(
         let mut st = store.player_state.lock().unwrap();
         *st = status.clone();
     }
+
+    // Dynamically update tray tooltip with live station and track information
+    if let Some(tray) = app.tray_by_id("main-tray") {
+        let state_str = status
+            .get("state")
+            .and_then(|v| v.as_str())
+            .unwrap_or("idle");
+        let station_name = status
+            .get("currentStation")
+            .and_then(|s| s.get("name"))
+            .and_then(|v| v.as_str());
+        let stream_title = status
+            .get("streamTitle")
+            .and_then(|v| v.as_str())
+            .filter(|s| !s.is_empty());
+
+        let tooltip = match (state_str, station_name, stream_title) {
+            ("playing", Some(station), Some(title)) => {
+                format!("▶ Squelch: {} — {}", station, title)
+            }
+            ("playing", Some(station), None) => {
+                format!("▶ Squelch: {}", station)
+            }
+            ("buffering" | "connecting", Some(station), _) => {
+                format!("⏳ Squelch: Menyambung ke {}...", station)
+            }
+            ("paused", Some(station), _) => {
+                format!("⏸ Squelch: {} (Dijeda)", station)
+            }
+            _ => "Squelch - Menu Bar Internet Radio".to_string(),
+        };
+
+        let _ = tray.set_tooltip(Some(tooltip));
+    }
+
     let _ = app.emit("squelch:player-sync", &status);
     let _ = app.emit("ui:state-changed", &status);
     Ok(())

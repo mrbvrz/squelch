@@ -171,7 +171,9 @@ class AudioEqualizerEngine {
         (event) => {
             const payload = event.payload;
             if (typeof payload?.volume === 'number') {
-                currentVolume = Math.max(0, Math.min(1, payload.volume));
+                const raw = payload.volume;
+                const normalized = raw > 1 ? raw / 100 : raw;
+                currentVolume = Math.max(0, Math.min(1, normalized));
                 audioEl.volume = currentVolume;
             }
             if (typeof payload?.muted === 'boolean') {
@@ -477,7 +479,8 @@ class AudioEqualizerEngine {
                 void audioEl
                     .play()
                     .then(() => {
-                        audioEl.muted = false;
+                        audioEl.muted = currentMuted;
+                        audioEl.volume = currentVolume;
                         eqEngine.resume();
                     })
                     .catch((err: unknown) => {
@@ -506,7 +509,8 @@ class AudioEqualizerEngine {
             try {
                 audioEl.muted = true;
                 await audioEl.play();
-                audioEl.muted = false;
+                audioEl.muted = currentMuted;
+                audioEl.volume = currentVolume;
                 eqEngine.resume();
             } catch (err) {
                 const msg =

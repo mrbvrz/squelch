@@ -14,7 +14,9 @@ describe('Schedule Management Logic', () => {
             endTime: '23:59',
             autoPlay: true,
             reminderMinutes: 5,
-            enabled: false
+            enabled: false,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z'
         };
         expect(isScheduleCurrentlyOnAir(sched)).toBe(false);
     });
@@ -34,7 +36,9 @@ describe('Schedule Management Logic', () => {
             endTime: '23:59',
             autoPlay: true,
             reminderMinutes: 5,
-            enabled: true
+            enabled: true,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z'
         };
         expect(isScheduleCurrentlyOnAir(sched)).toBe(false);
     });
@@ -64,7 +68,9 @@ describe('Schedule Management Logic', () => {
             endTime: `${eH}:${eM}`,
             autoPlay: true,
             reminderMinutes: 5,
-            enabled: true
+            enabled: true,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z'
         };
 
         expect(isScheduleCurrentlyOnAir(sched)).toBe(true);

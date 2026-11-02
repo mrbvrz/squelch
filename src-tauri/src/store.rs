@@ -26,7 +26,7 @@ impl AppStore {
             player_state: Mutex::new(serde_json::json!({
                 "state": "idle",
                 "currentStation": null,
-                "volume": 80,
+                "volume": 1.0,
                 "isMuted": false,
                 "metadata": null,
                 "streamTitle": null,

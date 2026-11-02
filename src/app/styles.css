@@ -527,3 +527,50 @@ html.is-scrolling ::-webkit-scrollbar-thumb,
     transform-origin: center;
     transform-box: fill-box;
 }
+
+/* macOS Native Glass Range Slider */
+.mac-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(120, 120, 128, 0.2);
+    outline: none;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.mac-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 0.5px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.mac-slider:hover::-webkit-slider-thumb {
+    transform: scale(1.15);
+    box-shadow: 0 1.5px 4.5px rgba(0, 0, 0, 0.35);
+}
+
+.mac-slider:active::-webkit-slider-thumb {
+    transform: scale(1.05);
+    background: #f2f2f2;
+}
+
+[data-theme='dark'] .mac-slider {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme='dark'] .mac-slider::-webkit-slider-thumb {
+    background: #ffffff;
+    border: 0.5px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 1px 3.5px rgba(0, 0, 0, 0.55);
+}
+

@@ -74,6 +74,7 @@ export const TrayPopoverApp: React.FC = () => {
     );
     const [volume, setVolume] = useState<number>(1.0);
     const [isMuted, setIsMuted] = useState<boolean>(false);
+    const isInteractingVolume = useRef<boolean>(false);
 
     const [stations, setStations] = useState<Station[]>([]);
     const [groups, setGroups] = useState<string[]>([]);
@@ -142,11 +143,15 @@ export const TrayPopoverApp: React.FC = () => {
         setStreamTitle(status.streamTitle);
         setSleepMinutes(status.sleepTimerMinutes);
         setSleepRemainingSec(status.sleepTimerRemainingSec);
-        if (typeof status.volume === 'number') {
-            setVolume(status.volume);
-        }
-        if (typeof status.isMuted === 'boolean') {
-            setIsMuted(status.isMuted);
+        if (!isInteractingVolume.current) {
+            if (typeof status.volume === 'number') {
+                const raw = status.volume;
+                const normalized = raw > 1 ? raw / 100 : raw;
+                setVolume(Math.max(0, Math.min(1, normalized)));
+            }
+            if (typeof status.isMuted === 'boolean') {
+                setIsMuted(status.isMuted);
+            }
         }
         setStations(stData.stations);
         setGroups(stData.groups);
@@ -477,18 +482,34 @@ export const TrayPopoverApp: React.FC = () => {
                             min={0}
                             max={100}
                             value={isMuted ? 0 : Math.round(volume * 100)}
+                            onPointerDown={() => {
+                                isInteractingVolume.current = true;
+                            }}
+                            onPointerUp={() => {
+                                isInteractingVolume.current = false;
+                            }}
                             onChange={(e) => {
-                                const newVol = Number(e.target.value) / 100;
+                                const newPct = Number(e.target.value);
+                                const newVol = newPct / 100;
                                 setVolume(newVol);
-                                setIsMuted(false);
+                                if (isMuted && newPct > 0) {
+                                    setIsMuted(false);
+                                }
                                 if (api.setVolume) {
                                     void api.setVolume(newVol);
                                 }
                             }}
-                            className="w-full h-1.5 rounded-full bg-black/10 dark:bg-white/10 appearance-none cursor-pointer accent-accent transition-all"
+                            className="mac-slider"
+                            style={{
+                                background: `linear-gradient(to right, var(--accent-color, #0a84ff) 0%, var(--accent-color, #0a84ff) ${
+                                    isMuted ? 0 : Math.round(volume * 100)
+                                }%, rgba(120, 120, 128, 0.2) ${
+                                    isMuted ? 0 : Math.round(volume * 100)
+                                }%, rgba(120, 120, 128, 0.2) 100%)`
+                            }}
                             aria-label="Volume"
                         />
-                        <span className="text-[10px] text-secondary font-mono tabular-nums shrink-0 w-7 text-right">
+                        <span className="text-[10px] text-secondary font-mono tabular-nums shrink-0 w-8 text-right select-none">
                             {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
                         </span>
                     </div>

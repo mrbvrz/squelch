@@ -706,7 +706,12 @@ export function initTauriBridge() {
                     if (remote && typeof remote === 'object') {
                         playerStatus = { ...playerStatus, ...remote };
                         if (typeof remote.volume === 'number') {
-                            currentAudioVolume = remote.volume;
+                            const raw = remote.volume;
+                            const normalized = raw > 1 ? raw / 100 : raw;
+                            currentAudioVolume = Math.max(
+                                0,
+                                Math.min(1, Math.round(normalized * 100) / 100)
+                            );
                         }
                         if (typeof remote.isMuted === 'boolean') {
                             isAudioMuted = remote.isMuted;
@@ -888,6 +893,7 @@ export function initTauriBridge() {
 
             toggleMute: async () => {
                 isAudioMuted = !isAudioMuted;
+                syncPlayerStatusToRust();
                 await emit('squelch:audio:volume', {
                     volume: currentAudioVolume,
                     muted: isAudioMuted
@@ -909,6 +915,7 @@ export function initTauriBridge() {
                     )
                 );
                 isAudioMuted = false;
+                syncPlayerStatusToRust();
                 await emit('squelch:audio:volume', {
                     volume: currentAudioVolume,
                     muted: false
@@ -922,11 +929,14 @@ export function initTauriBridge() {
             },
 
             setVolume: async (vol: number) => {
+                const raw = typeof vol === 'number' && !isNaN(vol) ? vol : 1.0;
+                const normalized = raw > 1 ? raw / 100 : raw;
                 currentAudioVolume = Math.max(
                     0,
-                    Math.min(1, Math.round(vol * 100) / 100)
+                    Math.min(1, Math.round(normalized * 100) / 100)
                 );
                 isAudioMuted = false;
+                syncPlayerStatusToRust();
                 await emit('squelch:audio:volume', {
                     volume: currentAudioVolume,
                     muted: false

@@ -87,6 +87,17 @@ pub(crate) fn show_main_window(app: &tauri::AppHandle) -> Option<tauri::WebviewW
     }
 }
 
+pub(crate) fn show_tray_popover(app: &tauri::AppHandle) -> Option<tauri::WebviewWindow> {
+    if let Some(tray_win) = app.get_webview_window("tray") {
+        let _ = tray_win.as_ref().window().move_window(Position::TrayCenter);
+        let _ = tray_win.show();
+        let _ = tray_win.set_focus();
+        Some(tray_win)
+    } else {
+        None
+    }
+}
+
 fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
     match id {
         "play_pause" => {
@@ -126,19 +137,51 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
             }
             let _ = app.emit("ui:open-update-modal", ());
         }
-        "about_squelch" => {
-            if let Some(win) = show_main_window(app) {
-                let _ = win.eval(
+        "tray_about_squelch" => {
+            if let Some(tray_win) = show_tray_popover(app) {
+                let _ = tray_win.eval(
                     "window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);",
                 );
             }
-            let _ = app.emit("squelch:open-about", ());
+        }
+        "tray_quit_squelch" => {
+            if let Some(tray_win) = show_tray_popover(app) {
+                let _ = tray_win.eval(
+                    "window.dispatchEvent(new CustomEvent('squelch:confirm-quit')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:confirm-quit')); }, 50);",
+                );
+            }
+        }
+        "about_squelch" => {
+            let main_visible = app
+                .get_webview_window("main")
+                .map(|w| w.is_visible().unwrap_or(false))
+                .unwrap_or(false);
+            if main_visible {
+                if let Some(win) = show_main_window(app) {
+                    let _ = win.eval(
+                        "window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);",
+                    );
+                }
+            } else if let Some(tray_win) = show_tray_popover(app) {
+                let _ = tray_win.eval(
+                    "window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);",
+                );
+            }
         }
         "quit_squelch" => {
-            let _ = app.emit("squelch:confirm-quit", ());
-            if let Some(win) = show_main_window(app) {
-                let _ = win.eval(
-                    "window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));",
+            let main_visible = app
+                .get_webview_window("main")
+                .map(|w| w.is_visible().unwrap_or(false))
+                .unwrap_or(false);
+            if main_visible {
+                if let Some(win) = show_main_window(app) {
+                    let _ = win.eval(
+                        "window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));",
+                    );
+                }
+            } else if let Some(tray_win) = show_tray_popover(app) {
+                let _ = tray_win.eval(
+                    "window.dispatchEvent(new CustomEvent('squelch:confirm-quit')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:confirm-quit')); }, 50);",
                 );
             }
         }
@@ -225,8 +268,8 @@ pub fn run() {
             let menu_open = MenuItemBuilder::with_id("open_squelch", "Buka Jendela Utama").build(app)?;
             let menu_stations = MenuItemBuilder::with_id("stations_squelch", "Stasiun Radio").build(app)?;
             let menu_pref = MenuItemBuilder::with_id("pref_squelch", "Pengaturan").build(app)?;
-            let menu_about = MenuItemBuilder::with_id("about_squelch", "Tentang Squelch").build(app)?;
-            let menu_quit = MenuItemBuilder::with_id("quit_squelch", "Keluar Squelch").build(app)?;
+            let menu_about = MenuItemBuilder::with_id("tray_about_squelch", "Tentang Squelch").build(app)?;
+            let menu_quit = MenuItemBuilder::with_id("tray_quit_squelch", "Keluar Squelch").build(app)?;
 
             let tray_menu = MenuBuilder::new(app)
                 .item(&menu_status)

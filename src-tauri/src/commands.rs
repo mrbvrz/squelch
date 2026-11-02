@@ -884,9 +884,17 @@ pub fn open_window_tab(app: AppHandle, tab: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn open_about_window(app: AppHandle) -> Result<(), String> {
-    if let Some(win) = crate::show_main_window(&app) {
-        let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);");
-        let _ = app.emit("squelch:open-about", ());
+    let main_visible = app
+        .get_webview_window("main")
+        .map(|w| w.is_visible().unwrap_or(false))
+        .unwrap_or(false);
+    if main_visible {
+        if let Some(win) = crate::show_main_window(&app) {
+            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);");
+            let _ = app.emit("squelch:open-about", ());
+        }
+    } else if let Some(tray_win) = crate::show_tray_popover(&app) {
+        let _ = tray_win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);");
     }
     Ok(())
 }
@@ -897,8 +905,7 @@ pub fn toggle_tray_popover(app: AppHandle) -> Result<(), String> {
         if tray_win.is_visible().unwrap_or(false) {
             let _ = tray_win.hide();
         } else {
-            let _ = tray_win.show();
-            let _ = tray_win.set_focus();
+            let _ = crate::show_tray_popover(&app);
         }
     }
     Ok(())

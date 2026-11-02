@@ -26,13 +26,13 @@ export const QuitConfirmModal: React.FC<QuitConfirmModalProps> = ({
             aria-modal="true"
             aria-labelledby="quit-modal-title"
             onClick={onClose}
-            className="fixed inset-0 mac-modal-backdrop flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 mac-modal-backdrop flex items-center justify-center p-3 z-50 animate-fade-in"
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="mac-modal-surface w-full max-w-[340px] p-6 space-y-4 text-xs flex flex-col items-center text-center shadow-2xl"
+                className="mac-modal-surface w-full max-w-[320px] p-5 space-y-3.5 text-xs flex flex-col items-center text-center shadow-2xl animate-scale-up"
             >
-                <SquircleAppIcon dataUrl={appIconDataUrl} size={54} />
+                <SquircleAppIcon dataUrl={appIconDataUrl} size={52} />
                 <div>
                     <h3
                         id="quit-modal-title"
@@ -42,14 +42,14 @@ export const QuitConfirmModal: React.FC<QuitConfirmModalProps> = ({
                             ? 'Quit Squelch?'
                             : 'Keluar dari Squelch?'}
                     </h3>
-                    <p className="text-[12px] text-secondary leading-normal mt-1.5 max-w-[260px] mx-auto">
+                    <p className="text-[11.5px] text-secondary leading-normal mt-1.5 max-w-[250px] mx-auto">
                         {language === 'en'
                             ? 'Active radio playback in the menu bar will be stopped.'
                             : 'Pemutaran siaran radio di menu bar akan dihentikan.'}
                     </p>
                 </div>
 
-                <div className="w-full flex items-center justify-center gap-2.5 pt-2">
+                <div className="w-full flex items-center justify-center gap-2 pt-1">
                     <button
                         type="button"
                         onClick={onClose}

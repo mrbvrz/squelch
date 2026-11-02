@@ -963,7 +963,9 @@ export function initTauriBridge() {
 
             requestQuitConfirm: async () => {
                 try {
-                    await invoke('open_window_tab', { tab: 'stations' });
+                    window.dispatchEvent(
+                        new CustomEvent('squelch:confirm-quit')
+                    );
                     await emit('squelch:confirm-quit');
                 } catch {
                     // ignore

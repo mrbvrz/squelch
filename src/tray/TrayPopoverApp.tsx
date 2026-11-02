@@ -11,8 +11,11 @@ import {
     applyAppearanceVariables,
     bindActiveScrollbars
 } from '../utils/appearance';
+import { AboutModal } from '../app/modals/AboutModal';
+import { QuitConfirmModal } from '../app/modals/QuitConfirmModal';
 import {
     IconCompass,
+    IconInfo,
     IconPause,
     IconPlay,
     IconPlus,
@@ -56,6 +59,8 @@ interface SquelchTrayPopoverApi {
     toggleFavorite: (stationId: string) => Promise<Station | undefined>;
     sendNotification: (title: string, body: string) => Promise<boolean>;
     onStateChanged: (cb: (data: unknown) => void) => () => void;
+    openExternalUrl?: (url: string) => Promise<boolean>;
+    getAppIconDataUrl?: () => Promise<string | null>;
 }
 
 export const TrayPopoverApp: React.FC = () => {
@@ -75,6 +80,10 @@ export const TrayPopoverApp: React.FC = () => {
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const isInteractingVolume = useRef<boolean>(false);
 
+    const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
+    const [isQuitConfirmOpen, setIsQuitConfirmOpen] = useState<boolean>(false);
+    const [appIconDataUrl, setAppIconDataUrl] = useState<string | null>(null);
+
     const [stations, setStations] = useState<Station[]>([]);
     const [groups, setGroups] = useState<string[]>([]);
     const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -83,7 +92,76 @@ export const TrayPopoverApp: React.FC = () => {
     const [tick, setTick] = useState<number>(0);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
+    const settingsRef = useRef<AppSettings | null>(settings);
+    useEffect(() => {
+        settingsRef.current = settings;
+    }, [settings]);
+
     const t = getTranslations(settings?.language);
+
+    useEffect(() => {
+        if (api?.getAppIconDataUrl) {
+            void api.getAppIconDataUrl().then((url) => {
+                if (url) setAppIconDataUrl(url);
+            });
+        }
+    }, [api]);
+
+    useEffect(() => {
+        const handleOpenAbout = () => {
+            setIsQuitConfirmOpen(false);
+            setIsAboutOpen(true);
+        };
+
+        const handleConfirmQuit = () => {
+            setIsAboutOpen(false);
+            if (settingsRef.current?.confirmBeforeQuit === false) {
+                void api.quitApp();
+            } else {
+                setIsQuitConfirmOpen(true);
+            }
+        };
+
+        window.addEventListener('squelch:open-about', handleOpenAbout);
+        window.addEventListener('squelch:confirm-quit', handleConfirmQuit);
+
+        let unlistenAbout: (() => void) | null = null;
+        let unlistenQuit: (() => void) | null = null;
+
+        if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+            import('@tauri-apps/api/event')
+                .then(({ listen }) => {
+                    listen('squelch:open-about', () => {
+                        handleOpenAbout();
+                    }).then((u) => {
+                        unlistenAbout = u;
+                    });
+                    listen('squelch:confirm-quit', () => {
+                        handleConfirmQuit();
+                    }).then((u) => {
+                        unlistenQuit = u;
+                    });
+                })
+                .catch(() => {});
+        }
+
+        const handleWindowBlur = () => {
+            setIsAboutOpen(false);
+            setIsQuitConfirmOpen(false);
+        };
+        window.addEventListener('blur', handleWindowBlur);
+
+        return () => {
+            window.removeEventListener('squelch:open-about', handleOpenAbout);
+            window.removeEventListener(
+                'squelch:confirm-quit',
+                handleConfirmQuit
+            );
+            window.removeEventListener('blur', handleWindowBlur);
+            if (unlistenAbout) unlistenAbout();
+            if (unlistenQuit) unlistenQuit();
+        };
+    }, [api]);
 
     useEffect(() => {
         const handlePopoverKeyDown = (e: KeyboardEvent) => {
@@ -91,6 +169,14 @@ export const TrayPopoverApp: React.FC = () => {
             const isEditing = target && target.tagName === 'INPUT';
 
             if (e.key === 'Escape') {
+                if (isAboutOpen) {
+                    setIsAboutOpen(false);
+                    return;
+                }
+                if (isQuitConfirmOpen) {
+                    setIsQuitConfirmOpen(false);
+                    return;
+                }
                 if (searchText) {
                     setSearchText('');
                     target?.blur();
@@ -686,7 +772,7 @@ export const TrayPopoverApp: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => void api.openWindowTab('stations')}
-                        className="flex items-center gap-1.5 hover:text-foreground transition font-medium cursor-pointer"
+                        className="flex items-center gap-1 hover:text-foreground transition font-medium cursor-pointer"
                     >
                         <IconPlus size={13} />
                         <span>{t.trayAddStation}</span>
@@ -694,7 +780,7 @@ export const TrayPopoverApp: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => void api.openWindowTab('discover')}
-                        className="flex items-center gap-1.5 hover:text-foreground transition font-medium cursor-pointer"
+                        className="flex items-center gap-1 hover:text-foreground transition font-medium cursor-pointer"
                     >
                         <IconCompass size={13} />
                         <span>{t.trayDiscover}</span>
@@ -702,18 +788,30 @@ export const TrayPopoverApp: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => void api.openWindowTab('preferences')}
-                        className="flex items-center gap-1.5 hover:text-foreground transition font-medium cursor-pointer"
+                        className="flex items-center gap-1 hover:text-foreground transition font-medium cursor-pointer"
                     >
                         <IconSliders size={13} />
                         <span>{t.traySettings}</span>
                     </button>
                     <button
                         type="button"
-                        onClick={async () => {
-                            await api.openWindowTab('stations');
-                            await api.requestQuitConfirm();
+                        onClick={() => setIsAboutOpen(true)}
+                        className="flex items-center gap-1 hover:text-foreground transition font-medium cursor-pointer"
+                        title={t.tabAbout}
+                    >
+                        <IconInfo size={13} />
+                        <span>{t.tabAbout}</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (settings?.confirmBeforeQuit ?? true) {
+                                setIsQuitConfirmOpen(true);
+                            } else {
+                                void api.quitApp();
+                            }
                         }}
-                        className="flex items-center gap-1.5 text-[#FF453A] hover:opacity-80 transition font-medium cursor-pointer"
+                        className="flex items-center gap-1 text-[#FF453A] hover:opacity-80 transition font-medium cursor-pointer"
                     >
                         <IconPower size={13} />
                         <span>{t.trayQuit}</span>
@@ -747,6 +845,35 @@ export const TrayPopoverApp: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* 5. DIRECT TRAY POPUP MODALS (About & Quit Confirmation) */}
+            <AboutModal
+                isOpen={isAboutOpen}
+                onClose={() => setIsAboutOpen(false)}
+                appIconDataUrl={appIconDataUrl}
+                version="v0.1.3"
+                tagline={t.aboutTagline}
+                description={t.aboutDescription}
+                websiteBtnText={t.aboutWebsiteBtn}
+                specLinkText={t.aboutSpecLink}
+                changelogLinkText={t.aboutChangelogLink}
+                onOpenExternalUrl={(url) => {
+                    if (api.openExternalUrl) {
+                        void api.openExternalUrl(url);
+                    } else {
+                        window.open(url, '_blank');
+                    }
+                }}
+            />
+
+            <QuitConfirmModal
+                isOpen={isQuitConfirmOpen}
+                onClose={() => setIsQuitConfirmOpen(false)}
+                onConfirm={() => void api.quitApp()}
+                appIconDataUrl={appIconDataUrl}
+                language={settings?.language || 'id'}
+                cancelBtnText={t.cancelBtn}
+            />
         </div>
     );
 };

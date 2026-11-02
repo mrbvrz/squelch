@@ -3,7 +3,8 @@ import { SquircleAppIcon } from '../../components/SquircleAppIcon';
 import {
     IconGitHub,
     IconGlobe,
-    IconExternalLink
+    IconExternalLink,
+    IconClose
 } from '../../components/Icons';
 
 export interface AboutModalProps {
@@ -47,18 +48,27 @@ export const AboutModal: React.FC<AboutModalProps> = ({
             aria-modal="true"
             aria-labelledby="about-modal-title"
             onClick={onClose}
-            className="fixed inset-0 mac-modal-backdrop flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 mac-modal-backdrop flex items-center justify-center p-3 z-50 animate-fade-in"
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="mac-modal-surface w-full max-w-[360px] p-6 space-y-4 text-xs relative flex flex-col items-center text-center shadow-2xl"
+                className="mac-modal-surface w-full max-w-[330px] p-5 space-y-3.5 text-xs relative flex flex-col items-center text-center shadow-2xl animate-scale-up"
             >
-                <SquircleAppIcon dataUrl={appIconDataUrl} size={76} />
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="absolute top-3 right-3 text-secondary hover:text-foreground w-6 h-6 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+                    aria-label="Close"
+                >
+                    <IconClose size={13} />
+                </button>
+
+                <SquircleAppIcon dataUrl={appIconDataUrl} size={68} />
                 <div>
                     <div className="flex items-center justify-center gap-2">
                         <h2
                             id="about-modal-title"
-                            className="text-[18px] font-bold tracking-tight text-foreground"
+                            className="text-[17px] font-bold tracking-tight text-foreground"
                         >
                             Squelch
                         </h2>
@@ -69,32 +79,32 @@ export const AboutModal: React.FC<AboutModalProps> = ({
                     <div className="text-[12px] font-medium text-accent mt-0.5">
                         {tagline}
                     </div>
-                    <p className="text-[12px] text-secondary leading-relaxed mt-2 max-w-[280px] mx-auto">
+                    <p className="text-[11.5px] text-secondary leading-relaxed mt-1.5 max-w-[270px] mx-auto">
                         {description}
                     </p>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-0.5">
                     <button
                         type="button"
                         onClick={() => onOpenExternalUrl(repoUrl)}
-                        className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition shadow-xs"
+                        className="mac-glass-pill px-3 py-1.5 rounded-[7px] text-[11.5px] font-medium flex items-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition shadow-xs"
                     >
-                        <IconGitHub size={14} />
+                        <IconGitHub size={13} />
                         <span>GitHub</span>
                     </button>
 
                     <button
                         type="button"
                         onClick={() => onOpenExternalUrl(websiteUrl)}
-                        className="bg-accent hover:opacity-90 text-white px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 shadow-xs cursor-pointer transition"
+                        className="bg-accent hover:opacity-90 text-white px-3 py-1.5 rounded-[7px] text-[11.5px] font-medium flex items-center gap-1.5 shadow-xs cursor-pointer transition"
                     >
-                        <IconGlobe size={14} />
+                        <IconGlobe size={13} />
                         <span>{websiteBtnText}</span>
                     </button>
                 </div>
 
-                <div className="flex items-center justify-center gap-3 text-[11px] text-secondary">
+                <div className="flex items-center justify-center gap-3 text-[11px] text-secondary pt-0.5">
                     <button
                         type="button"
                         onClick={() => onOpenExternalUrl(specUrl)}

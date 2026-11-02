@@ -1259,6 +1259,7 @@ export const App: React.FC = () => {
                             api={api}
                             lang={lang}
                             t={t}
+                            setActiveTab={setActiveTab}
                         />
                     )}
 

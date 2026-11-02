@@ -135,7 +135,9 @@ export interface TranslationDictionary {
     statsMonthlyView: string;
     statsYearlyView: string;
     statsTopStationsTitle: string;
+    statsEmptyTitle: string;
     statsEmptyText: string;
+    statsEmptyActionBtn: string;
 
     // Preferences Tab
     prefSubtitle: string;

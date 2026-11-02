@@ -133,8 +133,10 @@ export const enLocale: TranslationDictionary = {
     statsMonthlyView: 'Monthly',
     statsYearlyView: 'Yearly',
     statsTopStationsTitle: 'Most Listened Stations',
+    statsEmptyTitle: 'No Listening History Yet',
     statsEmptyText:
         'No listening duration recorded yet. Play any station to start tracking statistics.',
+    statsEmptyActionBtn: 'Listen Now',
 
     // Preferences Tab
     prefSubtitle:

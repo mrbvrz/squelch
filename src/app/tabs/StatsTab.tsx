@@ -5,7 +5,7 @@ import type {
     Station
 } from '../../types';
 import type { TranslationDictionary } from '../../i18n';
-import type { SquelchWindowApi, StatsPeriodMode } from '../types';
+import type { ActiveTab, SquelchWindowApi, StatsPeriodMode } from '../types';
 import { StationAvatar } from '../../components/StationAvatar';
 import { formatDurationCompact } from '../../utils/appearance';
 import { IconChart, IconPlay, IconStop } from '../../components/Icons';
@@ -30,6 +30,7 @@ export interface StatsTabProps {
     api: SquelchWindowApi;
     lang: 'id' | 'en';
     t: TranslationDictionary;
+    setActiveTab?: (tab: ActiveTab) => void;
 }
 
 export const StatsTab: React.FC<StatsTabProps> = ({
@@ -42,7 +43,8 @@ export const StatsTab: React.FC<StatsTabProps> = ({
     isPlayingStation,
     api,
     lang,
-    t
+    t,
+    setActiveTab
 }) => {
     const chartData = useMemo(() => {
         return activeChartPoints.map((pt) => ({
@@ -99,12 +101,45 @@ export const StatsTab: React.FC<StatsTabProps> = ({
         return null;
     };
 
+    const hasStats = Boolean(statsSummary && statsSummary.totalSeconds > 0);
+
     return (
         <div
             key="tab-stats"
-            className="max-w-3xl space-y-6 text-xs animate-tab-enter"
+            className={`max-w-3xl animate-tab-enter text-xs ${
+                !hasStats
+                    ? 'flex-1 flex flex-col items-center justify-center min-h-[460px] my-auto'
+                    : 'space-y-6'
+            }`}
         >
-            {/* Top Hero Summary Card */}
+            {!hasStats ? (
+                /* Empty state without card wrapper; positioned dead-center in the window */
+                <div className="text-center flex flex-col items-center justify-center gap-3 my-auto py-12">
+                    <div className="w-14 h-14 rounded-2xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-secondary">
+                        <IconChart size={28} className="opacity-70" />
+                    </div>
+                    <div className="max-w-sm">
+                        <h3 className="text-[15px] font-bold text-foreground">
+                            {t.statsEmptyTitle}
+                        </h3>
+                        <p className="text-[12px] text-secondary mt-1 leading-relaxed">
+                            {t.statsEmptyText}
+                        </p>
+                    </div>
+                    {setActiveTab && (
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('stations')}
+                            className="mt-2 bg-accent hover:opacity-90 text-white px-4 h-[34px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                        >
+                            <IconPlay size={13} />
+                            <span>{t.statsEmptyActionBtn}</span>
+                        </button>
+                    )}
+                </div>
+            ) : (
+                <>
+                    {/* Top Hero Summary Card */}
             <div className="mac-settings-card">
                 <div className="p-4 flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3.5">
@@ -427,6 +462,8 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                     )}
                 </div>
             </div>
-        </div>
+        </>
+    )}
+</div>
     );
 };

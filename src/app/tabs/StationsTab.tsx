@@ -84,9 +84,56 @@ export const StationsTab: React.FC<StationsTabProps> = ({
     return (
         <div
             key="tab-stations"
-            className="max-w-3xl space-y-6 animate-tab-enter"
+            className={`max-w-3xl animate-tab-enter text-xs ${
+                stations.length === 0
+                    ? 'flex-1 flex flex-col items-center justify-center min-h-[460px] my-auto'
+                    : 'space-y-6'
+            }`}
         >
-            {/* Category Filter Pills & Stream Health Tools */}
+            {stations.length === 0 ? (
+                /* Empty state without card wrapper; positioned dead-center in the window */
+                <div className="text-center flex flex-col items-center justify-center gap-3 my-auto py-12">
+                    <div className="w-14 h-14 rounded-2xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-secondary">
+                        <IconRadioTower size={28} className="opacity-70" />
+                    </div>
+                    <div className="max-w-md">
+                        <h3 className="text-[15px] font-bold text-foreground">
+                            {t.emptyStationsTitle}
+                        </h3>
+                        <p className="text-[12px] text-secondary mt-1 leading-relaxed">
+                            {t.emptyStationsDesc}
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+                        <button
+                            type="button"
+                            onClick={openAddStationModal}
+                            className="bg-accent hover:opacity-90 text-white px-4 h-[34px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                        >
+                            <IconPlus size={13} />
+                            <span>{t.addStation}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('discover')}
+                            className="mac-glass-pill hover:bg-white/15 px-4 h-[34px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer transition shadow-sm"
+                        >
+                            <IconCompass size={13} />
+                            <span>{t.emptyStationsDiscoverBtn}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setIsImportExportOpen(true)}
+                            className="mac-glass-pill hover:bg-white/15 px-4 h-[34px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer transition shadow-sm"
+                        >
+                            <IconTransfer size={13} />
+                            <span>{t.importExport}</span>
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <>
+                    {/* Category Filter Pills & Stream Health Tools */}
             <div className="mac-settings-card px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-1.5">
                     <button
@@ -263,47 +310,7 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                 </div>
 
                 <div className="mac-settings-card mac-inset-list overflow-hidden">
-                    {stations.length === 0 ? (
-                        <div className="py-14 px-6 text-center flex flex-col items-center justify-center gap-3">
-                            <div className="w-14 h-14 rounded-[12px] bg-accent/10 text-accent flex items-center justify-center shadow-sm">
-                                <IconRadioTower size={28} />
-                            </div>
-                            <div className="max-w-md">
-                                <h3 className="text-[15px] font-bold text-foreground">
-                                    {t.emptyStationsTitle}
-                                </h3>
-                                <p className="text-[12px] text-secondary leading-relaxed mt-1">
-                                    {t.emptyStationsDesc}
-                                </p>
-                            </div>
-                            <div className="flex flex-wrap items-center justify-center gap-2.5 mt-3">
-                                <button
-                                    type="button"
-                                    onClick={openAddStationModal}
-                                    className="bg-accent hover:opacity-90 text-white px-4 py-2 rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
-                                >
-                                    <IconPlus size={13} />
-                                    <span>{t.addStation}</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setActiveTab('discover')}
-                                    className="mac-glass-pill hover:bg-white/15 px-4 py-2 rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer transition shadow-sm"
-                                >
-                                    <IconCompass size={13} />
-                                    <span>{t.emptyStationsDiscoverBtn}</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsImportExportOpen(true)}
-                                    className="mac-glass-pill hover:bg-white/15 px-4 py-2 rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer transition shadow-sm"
-                                >
-                                    <IconTransfer size={13} />
-                                    <span>{t.importExport}</span>
-                                </button>
-                            </div>
-                        </div>
-                    ) : filteredStations.length === 0 ? (
+                    {filteredStations.length === 0 ? (
                         <div className="p-10 text-center text-xs text-secondary flex flex-col items-center justify-center gap-2">
                             <IconSearch size={22} className="opacity-40" />
                             <span>{t.emptyStationsText}</span>
@@ -438,6 +445,8 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                     )}
                 </div>
             </div>
-        </div>
+        </>
+    )}
+</div>
     );
 };

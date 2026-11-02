@@ -133,8 +133,10 @@ export const idLocale: TranslationDictionary = {
     statsMonthlyView: 'Bulanan',
     statsYearlyView: 'Tahunan',
     statsTopStationsTitle: 'Stasiun Paling Sering Didengar',
+    statsEmptyTitle: 'Belum Ada Riwayat Mendengar',
     statsEmptyText:
         'Belum ada riwayat durasi mendengarkan. Putar stasiun radio untuk mulai mencatat statistik.',
+    statsEmptyActionBtn: 'Putar Radio Sekarang',
 
     // Preferences Tab
     prefSubtitle:

@@ -1,0 +1,130 @@
+import type {
+    Station,
+    StationsDataSchema,
+    AppSettings,
+    StreamTestResult,
+    DiscoverStationItem,
+    RadioBrowserCountry,
+    PlayerState,
+    ListeningStatsSummary,
+    ShowSchedule,
+    NewShowScheduleInput
+} from '../types';
+import type { UpdateCheckResult } from '../components/UpdateModal';
+
+export type ActiveTab =
+    'stations' | 'schedules' | 'discover' | 'stats' | 'preferences' | 'about';
+
+export type StatsPeriodMode = 'weekly' | 'monthly' | 'yearly';
+
+export interface DayLabelItem {
+    day: number;
+    labelId: string;
+    labelEn: string;
+}
+
+export const DAY_LABELS: DayLabelItem[] = [
+    { day: 1, labelId: 'Sen', labelEn: 'Mon' },
+    { day: 2, labelId: 'Sel', labelEn: 'Tue' },
+    { day: 3, labelId: 'Rab', labelEn: 'Wed' },
+    { day: 4, labelId: 'Kam', labelEn: 'Thu' },
+    { day: 5, labelId: 'Jum', labelEn: 'Fri' },
+    { day: 6, labelId: 'Sab', labelEn: 'Sat' },
+    { day: 0, labelId: 'Min', labelEn: 'Sun' }
+];
+
+export const GITHUB_REPO_URL = 'https://github.com/mrbvrz/squelch';
+export const AUTHOR_WEBSITE_URL = 'https://mrbvrz.web.id';
+export const SPEC_DOC_URL =
+    'https://github.com/mrbvrz/squelch/blob/main/ARCHITECTURE.md';
+export const CHANGELOG_DOC_URL =
+    'https://github.com/mrbvrz/squelch/blob/main/CHANGELOG.md';
+
+export interface SquelchWindowApi {
+    getPlayerStatus: () => Promise<{
+        state: PlayerState;
+        currentStation: Station | null;
+        streamTitle: string | null;
+        sleepTimerMinutes: number | null;
+        sleepTimerRemainingSec: number | null;
+    }>;
+    playStation: (stationId: string | Partial<Station>) => Promise<boolean>;
+    togglePlayPause: () => Promise<boolean>;
+    stopPlayback: () => Promise<boolean>;
+    setSleepTimer: (minutes: number | null) => Promise<boolean>;
+    openWindowTab: (
+        tab: 'stations' | 'discover' | 'stats' | 'preferences' | 'about'
+    ) => Promise<boolean>;
+    quitApp: () => Promise<boolean>;
+    getAppIconDataUrl: () => Promise<string | null>;
+    openAboutWindow: () => Promise<boolean>;
+    openExternalUrl: (url: string) => Promise<boolean>;
+    getStationsData: () => Promise<StationsDataSchema>;
+    getSchedules: () => Promise<ShowSchedule[]>;
+    saveSchedule: (schedule: NewShowScheduleInput) => Promise<ShowSchedule>;
+    deleteSchedule: (id: string) => Promise<boolean>;
+    toggleSchedule: (
+        id: string,
+        enabled?: boolean
+    ) => Promise<ShowSchedule | undefined>;
+    toggleScheduleAutoPlay: (id: string) => Promise<ShowSchedule | undefined>;
+    resolveStationLogo: (logoUrl: string) => Promise<string | null>;
+    saveStation: (
+        station: Partial<Station> & { name: string; streamUrl: string }
+    ) => Promise<Station>;
+    deleteStation: (stationId: string) => Promise<boolean>;
+    toggleFavorite: (stationId: string) => Promise<Station | undefined>;
+    reorderStations: (orderedIds: string[]) => Promise<boolean>;
+    saveGroups: (groups: string[]) => Promise<string[]>;
+    renameGroup: (
+        oldName: string,
+        newName: string
+    ) => Promise<StationsDataSchema>;
+    deleteGroup: (
+        groupName: string,
+        moveToGroup?: string
+    ) => Promise<StationsDataSchema>;
+    testStreamUrl: (url: string) => Promise<StreamTestResult>;
+    runHealthCheck: () => Promise<{
+        results: Array<{ stationId: string; ok: boolean }>;
+        stations: Station[];
+    }>;
+    removeOfflineStations: () => Promise<number>;
+    exportStations: (format: 'json' | 'm3u' | 'pls') => Promise<string>;
+    importStations: (payload: {
+        content: string;
+        format: 'json' | 'm3u' | 'pls';
+        duplicateStrategy: 'skip' | 'overwrite' | 'duplicate';
+    }) => Promise<{ importedCount: number; skippedCount: number }>;
+    getOnlineCountries: () => Promise<RadioBrowserCountry[]>;
+    searchOnlineStations: (query: {
+        countrycode?: string;
+        name?: string;
+        tag?: string;
+        language?: string;
+        limit?: number;
+    }) => Promise<DiscoverStationItem[]>;
+    getSettings: () => Promise<{ settings: AppSettings; dataDir: string }>;
+    updateSettings: (partial: Partial<AppSettings>) => Promise<AppSettings>;
+    resetSettings: () => Promise<AppSettings>;
+    getSystemFonts: () => Promise<string[]>;
+    backupAppData: () => Promise<{
+        ok: boolean;
+        filePath?: string;
+        canceled?: boolean;
+        error?: string;
+    }>;
+    restoreAppData: () => Promise<{
+        ok: boolean;
+        filePath?: string;
+        canceled?: boolean;
+        error?: string;
+    }>;
+    getListeningStats: () => Promise<ListeningStatsSummary>;
+    getDiagnostics: () => Promise<string>;
+    openLogsFolder: () => Promise<boolean>;
+    checkForUpdates: () => Promise<UpdateCheckResult>;
+    sendNotification: (title: string, body: string) => Promise<boolean>;
+    requestQuitConfirm?: () => Promise<void>;
+    onStateChanged: (cb: (data: unknown) => void) => () => void;
+}

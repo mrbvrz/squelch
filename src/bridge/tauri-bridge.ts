@@ -490,8 +490,54 @@ export function initTauriBridge() {
                 syncPlayerStatusToRust();
                 emit('ui:state-changed', { ...playerStatus });
             },
-            notifyDeviceRemoved: () => {},
-            notifyMediaAction: () => {}
+            notifyDeviceRemoved: () => {
+                if (playerStatus.state === 'playing') {
+                    const api = (window as any).squelchApi;
+                    if (api?.togglePlayPause) {
+                        void api.togglePlayPause();
+                    }
+                }
+            },
+            notifyMediaAction: (action: string) => {
+                const api = (window as any).squelchApi;
+                if (!api) return;
+                if (action === 'play') {
+                    if (
+                        playerStatus.state !== 'playing' &&
+                        playerStatus.currentStation
+                    ) {
+                        void api.togglePlayPause();
+                    }
+                } else if (action === 'pause') {
+                    if (playerStatus.state === 'playing') {
+                        void api.togglePlayPause();
+                    }
+                } else if (
+                    action === 'nexttrack' ||
+                    action === 'previoustrack'
+                ) {
+                    void invoke('get_stations_data').then((data: any) => {
+                        const stations = data?.stations || [];
+                        if (stations.length === 0) return;
+                        const currentIndex = stations.findIndex(
+                            (s: any) => s.id === playerStatus.currentStation?.id
+                        );
+                        let nextIndex = 0;
+                        if (action === 'nexttrack') {
+                            nextIndex =
+                                currentIndex >= 0
+                                    ? (currentIndex + 1) % stations.length
+                                    : 0;
+                        } else {
+                            nextIndex =
+                                currentIndex > 0
+                                    ? currentIndex - 1
+                                    : stations.length - 1;
+                        }
+                        void api.playStation(stations[nextIndex].id);
+                    });
+                }
+            }
         };
         (window as any).radioAudioBridge = (window as any).squelchAudioBridge;
     }

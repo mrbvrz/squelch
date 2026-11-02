@@ -1,0 +1,311 @@
+import React from 'react';
+import type {
+    ListeningStatsSummary,
+    StatSeriesPoint,
+    Station
+} from '../../types';
+import type { TranslationDictionary } from '../../i18n';
+import type { SquelchWindowApi, StatsPeriodMode } from '../types';
+import { StationAvatar } from '../../components/StationAvatar';
+import { formatDurationCompact } from '../../utils/appearance';
+import { IconChart, IconPlay, IconStop } from '../../components/Icons';
+
+export interface StatsTabProps {
+    statsSummary: ListeningStatsSummary;
+    statsViewMode: StatsPeriodMode;
+    setStatsViewMode: (mode: StatsPeriodMode) => void;
+    activeChartPoints: StatSeriesPoint[];
+    maxChartSeconds: number;
+    stations: Station[];
+    isPlayingStation: (stationId: string) => boolean;
+    api: SquelchWindowApi;
+    lang: 'id' | 'en';
+    t: TranslationDictionary;
+}
+
+export const StatsTab: React.FC<StatsTabProps> = ({
+    statsSummary,
+    statsViewMode,
+    setStatsViewMode,
+    activeChartPoints,
+    maxChartSeconds,
+    stations,
+    isPlayingStation,
+    api,
+    lang,
+    t
+}) => {
+    return (
+        <div
+            key="tab-stats"
+            className="max-w-3xl space-y-6 text-xs animate-tab-enter"
+        >
+            {/* Top Hero Summary Card */}
+            <div className="mac-settings-card">
+                <div className="p-4 flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3.5">
+                        <div className="w-9 h-9 rounded-[8px] bg-[#30D158] text-white flex items-center justify-center shadow-sm shrink-0 mt-0.5">
+                            <IconChart size={19} />
+                        </div>
+                        <div>
+                            <div className="text-[13px] font-bold">
+                                {t.statsTitle}
+                            </div>
+                            <p className="text-[12px] text-secondary leading-relaxed mt-0.5">
+                                {t.statsSubtitle}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mx-4 border-t mac-divider" />
+
+                {/* 3 KPI Summary Metrics: Minggu Ini, Bulan Ini, Tahun Ini */}
+                <div className="grid grid-cols-3 divide-x mac-divider px-2 py-3">
+                    <div className="px-3">
+                        <div className="text-[11px] text-secondary">
+                            {t.statsWeekLabel}
+                        </div>
+                        <div className="text-[18px] font-bold tabular-nums mt-0.5 text-accent">
+                            {formatDurationCompact(
+                                statsSummary.thisWeekSeconds,
+                                lang
+                            )}
+                        </div>
+                    </div>
+                    <div className="px-3">
+                        <div className="text-[11px] text-secondary">
+                            {t.statsMonthLabel}
+                        </div>
+                        <div className="text-[18px] font-bold tabular-nums mt-0.5">
+                            {formatDurationCompact(
+                                statsSummary.thisMonthSeconds,
+                                lang
+                            )}
+                        </div>
+                    </div>
+                    <div className="px-3">
+                        <div className="text-[11px] text-secondary">
+                            {t.statsYearLabel}
+                        </div>
+                        <div className="text-[18px] font-bold tabular-nums mt-0.5">
+                            {formatDurationCompact(
+                                statsSummary.thisYearSeconds,
+                                lang
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Interactive Bar Graph Card (Mingguan / Bulanan / Tahunan) */}
+            <div>
+                <div className="flex items-center justify-between mb-2 px-1">
+                    <h2 className="text-[13px] font-bold">
+                        {t.statsChartTitle}
+                    </h2>
+                    <div className="flex items-center gap-1 p-0.5 rounded-[7px] mac-glass-pill">
+                        {(
+                            [
+                                ['weekly', t.statsWeeklyView],
+                                ['monthly', t.statsMonthlyView],
+                                ['yearly', t.statsYearlyView]
+                            ] as Array<[StatsPeriodMode, string]>
+                        ).map(([mode, label]) => (
+                            <button
+                                key={mode}
+                                type="button"
+                                onClick={() => setStatsViewMode(mode)}
+                                className={`px-3 py-1 rounded-[5px] text-[11px] font-medium cursor-pointer transition ${
+                                    statsViewMode === mode
+                                        ? 'bg-accent text-white'
+                                        : 'text-secondary'
+                                }`}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="mac-settings-card p-5">
+                    <div className="h-44 flex items-end justify-between gap-1.5 pt-6 pb-2 border-b mac-divider">
+                        {activeChartPoints.map((pt) => {
+                            const ratio =
+                                pt.seconds > 0
+                                    ? Math.max(
+                                          0.08,
+                                          pt.seconds / maxChartSeconds
+                                      )
+                                    : 0.03;
+                            const heightPct = Math.round(ratio * 100);
+                            return (
+                                <div
+                                    key={pt.key}
+                                    className="flex-1 flex flex-col items-center justify-end h-full group relative"
+                                >
+                                    {/* Tooltip on hover */}
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-6 px-2 py-0.5 rounded bg-black/85 text-white text-[10px] font-mono whitespace-nowrap pointer-events-none z-10 shadow">
+                                        {pt.label}:{' '}
+                                        {formatDurationCompact(
+                                            pt.seconds,
+                                            lang
+                                        )}
+                                    </div>
+                                    <div
+                                        className={`w-full max-w-[28px] rounded-t-[4px] transition-all duration-300 ${
+                                            pt.seconds > 0
+                                                ? 'bg-accent opacity-85 group-hover:opacity-100'
+                                                : 'bg-white/10'
+                                        }`}
+                                        style={{
+                                            height: `${heightPct}%`
+                                        }}
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* X-Axis Labels */}
+                    <div className="flex items-center justify-between gap-1 pt-2.5">
+                        {activeChartPoints.map((pt, idx) => {
+                            const showLabel =
+                                statsViewMode !== 'monthly' ||
+                                idx % 5 === 0 ||
+                                idx === activeChartPoints.length - 1;
+                            return (
+                                <div
+                                    key={pt.key}
+                                    className="flex-1 text-center text-[10px] text-secondary tabular-nums truncate"
+                                >
+                                    {showLabel ? pt.label : ''}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+
+            {/* Top Listened Stations List */}
+            <div>
+                <h2 className="text-[13px] font-bold mb-2 px-1">
+                    {t.statsTopStationsTitle}
+                </h2>
+                <div className="mac-settings-card mac-inset-list overflow-hidden">
+                    {statsSummary.topStations.length === 0 ? (
+                        <div className="p-8 text-center text-secondary">
+                            {t.statsEmptyText}
+                        </div>
+                    ) : (
+                        statsSummary.topStations.map((st, idx) => {
+                            const topMax =
+                                statsSummary.topStations[0]?.seconds || 1;
+                            const pct = Math.max(
+                                6,
+                                Math.round((st.seconds / topMax) * 100)
+                            );
+                            const stationObj = stations.find(
+                                (item) => item.id === st.stationId
+                            );
+                            const resolvedName =
+                                stationObj?.name ??
+                                st.stationName ??
+                                (st.stationId.startsWith('station-')
+                                    ? 'Radio Station'
+                                    : st.stationId);
+                            const resolvedLogo =
+                                stationObj?.logoUrl ?? st.logoUrl;
+                            const active = isPlayingStation(st.stationId);
+                            return (
+                                <div
+                                    key={st.stationId}
+                                    className="px-4 py-3 flex items-center justify-between gap-4 mac-row cursor-pointer"
+                                    onClick={() =>
+                                        void api.playStation(st.stationId)
+                                    }
+                                >
+                                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                        <span className="w-5 h-5 rounded-[5px] mac-glass-pill text-[11px] font-bold tabular-nums flex items-center justify-center shrink-0">
+                                            {idx + 1}
+                                        </span>
+
+                                        <StationAvatar
+                                            logoUrl={resolvedLogo}
+                                            size="sm"
+                                            accentFallback
+                                            onResolveLogo={(url) =>
+                                                api.resolveStationLogo(url)
+                                            }
+                                        />
+
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className="text-[13px] font-medium truncate">
+                                                        {resolvedName}
+                                                    </span>
+                                                    {stationObj && (
+                                                        <span className="text-[11px] text-secondary truncate">
+                                                            · {stationObj.genre}{' '}
+                                                            · {stationObj.city}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <span className="text-[12px] font-semibold text-secondary tabular-nums shrink-0 ml-2">
+                                                    {formatDurationCompact(
+                                                        st.seconds,
+                                                        lang
+                                                    )}
+                                                </span>
+                                            </div>
+                                            <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full bg-accent transition-all duration-300"
+                                                    style={{
+                                                        width: `${pct}%`
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="flex items-center gap-1.5 shrink-0 ml-2"
+                                    >
+                                        <button
+                                            type="button"
+                                            title={active ? t.stop : t.play}
+                                            aria-label={
+                                                active ? t.stop : t.play
+                                            }
+                                            onClick={() =>
+                                                active
+                                                    ? void api.stopPlayback()
+                                                    : void api.playStation(
+                                                          st.stationId
+                                                      )
+                                            }
+                                            className={`w-7 h-7 rounded-[7px] flex items-center justify-center cursor-pointer transition ${
+                                                active
+                                                    ? 'bg-[#30D158] text-white'
+                                                    : 'mac-glass-pill hover:bg-white/15'
+                                            }`}
+                                        >
+                                            {active ? (
+                                                <IconStop size={12} />
+                                            ) : (
+                                                <IconPlay size={12} />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};

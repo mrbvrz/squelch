@@ -125,10 +125,6 @@ export interface GlobalShortcutsConfig {
     playPause: string;
     nextStation: string;
     prevStation: string;
-    toggleMute?: string;
-    volumeUp?: string;
-    volumeDown?: string;
-    showHideApp?: string;
 }
 
 export interface AppSettings {
@@ -188,11 +184,7 @@ export function createDefaultSettings(): AppSettings {
         shortcuts: {
             playPause: 'CommandOrControl+Shift+P',
             nextStation: 'CommandOrControl+Shift+Right',
-            prevStation: 'CommandOrControl+Shift+Left',
-            toggleMute: 'CommandOrControl+Shift+M',
-            volumeUp: 'CommandOrControl+Shift+Up',
-            volumeDown: 'CommandOrControl+Shift+Down',
-            showHideApp: 'CommandOrControl+Shift+Space'
+            prevStation: 'CommandOrControl+Shift+Left'
         }
     };
 }

@@ -88,7 +88,7 @@ describe('Keyboard Shortcuts Utilities', () => {
         expect(conflict).toBe('playPause');
 
         const noConflict = findShortcutConflict(
-            'toggleMute',
+            'prevStation',
             'CommandOrControl+Shift+M',
             shortcuts
         );
@@ -96,7 +96,9 @@ describe('Keyboard Shortcuts Utilities', () => {
     });
 
     it('has standard global shortcut definitions with sensible defaults', () => {
-        expect(GLOBAL_SHORTCUT_DEFINITIONS.length).toBeGreaterThanOrEqual(7);
+        expect(GLOBAL_SHORTCUT_DEFINITIONS).toHaveLength(3);
+        const keys = GLOBAL_SHORTCUT_DEFINITIONS.map((d) => d.key);
+        expect(keys).toEqual(['playPause', 'nextStation', 'prevStation']);
         for (const def of GLOBAL_SHORTCUT_DEFINITIONS) {
             expect(def.key).toBeTruthy();
             expect(def.defaultAccelerator).toBeTruthy();

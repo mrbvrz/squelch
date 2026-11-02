@@ -430,10 +430,6 @@ export function initTauriBridge() {
                 await registerItem(shortcuts.playPause, 'toggle-play-pause');
                 await registerItem(shortcuts.nextStation, 'next-station');
                 await registerItem(shortcuts.prevStation, 'prev-station');
-                await registerItem(shortcuts.toggleMute, 'toggle-mute');
-                await registerItem(shortcuts.volumeUp, 'volume-up');
-                await registerItem(shortcuts.volumeDown, 'volume-down');
-                await registerItem(shortcuts.showHideApp, 'toggle-app');
             } catch (err) {
                 console.warn('[GlobalShortcuts] Init failed:', err);
             }

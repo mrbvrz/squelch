@@ -16,7 +16,7 @@ export const GLOBAL_SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
         key: 'playPause',
         labelEn: 'Play / Pause Stream',
         labelId: 'Putar / Jeda Siaran',
-        descEn: 'Toggle live internet radio stream playback from any application',
+        descEn: 'Toggle live internet radio stream playback from anywhere',
         descId: 'Putar atau jeda siaran radio secara instan dari aplikasi mana pun',
         defaultAccelerator: 'CommandOrControl+Shift+P'
     },
@@ -35,95 +35,6 @@ export const GLOBAL_SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
         descEn: 'Switch backward to previous radio station in your list',
         descId: 'Pindah ke stasiun radio sebelumnya dalam daftar Anda',
         defaultAccelerator: 'CommandOrControl+Shift+Left'
-    },
-    {
-        key: 'toggleMute',
-        labelEn: 'Mute / Unmute Audio',
-        labelId: 'Bungkam / Nyalakan Suara',
-        descEn: 'Instantly silence or restore audio output',
-        descId: 'Bungkam suara seketika atau pulihkan suara siaran',
-        defaultAccelerator: 'CommandOrControl+Shift+M'
-    },
-    {
-        key: 'volumeUp',
-        labelEn: 'Volume Up (+5%)',
-        labelId: 'Perbesar Volume (+5%)',
-        descEn: 'Raise stream playback volume incrementally',
-        descId: 'Tingkatkan level volume siaran radio secara bertahap',
-        defaultAccelerator: 'CommandOrControl+Shift+Up'
-    },
-    {
-        key: 'volumeDown',
-        labelEn: 'Volume Down (-5%)',
-        labelId: 'Perkecil Volume (-5%)',
-        descEn: 'Lower stream playback volume incrementally',
-        descId: 'Turunkan level volume siaran radio secara bertahap',
-        defaultAccelerator: 'CommandOrControl+Shift+Down'
-    },
-    {
-        key: 'showHideApp',
-        labelEn: 'Show / Hide Squelch Popover',
-        labelId: 'Buka / Tutup Popover Squelch',
-        descEn: 'Summon or dismiss the menu bar popover instantly',
-        descId: 'Tampilkan atau sembunyikan popover menu bar seketika',
-        defaultAccelerator: 'CommandOrControl+Shift+Space'
-    }
-];
-
-export const IN_APP_SHORTCUTS = [
-    {
-        key: 'Space',
-        labelEn: 'Play / Pause stream',
-        labelId: 'Putar / Jeda siaran',
-        badge: ['␣ Space']
-    },
-    {
-        key: 'Arrows',
-        labelEn: 'Previous / Next station',
-        labelId: 'Stasiun sebelum / berikut',
-        badge: ['←', '→']
-    },
-    {
-        key: 'Volume',
-        labelEn: 'Volume Up / Down (5%)',
-        labelId: 'Volume Naik / Turun (5%)',
-        badge: ['↑', '↓']
-    },
-    {
-        key: 'Mute',
-        labelEn: 'Toggle Mute',
-        labelId: 'Bungkam / Nyalakan suara',
-        badge: ['M']
-    },
-    {
-        key: 'Search',
-        labelEn: 'Focus search input',
-        labelId: 'Fokus ke kotak pencarian',
-        badge: ['⌘', 'F']
-    },
-    {
-        key: 'Preferences',
-        labelEn: 'Open Preferences Tab',
-        labelId: 'Buka Tab Pengaturan',
-        badge: ['⌘', ',']
-    },
-    {
-        key: 'Tabs',
-        labelEn: 'Quick switch tabs (1 to 6)',
-        labelId: 'Pindah tab cepat (1 s.d 6)',
-        badge: ['⌘', '1-6']
-    },
-    {
-        key: 'Reload',
-        labelEn: 'Reconnect current stream',
-        labelId: 'Hubungkan ulang siaran',
-        badge: ['⌘', 'R']
-    },
-    {
-        key: 'Close',
-        labelEn: 'Close Modal or Dismiss Popover',
-        labelId: 'Tutup Modal / Popover',
-        badge: ['Esc']
     }
 ];
 

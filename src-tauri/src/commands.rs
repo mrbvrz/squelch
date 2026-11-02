@@ -244,11 +244,7 @@ pub fn reset_settings(store: State<Arc<AppStore>>) -> Result<Value, String> {
         "shortcuts": {
             "playPause": "CommandOrControl+Shift+P",
             "nextStation": "CommandOrControl+Shift+Right",
-            "prevStation": "CommandOrControl+Shift+Left",
-            "toggleMute": "CommandOrControl+Shift+M",
-            "volumeUp": "CommandOrControl+Shift+Up",
-            "volumeDown": "CommandOrControl+Shift+Down",
-            "showHideApp": "CommandOrControl+Shift+Space"
+            "prevStation": "CommandOrControl+Shift+Left"
         },
         "hasCompletedOnboarding": false,
         "autoCheckUpdates": true

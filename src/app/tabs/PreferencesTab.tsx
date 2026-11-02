@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { AppSettings } from '../../types';
 import { SUPPORTED_LOCALES, type TranslationDictionary } from '../../i18n';
 import type { SquelchWindowApi } from '../types';
@@ -9,7 +9,6 @@ import { MacToggle } from '../../components/MacToggle';
 import { SearchableFontPicker } from '../../components/SearchableFontPicker';
 import { AudioEqualizerCard } from '../../components/AudioEqualizerCard';
 import { KeyboardShortcutRecorder } from '../../components/KeyboardShortcutRecorder';
-import { ShortcutCheatSheetModal } from '../../components/ShortcutCheatSheetModal';
 import {
     GLOBAL_SHORTCUT_DEFINITIONS,
     type ShortcutActionKey
@@ -90,8 +89,6 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     api,
     t
 }) => {
-    const [isCheatSheetOpen, setIsCheatSheetOpen] = useState(false);
-
     const handleUpdateShortcut = (key: ShortcutActionKey, newAccel: string) => {
         void api.updateSettings({
             shortcuts: {
@@ -518,26 +515,13 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
             {/* Group 4: Global Shortcuts */}
             <div>
                 <div className="flex items-center justify-between mb-2 px-1">
-                    <div>
-                        <h2 className="text-[13px] font-bold flex items-center gap-1.5">
-                            <IconKey size={14} className="text-accent" />
-                            <span>{t.prefShortcuts}</span>
-                        </h2>
-                        <p className="text-[11px] text-secondary mt-0.5">
-                            {t.prefShortcutRecordHint}
-                        </p>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={() => setIsCheatSheetOpen(true)}
-                        className="mac-glass-pill px-2.5 py-1 rounded-[6px] text-[11px] font-medium flex items-center gap-1.5 text-secondary hover:text-foreground cursor-pointer transition shadow-xs"
-                    >
-                        <span>{t.prefShortcutCheatSheetBtn}</span>
-                        <kbd className="px-1.5 py-0.2 rounded font-mono text-[9px] bg-black/5 dark:bg-white/10 font-bold border border-black/10 dark:border-white/10">
-                            ?
-                        </kbd>
-                    </button>
+                    <h2 className="text-[13px] font-bold flex items-center gap-1.5">
+                        <IconKey size={14} className="text-accent" />
+                        <span>{t.prefShortcuts}</span>
+                    </h2>
+                    <span className="text-[11px] text-secondary">
+                        {t.prefShortcutRecordHint}
+                    </span>
                 </div>
 
                 <div className="mac-settings-card mac-inset-list rounded-xl overflow-hidden divide-y mac-divider">
@@ -565,14 +549,6 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         );
                     })}
                 </div>
-
-                <ShortcutCheatSheetModal
-                    isOpen={isCheatSheetOpen}
-                    onClose={() => setIsCheatSheetOpen(false)}
-                    shortcuts={settings.shortcuts}
-                    lang={lang}
-                    t={t}
-                />
             </div>
 
             {/* Group 5: Backup & Restore Data */}

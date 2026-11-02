@@ -181,18 +181,10 @@ export interface TranslationDictionary {
     prefShortcutPlayPause: string;
     prefShortcutNext: string;
     prefShortcutPrev: string;
-    prefShortcutMute: string;
-    prefShortcutVolumeUp: string;
-    prefShortcutVolumeDown: string;
-    prefShortcutToggleApp: string;
     prefShortcutUnassigned: string;
     prefShortcutClear: string;
     prefShortcutReset: string;
     prefShortcutConflict: string;
-    prefShortcutCheatSheetBtn: string;
-    prefShortcutCheatSheetTitle: string;
-    prefShortcutGlobalSection: string;
-    prefShortcutLocalSection: string;
     prefBackupSection: string;
     prefBackupTitle: string;
     prefBackupDesc: string;

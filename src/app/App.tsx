@@ -42,7 +42,6 @@ import { ImportExportModal } from './modals/ImportExportModal';
 import { ResetConfirmModal } from './modals/ResetConfirmModal';
 import { QuitConfirmModal } from './modals/QuitConfirmModal';
 import { AboutModal } from './modals/AboutModal';
-import { ShortcutCheatSheetModal } from '../components/ShortcutCheatSheetModal';
 
 declare global {
     interface Window {
@@ -199,7 +198,6 @@ export const App: React.FC = () => {
         null
     );
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
-    const [isCheatSheetOpen, setIsCheatSheetOpen] = useState<boolean>(false);
     const [notifTestSuccess, setNotifTestSuccess] = useState<boolean>(false);
 
     // Show Schedules
@@ -481,7 +479,6 @@ export const App: React.FC = () => {
                 setIsAboutModalOpen(false);
                 setIsQuitConfirmOpen(false);
                 setUpdateInfo(null);
-                setIsCheatSheetOpen(false);
                 setIsScheduleModalOpen(false);
                 setIsUpdateModalOpen(false);
                 setIsOnboardingOpen(false);
@@ -534,13 +531,6 @@ export const App: React.FC = () => {
                     void api.playStation(currentStation.id);
                     return;
                 }
-            }
-
-            // '?' key: Open Shortcut Cheat Sheet
-            if (!isEditingText && e.key === '?' && !e.metaKey && !e.ctrlKey) {
-                e.preventDefault();
-                setIsCheatSheetOpen((prev) => !prev);
-                return;
             }
 
             // The following controls are only active when NOT editing text
@@ -1342,16 +1332,6 @@ export const App: React.FC = () => {
                 }
                 t={t}
             />
-
-            {settings && (
-                <ShortcutCheatSheetModal
-                    isOpen={isCheatSheetOpen}
-                    onClose={() => setIsCheatSheetOpen(false)}
-                    shortcuts={settings.shortcuts}
-                    lang={lang}
-                    t={t}
-                />
-            )}
         </div>
     );
 };

@@ -75,7 +75,7 @@ export const SchedulesTab: React.FC<SchedulesTabProps> = ({
                     <button
                         type="button"
                         onClick={openAddScheduleModal}
-                        className="mt-2 bg-accent hover:opacity-90 text-white px-4 h-[34px] rounded-[7px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                        className="mt-2 bg-accent hover:opacity-90 text-white px-4 h-[30px] rounded-[7px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
                     >
                         <IconPlus size={14} />
                         <span>{t.addScheduleBtn}</span>

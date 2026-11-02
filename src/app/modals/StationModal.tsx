@@ -134,13 +134,13 @@ export const StationModal: React.FC<StationModalProps> = ({
                             value={formUrl}
                             onChange={(e) => setFormUrl(e.target.value)}
                             placeholder="https://... or https://open.noice.id/catalog/..."
-                            className="mac-input flex-1 px-3 h-[34px] rounded-[7px]"
+                            className="mac-input flex-1 px-3 h-[30px] rounded-[7px]"
                         />
                         <button
                             type="button"
                             onClick={onTestStream}
                             disabled={isTestingStream}
-                            className="mac-glass-pill px-3.5 h-[34px] rounded-[7px] font-semibold shrink-0 cursor-pointer flex items-center justify-center"
+                            className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] font-semibold shrink-0 cursor-pointer flex items-center justify-center text-[12px]"
                         >
                             {isTestingStream
                                 ? t.testingStream
@@ -172,7 +172,7 @@ export const StationModal: React.FC<StationModalProps> = ({
                             required
                             value={formName}
                             onChange={(e) => setFormName(e.target.value)}
-                            className="mac-input w-full px-3 h-[34px] rounded-[7px]"
+                            className="mac-input w-full px-3 h-[30px] rounded-[7px]"
                         />
                     </div>
                     <div>
@@ -184,7 +184,7 @@ export const StationModal: React.FC<StationModalProps> = ({
                             list="group-options"
                             value={formGroup}
                             onChange={(e) => setFormGroup(e.target.value)}
-                            className="mac-input w-full px-3 h-[34px] rounded-[7px]"
+                            className="mac-input w-full px-3 h-[30px] rounded-[7px]"
                         />
                         <datalist id="group-options">
                             {groups.map((g) => (
@@ -205,7 +205,7 @@ export const StationModal: React.FC<StationModalProps> = ({
                             type="text"
                             value={formGenre}
                             onChange={(e) => setFormGenre(e.target.value)}
-                            className="mac-input w-full px-3 h-[34px] rounded-[7px]"
+                            className="mac-input w-full px-3 h-[30px] rounded-[7px]"
                         />
                     </div>
                     <div>
@@ -218,7 +218,7 @@ export const StationModal: React.FC<StationModalProps> = ({
                             type="text"
                             value={formCity}
                             onChange={(e) => setFormCity(e.target.value)}
-                            className="mac-input w-full px-3 h-[34px] rounded-[7px]"
+                            className="mac-input w-full px-3 h-[30px] rounded-[7px]"
                         />
                     </div>
                     <div>
@@ -246,7 +246,7 @@ export const StationModal: React.FC<StationModalProps> = ({
                             onChange={(e) =>
                                 setFormType(e.target.value as StreamType)
                             }
-                            className="mac-input w-full px-2.5 h-[34px] rounded-[7px] uppercase disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition"
+                            className="mac-input w-full px-2.5 h-[30px] rounded-[7px] uppercase disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition"
                         >
                             <option value="mp3">MP3</option>
                             <option value="aac">AAC / AAC+</option>
@@ -265,7 +265,7 @@ export const StationModal: React.FC<StationModalProps> = ({
                         value={formLogo}
                         onChange={(e) => setFormLogo(e.target.value)}
                         placeholder="https://.../favicon.ico or .png"
-                        className="mac-input w-full px-3 h-[34px] rounded-[7px]"
+                        className="mac-input w-full px-3 h-[30px] rounded-[7px]"
                     />
                 </div>
 
@@ -278,7 +278,7 @@ export const StationModal: React.FC<StationModalProps> = ({
                         value={formTags}
                         onChange={(e) => setFormTags(e.target.value)}
                         placeholder="pop, news, jakarta"
-                        className="mac-input w-full px-3 h-[34px] rounded-[7px]"
+                        className="mac-input w-full px-3 h-[30px] rounded-[7px]"
                     />
                 </div>
 
@@ -286,13 +286,13 @@ export const StationModal: React.FC<StationModalProps> = ({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="mac-glass-pill px-4 py-2 rounded-[7px] font-medium cursor-pointer"
+                        className="mac-glass-pill px-4 h-[30px] rounded-[7px] text-[12px] font-medium cursor-pointer flex items-center justify-center"
                     >
                         {t.cancelBtn}
                     </button>
                     <button
                         type="submit"
-                        className="bg-accent hover:opacity-90 text-white px-5 py-2 rounded-[7px] font-semibold shadow-sm cursor-pointer transition"
+                        className="bg-accent hover:opacity-90 text-white px-5 h-[30px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition flex items-center justify-center"
                     >
                         {t.saveBtn}
                     </button>

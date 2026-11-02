@@ -164,7 +164,7 @@ export const SearchableCountryPicker: React.FC<
                 aria-expanded={isOpen}
                 aria-label={ariaLabel}
                 onClick={() => setIsOpen((prev) => !prev)}
-                className="mac-input px-2.5 h-8 rounded-[7px] text-xs w-full cursor-pointer flex items-center justify-between gap-1.5 text-left hover:border-accent/40 transition shadow-sm"
+                className="mac-input px-3 h-[30px] rounded-[7px] text-xs w-full cursor-pointer flex items-center justify-between gap-1.5 text-left hover:border-accent/40 transition shadow-sm"
             >
                 <span className="truncate flex-1 font-medium flex items-center gap-1.5">
                     {isGlobalSelected ? (

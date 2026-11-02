@@ -130,7 +130,7 @@ export const StatsTab: React.FC<StatsTabProps> = ({
                         <button
                             type="button"
                             onClick={() => setActiveTab('stations')}
-                            className="mt-2 bg-accent hover:opacity-90 text-white px-4 h-[34px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                            className="mt-2 bg-accent hover:opacity-90 text-white px-4 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
                         >
                             <IconPlay size={13} />
                             <span>{t.statsEmptyActionBtn}</span>

@@ -424,7 +424,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                             placeholder="e.g. Sarapan Seru"
                             value={schedShowName}
                             onChange={(e) => setSchedShowName(e.target.value)}
-                            className="mac-input w-full px-3 py-2 rounded-[7px]"
+                            className="mac-input w-full px-3 h-[30px] rounded-[7px] text-xs"
                         />
                     </div>
                     <div>
@@ -436,7 +436,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                             placeholder="e.g. Surya Insomnia & Molan"
                             value={schedHost}
                             onChange={(e) => setSchedHost(e.target.value)}
-                            className="mac-input w-full px-3 py-2 rounded-[7px]"
+                            className="mac-input w-full px-3 h-[30px] rounded-[7px] text-xs"
                         />
                     </div>
                 </div>
@@ -513,7 +513,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                             required
                             value={schedStartTime}
                             onChange={(e) => setSchedStartTime(e.target.value)}
-                            className="mac-input w-full px-3 py-2 rounded-[7px] font-mono text-[13px]"
+                            className="mac-input w-full px-3 h-[30px] rounded-[7px] font-mono text-[12px]"
                         />
                     </div>
                     <div>
@@ -525,7 +525,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                             required
                             value={schedEndTime}
                             onChange={(e) => setSchedEndTime(e.target.value)}
-                            className="mac-input w-full px-3 py-2 rounded-[7px] font-mono text-[13px]"
+                            className="mac-input w-full px-3 h-[30px] rounded-[7px] font-mono text-[12px]"
                         />
                     </div>
                 </div>
@@ -559,7 +559,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                                     parseInt(e.target.value, 10)
                                 )
                             }
-                            className="mac-input px-2.5 py-1 rounded-[6px]"
+                            className="mac-input w-[200px] px-3 h-[30px] rounded-[7px] text-[12px] font-medium cursor-pointer"
                         >
                             <option value={0}>
                                 {t.scheduleReminderAtStart}
@@ -656,13 +656,13 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="mac-glass-pill px-4 py-2 rounded-[7px] font-medium cursor-pointer"
+                        className="mac-glass-pill px-4 h-[30px] rounded-[7px] text-[12px] font-medium cursor-pointer flex items-center justify-center"
                     >
                         {t.cancelBtn}
                     </button>
                     <button
                         type="submit"
-                        className="bg-accent hover:opacity-90 text-white px-5 py-2 rounded-[7px] font-semibold shadow-sm cursor-pointer transition"
+                        className="bg-accent hover:opacity-90 text-white px-5 h-[30px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition flex items-center justify-center"
                     >
                         {t.saveBtn}
                     </button>

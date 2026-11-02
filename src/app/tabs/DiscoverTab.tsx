@@ -106,7 +106,7 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
                         foundLabel={t.discoverCountriesFound}
                         noMatchLabel={t.discoverNoCountryMatch}
                         ariaLabel="Country Filter"
-                        className="w-40 sm:w-48"
+                        className="w-[200px] shrink-0"
                     />
 
                     <input
@@ -115,7 +115,7 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
                         onChange={(e) => setDiscName(e.target.value)}
                         placeholder={t.discoverName}
                         aria-label={t.discoverName}
-                        className="mac-input px-3 h-8 text-xs rounded-[7px] flex-1 min-w-[110px]"
+                        className="mac-input px-3 h-[30px] text-xs rounded-[7px] flex-1 min-w-[110px]"
                     />
 
                     <input
@@ -124,13 +124,13 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
                         onChange={(e) => setDiscTag(e.target.value)}
                         placeholder={t.discoverTag}
                         aria-label={t.discoverTag}
-                        className="mac-input px-3 h-8 text-xs rounded-[7px] w-24 sm:w-28 shrink-0"
+                        className="mac-input px-3 h-[30px] text-xs rounded-[7px] w-24 sm:w-28 shrink-0"
                     />
 
                     <button
                         type="submit"
                         disabled={isSearchingOnline}
-                        className="bg-accent hover:opacity-90 disabled:opacity-60 text-white px-3.5 h-8 rounded-[7px] text-xs font-medium shadow-sm cursor-pointer transition shrink-0 flex items-center gap-1.5"
+                        className="bg-accent hover:opacity-90 disabled:opacity-60 text-white px-3.5 h-[30px] rounded-[7px] text-xs font-medium shadow-sm cursor-pointer transition shrink-0 flex items-center gap-1.5"
                     >
                         {isSearchingOnline ? (
                             <IconSpinner size={14} className="animate-spin" />

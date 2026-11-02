@@ -297,7 +297,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                         .value as AppSettings['language']
                                 })
                             }
-                            className="mac-input px-3 rounded-[7px] text-[12px] w-48 h-[30px] cursor-pointer hover:border-accent/40 transition shadow-sm"
+                            className="mac-input px-3 rounded-[7px] text-[12px] w-[200px] h-[30px] cursor-pointer hover:border-accent/40 transition shadow-sm font-medium"
                         >
                             {SUPPORTED_LOCALES.map((loc) => (
                                 <option key={loc.code} value={loc.code}>
@@ -381,7 +381,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <button
                             type="button"
                             onClick={() => setIsOnboardingOpen(true)}
-                            className="mac-glass-pill px-3 py-1.5 rounded-[7px] font-medium flex items-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition"
+                            className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center justify-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition shrink-0"
                         >
                             <IconCompass size={14} />
                             <span>{t.introReopenBtn}</span>
@@ -572,7 +572,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <button
                             type="button"
                             onClick={() => void handleRestoreData()}
-                            className="mac-glass-pill px-3 py-1.5 rounded-[7px] font-medium flex items-center gap-1.5 cursor-pointer"
+                            className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer"
                         >
                             <IconRestore size={13} />
                             <span>{t.prefRestoreBtn}</span>
@@ -580,7 +580,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <button
                             type="button"
                             onClick={() => void handleBackupData()}
-                            className="bg-accent hover:opacity-90 text-white px-3 py-1.5 rounded-[7px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                            className="bg-accent hover:opacity-90 text-white px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
                         >
                             <IconBackup size={13} />
                             <span>{t.prefBackupBtn}</span>
@@ -636,7 +636,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => setIsUpdateModalOpen(true)}
-                                    className="bg-accent hover:opacity-90 text-white px-3.5 py-1.5 rounded-[7px] text-[12px] font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                                    className="bg-accent hover:opacity-90 text-white px-3.5 h-[30px] rounded-[7px] text-[12px] font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer transition"
                                 >
                                     <IconArrowDownTray size={13} />
                                     <span>{t.updatesDownloadDmg}</span>
@@ -647,7 +647,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                 type="button"
                                 disabled={isCheckingUpdate}
                                 onClick={() => void handleCheckForUpdates(true)}
-                                className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:bg-black/5 dark:hover:bg-white/10 transition"
+                                className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:bg-black/5 dark:hover:bg-white/10 transition"
                             >
                                 {isCheckingUpdate ? (
                                     <>
@@ -753,7 +753,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                     );
                                 }
                             }}
-                            className="mac-glass-pill px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition shadow-xs"
+                            className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition shadow-xs"
                         >
                             <IconBell size={13} />
                             <span>{t.prefNotifTestBtn}</span>
@@ -781,7 +781,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                             <button
                                 type="button"
                                 onClick={() => void api.openLogsFolder()}
-                                className="mac-glass-pill px-3 py-1.5 rounded-[7px] font-medium flex items-center gap-1.5 cursor-pointer"
+                                className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer"
                             >
                                 <IconFolder size={13} />
                                 <span>{t.openLogsBtn}</span>
@@ -806,7 +806,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                         2000
                                     );
                                 }}
-                                className="mac-glass-pill px-3 py-1.5 rounded-[7px] font-medium flex items-center gap-1.5 cursor-pointer"
+                                className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer"
                             >
                                 <IconCopy size={13} />
                                 <span>
@@ -900,7 +900,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                             | 'all'
                                     )
                                 }
-                                className="mac-input px-3 w-36 h-[34px] rounded-[7px] text-[12px] cursor-pointer hover:border-accent/40 transition shadow-sm font-medium"
+                                className="mac-input px-3 w-[200px] h-[30px] rounded-[7px] text-[12px] cursor-pointer hover:border-accent/40 transition shadow-sm font-medium"
                             >
                                 <option value="stations">
                                     {t.tabStations}
@@ -922,7 +922,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                         ? onRequestReset(selectedClearTarget)
                                         : setIsResetConfirmOpen(true)
                                 }
-                                className="mac-glass-pill text-[#FF453A] hover:bg-[#FF453A]/10 px-3.5 h-[34px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition shrink-0"
+                                className="mac-glass-pill text-[#FF453A] hover:bg-[#FF453A]/10 px-3.5 h-[30px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition shrink-0"
                             >
                                 {t.prefClearBtn || 'Hapus Data'}
                             </button>
@@ -946,7 +946,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                     ? onRequestReset('settings')
                                     : setIsResetConfirmOpen(true)
                             }
-                            className="mac-glass-pill px-3.5 h-[34px] rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 transition cursor-pointer shrink-0"
+                            className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 transition cursor-pointer shrink-0"
                         >
                             {t.prefResetBtn}
                         </button>

@@ -108,7 +108,7 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                         <button
                             type="button"
                             onClick={openAddStationModal}
-                            className="bg-accent hover:opacity-90 text-white px-4 h-[34px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                            className="bg-accent hover:opacity-90 text-white px-4 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
                         >
                             <IconPlus size={13} />
                             <span>{t.addStation}</span>
@@ -116,7 +116,7 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                         <button
                             type="button"
                             onClick={() => setActiveTab('discover')}
-                            className="mac-glass-pill hover:bg-white/15 px-4 h-[34px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer transition shadow-sm"
+                            className="mac-glass-pill hover:bg-white/15 px-4 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer transition shadow-sm"
                         >
                             <IconCompass size={13} />
                             <span>{t.emptyStationsDiscoverBtn}</span>
@@ -124,7 +124,7 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                         <button
                             type="button"
                             onClick={() => setIsImportExportOpen(true)}
-                            className="mac-glass-pill hover:bg-white/15 px-4 h-[34px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer transition shadow-sm"
+                            className="mac-glass-pill hover:bg-white/15 px-4 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer transition shadow-sm"
                         >
                             <IconTransfer size={13} />
                             <span>{t.importExport}</span>

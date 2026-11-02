@@ -7,7 +7,7 @@ export type { LocaleCode, LocaleMetadata, TranslationDictionary };
 /**
  * Registry of supported locales.
  * To contribute a new language on GitHub (http://github.com/mrbvrz/squelch):
- * 1. Create `src/ui/i18n/locales/<code>.ts` implementing `TranslationDictionary`.
+ * 1. Create `src/i18n/locales/<code>.ts` implementing `TranslationDictionary`.
  * 2. Add the locale metadata (with flag emoji) to `SUPPORTED_LOCALES` and register it in `TRANSLATIONS` below.
  */
 export const SUPPORTED_LOCALES: LocaleMetadata[] = [

@@ -1,5 +1,10 @@
 module.exports = {
-  content: ['./index.html', './src/ui/**/*.{ts,tsx}'],
+  content: [
+    './index.html',
+    './tray.html',
+    './audio.html',
+    './src/**/*.{ts,tsx,html}'
+  ],
   darkMode: 'class',
   theme: {
     extend: {}

@@ -182,6 +182,11 @@ export const idLocale: TranslationDictionary = {
     prefBufferBalanced: '5 detik (Seimbang & Rekomendasi)',
     prefBufferCellular: '10 detik (Stabil Seluler / Tethering)',
     prefBufferHigh: '15 detik (Anti-stutter Sinyal Lemah)',
+    prefAudioOutputDevice: 'Perangkat Output Audio',
+    prefAudioOutputDeviceDesc:
+        'Pilih rute audio radio ke speaker laptop, headphone Bluetooth, AirPods, atau DAC terpisah.',
+    prefAudioOutputDefault: 'Bawaan Sistem (macOS Default)',
+    prefAudioOutputLoading: 'Mendeteksi perangkat audio...',
 
     // Equalizer & Audio Enhancement
     prefEqSection: 'Equalizer & Karakter Suara',

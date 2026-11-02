@@ -180,6 +180,10 @@ export interface TranslationDictionary {
     prefBufferBalanced: string;
     prefBufferCellular: string;
     prefBufferHigh: string;
+    prefAudioOutputDevice: string;
+    prefAudioOutputDeviceDesc: string;
+    prefAudioOutputDefault: string;
+    prefAudioOutputLoading: string;
 
     // Equalizer & Audio Enhancement
     prefEqSection: string;

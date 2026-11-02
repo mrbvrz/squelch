@@ -127,6 +127,20 @@ export interface GlobalShortcutsConfig {
     prevStation: string;
 }
 
+export interface AudioOutputDevice {
+    id: string;
+    name: string;
+    transport:
+        | 'builtin'
+        | 'bluetooth'
+        | 'usb'
+        | 'display'
+        | 'airplay'
+        | 'system'
+        | 'other';
+    isDefault: boolean;
+}
+
 export interface AppSettings {
     schemaVersion: number;
     launchAtLogin: boolean;
@@ -149,6 +163,7 @@ export interface AppSettings {
     hasCompletedOnboarding?: boolean;
     autoCheckUpdates?: boolean;
     hideFromDock?: boolean;
+    audioOutputDeviceId?: string;
 }
 
 export interface AppRuntimeState {
@@ -162,6 +177,7 @@ export function createDefaultSettings(): AppSettings {
         hasCompletedOnboarding: false,
         autoCheckUpdates: true,
         hideFromDock: false,
+        audioOutputDeviceId: 'default',
         launchAtLogin: false,
         autoPlayLastStation: false,
         autoReconnect: true,

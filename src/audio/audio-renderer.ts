@@ -50,6 +50,14 @@ class AudioEqualizerEngine {
     private filters: BiquadFilterNode[] = [];
     private compressor: DynamicsCompressorNode | null = null;
     private isInitialized = false;
+    private initialSinkId: string | null = null;
+
+    setPendingSinkId(sinkId: string) {
+        this.initialSinkId = sinkId;
+        if (this.ctx && typeof (this.ctx as any).setSinkId === 'function') {
+            void (this.ctx as any).setSinkId(sinkId).catch(() => {});
+        }
+    }
 
     init(audioEl: HTMLAudioElement) {
         if (this.isInitialized) return;
@@ -109,6 +117,15 @@ class AudioEqualizerEngine {
             }
             previousNode.connect(this.compressor);
             this.compressor.connect(this.ctx.destination);
+
+            if (
+                this.initialSinkId &&
+                typeof (this.ctx as any).setSinkId === 'function'
+            ) {
+                void (this.ctx as any)
+                    .setSinkId(this.initialSinkId)
+                    .catch(() => {});
+            }
 
             this.isInitialized = true;
         } catch (e) {
@@ -204,6 +221,73 @@ class AudioEqualizerEngine {
         }
     }).catch(() => {});
 
+    let currentAudioSinkId = 'default';
+
+    const applyAudioSink = async (targetId?: string, targetName?: string) => {
+        const sinkId = targetId || 'default';
+        currentAudioSinkId = sinkId;
+
+        // If 'default', clear custom sink so system default is used
+        const rawSinkToApply = sinkId === 'default' ? '' : sinkId;
+        let resolvedSinkId = rawSinkToApply;
+
+        if (rawSinkToApply && navigator.mediaDevices?.enumerateDevices) {
+            try {
+                const devs = await navigator.mediaDevices.enumerateDevices();
+                const outputDevs = devs.filter((d) => d.kind === 'audiooutput');
+                const matched = outputDevs.find(
+                    (d) =>
+                        d.deviceId === rawSinkToApply ||
+                        d.groupId === rawSinkToApply ||
+                        (targetName &&
+                            d.label &&
+                            d.label
+                                .toLowerCase()
+                                .includes(targetName.toLowerCase())) ||
+                        (d.label &&
+                            rawSinkToApply
+                                .toLowerCase()
+                                .includes(d.label.toLowerCase()))
+                );
+                if (matched?.deviceId) {
+                    resolvedSinkId = matched.deviceId;
+                }
+            } catch {
+                // Ignore enumeration failure
+            }
+        }
+
+        eqEngine.setPendingSinkId(resolvedSinkId);
+
+        if (typeof (audioEl as any).setSinkId === 'function') {
+            try {
+                await (audioEl as any).setSinkId(resolvedSinkId);
+            } catch (err) {
+                console.warn('[AudioWorker] audioEl.setSinkId failed:', err);
+            }
+        }
+    };
+
+    // Real-time listener for Audio Output Device Sink updates
+    listen<{ deviceId?: string; deviceName?: string }>(
+        'squelch:audio:sink',
+        (event) => {
+            void applyAudioSink(
+                event.payload?.deviceId,
+                event.payload?.deviceName
+            );
+        }
+    ).catch(() => {});
+
+    // Read initial audioOutputDeviceId from settings
+    void invoke('get_settings')
+        .then((res: any) => {
+            if (res?.settings?.audioOutputDeviceId) {
+                void applyAudioSink(res.settings.audioOutputDeviceId);
+            }
+        })
+        .catch(() => {});
+
     const destroyHls = () => {
         if (hlsInstance) {
             hlsInstance.destroy();
@@ -265,6 +349,7 @@ class AudioEqualizerEngine {
                 ).length;
                 if (knownOutputCount > 0 && outputs < knownOutputCount) {
                     bridge.notifyDeviceRemoved();
+                    void applyAudioSink(currentAudioSinkId);
                 }
                 knownOutputCount = outputs;
             } catch {

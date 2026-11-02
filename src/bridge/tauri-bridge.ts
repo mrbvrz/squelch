@@ -1451,6 +1451,11 @@ export function initTauriBridge() {
                             res.settings.shortcuts
                         );
                     }
+                    if (partial?.audioOutputDeviceId !== undefined) {
+                        void emit('squelch:audio:sink', {
+                            deviceId: res.settings.audioOutputDeviceId
+                        });
+                    }
                 }
                 await emit('ui:state-changed', { type: 'settings', ...res });
                 return res?.settings;
@@ -1465,9 +1470,42 @@ export function initTauriBridge() {
                         bufferLengthSeconds: res.settings.bufferLengthSeconds
                     });
                     void emit('squelch:shortcuts:sync', res.settings.shortcuts);
+                    void emit('squelch:audio:sink', {
+                        deviceId: 'default'
+                    });
                 }
                 await emit('ui:state-changed', { type: 'settings', ...res });
                 return res?.settings;
+            },
+
+            getAudioOutputDevices: async () => {
+                try {
+                    const devices: any = await invoke('get_audio_output_devices');
+                    if (Array.isArray(devices) && devices.length > 0) {
+                        return devices;
+                    }
+                } catch {
+                    // ignore
+                }
+                return [
+                    {
+                        id: 'default',
+                        name: 'Bawaan Sistem (macOS Default)',
+                        transport: 'system',
+                        isDefault: true
+                    }
+                ];
+            },
+
+            setAudioOutputDevice: async (
+                deviceId: string,
+                deviceName?: string
+            ) => {
+                await emit('squelch:audio:sink', { deviceId, deviceName });
+                await (window as any).squelchApi.updateSettings({
+                    audioOutputDeviceId: deviceId
+                });
+                return true;
             },
 
             clearStationsData: async () => {

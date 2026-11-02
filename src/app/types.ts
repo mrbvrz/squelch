@@ -2,6 +2,7 @@ import type {
     Station,
     StationsDataSchema,
     AppSettings,
+    AudioOutputDevice,
     StreamTestResult,
     DiscoverStationItem,
     RadioBrowserCountry,
@@ -106,6 +107,8 @@ export interface SquelchWindowApi {
     getSettings: () => Promise<{ settings: AppSettings; dataDir: string }>;
     updateSettings: (partial: Partial<AppSettings>) => Promise<AppSettings>;
     resetSettings: () => Promise<AppSettings>;
+    getAudioOutputDevices: () => Promise<AudioOutputDevice[]>;
+    setAudioOutputDevice: (deviceId: string, deviceName?: string) => Promise<boolean>;
     getSystemFonts: () => Promise<string[]>;
     backupAppData: () => Promise<{
         ok: boolean;

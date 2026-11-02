@@ -407,6 +407,8 @@ pub fn run() {
             commands::open_update_installer,
             commands::reveal_update_in_finder,
             commands::send_notification,
+            commands::get_audio_output_devices,
+            commands::log_debug,
             commands::get_player_status,
             commands::update_player_status,
             commands::clear_stations_data,

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import type { AppSettings } from '../../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import type { AppSettings, AudioOutputDevice } from '../../types';
 import { SUPPORTED_LOCALES, type TranslationDictionary } from '../../i18n';
 import type { SquelchWindowApi } from '../types';
 import type { UpdateCheckResult, UpdateDownloadProgress } from '../../components/UpdateModal';
@@ -7,7 +7,7 @@ import { ACCENT_SWATCHES } from '../../utils/appearance';
 import { ThemePreviewCard } from '../../components/ThemePreviewCard';
 import { MacToggle } from '../../components/MacToggle';
 import { SearchableFontPicker } from '../../components/SearchableFontPicker';
-import { MacSelect } from '../../components/MacSelect';
+import { MacSelect, type MacSelectOption } from '../../components/MacSelect';
 import { AudioEqualizerCard } from '../../components/AudioEqualizerCard';
 import { KeyboardShortcutRecorder } from '../../components/KeyboardShortcutRecorder';
 import {
@@ -26,6 +26,7 @@ import {
     IconFolder,
     IconRestore,
     IconSparkles,
+    IconSpeaker,
     IconSpinner,
     IconSwatch,
     IconTrash
@@ -101,6 +102,60 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     const [selectedClearTarget, setSelectedClearTarget] = useState<
         'stations' | 'schedules' | 'stats' | 'all'
     >('stations');
+
+    const [audioDevices, setAudioDevices] = useState<AudioOutputDevice[]>([]);
+    const [isLoadingAudioDevices, setIsLoadingAudioDevices] =
+        useState<boolean>(true);
+
+    useEffect(() => {
+        let isMounted = true;
+        const fetchDevices = async () => {
+            try {
+                if (api.getAudioOutputDevices) {
+                    const devs = await api.getAudioOutputDevices();
+                    if (isMounted) {
+                        setAudioDevices(devs);
+                    }
+                }
+            } catch {
+                // ignore
+            } finally {
+                if (isMounted) {
+                    setIsLoadingAudioDevices(false);
+                }
+            }
+        };
+        void fetchDevices();
+        return () => {
+            isMounted = false;
+        };
+    }, [api]);
+
+    const audioDeviceOptions: MacSelectOption<string>[] = useMemo(() => {
+        if (audioDevices.length === 0) {
+            return [
+                {
+                    value: 'default',
+                    label: t.prefAudioOutputDefault,
+                    icon: <IconSpeaker size={13} className="text-secondary" />
+                }
+            ];
+        }
+        return audioDevices.map((dev) => ({
+            value: dev.id,
+            label: dev.id === 'default' ? t.prefAudioOutputDefault : dev.name,
+            icon: (
+                <IconSpeaker
+                    size={13}
+                    className={
+                        dev.id === (settings.audioOutputDeviceId ?? 'default')
+                            ? 'text-accent'
+                            : 'text-secondary'
+                    }
+                />
+            )
+        }));
+    }, [audioDevices, settings.audioOutputDeviceId, t.prefAudioOutputDefault]);
 
     const handleUpdateShortcut = (key: ShortcutActionKey, newAccel: string) => {
         void api.updateSettings({
@@ -523,6 +578,52 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                     {label}
                                 </button>
                             ))}
+                        </div>
+                    </div>
+
+                    {/* Audio Output Device Selector */}
+                    <div className="px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                            <div className="text-[13px] font-medium flex items-center gap-2">
+                                <span>{t.prefAudioOutputDevice}</span>
+                                {isLoadingAudioDevices && (
+                                    <span className="text-[11px] text-secondary font-normal flex items-center gap-1">
+                                        <IconSpinner
+                                            size={11}
+                                            className="animate-spin text-accent"
+                                        />
+                                        <span>{t.prefAudioOutputLoading}</span>
+                                    </span>
+                                )}
+                            </div>
+                            <div className="text-[12px] text-secondary mt-0.5 leading-relaxed">
+                                {t.prefAudioOutputDeviceDesc}
+                            </div>
+                        </div>
+                        <div className="shrink-0 self-start sm:self-auto">
+                            <MacSelect
+                                value={
+                                    settings.audioOutputDeviceId ?? 'default'
+                                }
+                                options={audioDeviceOptions}
+                                ariaLabel={t.prefAudioOutputDevice}
+                                widthClass="w-[230px]"
+                                onChange={(selectedId) => {
+                                    const matchedDev = audioDevices.find(
+                                        (d) => d.id === selectedId
+                                    );
+                                    if (api.setAudioOutputDevice) {
+                                        void api.setAudioOutputDevice(
+                                            selectedId,
+                                            matchedDev?.name
+                                        );
+                                    } else {
+                                        void api.updateSettings({
+                                            audioOutputDeviceId: selectedId
+                                        });
+                                    }
+                                }}
+                            />
                         </div>
                     </div>
                 </div>

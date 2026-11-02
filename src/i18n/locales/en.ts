@@ -183,6 +183,11 @@ export const enLocale: TranslationDictionary = {
     prefBufferBalanced: '5 sec (Balanced & Recommended)',
     prefBufferCellular: '10 sec (Stable Cellular / Tethering)',
     prefBufferHigh: '15 sec (Anti-stutter Weak Signal)',
+    prefAudioOutputDevice: 'Audio Output Device',
+    prefAudioOutputDeviceDesc:
+        'Route radio audio to laptop speakers, Bluetooth headphones, AirPods, or a dedicated DAC.',
+    prefAudioOutputDefault: 'System Default (macOS)',
+    prefAudioOutputLoading: 'Detecting audio devices...',
 
     // Equalizer & Audio Enhancement
     prefEqSection: 'Equalizer & Sound Quality',

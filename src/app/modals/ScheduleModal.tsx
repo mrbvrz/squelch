@@ -584,15 +584,15 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                     </div>
                 </div>
 
-                {/* Notes & Description with Rich Formatting */}
+                {/* Notes & Description with Integrated Toolbar */}
                 <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                        <label className="font-semibold text-foreground">
-                            {t.scheduleNotes}
-                        </label>
-                        <div className="flex items-center gap-1">
-                            {/* Toolbar buttons */}
-                            <div className="flex items-center gap-0.5 mr-1.5">
+                    <label className="block font-semibold mb-1.5 text-foreground">
+                        {t.scheduleNotes}
+                    </label>
+                    <div className="mac-input rounded-[8px] overflow-hidden focus-within:border-accent/60 transition shadow-sm flex flex-col">
+                        {/* Integrated Toolbar inside Textarea box */}
+                        <div className="flex items-center justify-between px-2.5 py-1.5 bg-black/5 dark:bg-white/5 border-b border-black/5 dark:border-white/10 select-none">
+                            <div className="flex items-center gap-0.5">
                                 <button
                                     type="button"
                                     title="Tebal (⌘B / Ctrl+B)"
@@ -635,6 +635,9 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                                 >
                                     S
                                 </button>
+                                <span className="text-secondary/30 text-[10px] mx-1">
+                                    |
+                                </span>
                                 <button
                                     type="button"
                                     title="Daftar Butir"
@@ -681,31 +684,32 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                                 </button>
                             </div>
                         </div>
-                    </div>
 
-                    {showNotesPreview ? (
-                        <div className="min-h-[82px] max-h-36 overflow-y-auto px-3 py-2 rounded-[7px] bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-[12px] text-foreground">
-                            {schedNotes.trim() ? (
-                                renderFormattedNotes(schedNotes)
-                            ) : (
-                                <span className="text-secondary/60 italic">
-                                    {lang === 'id'
-                                        ? 'Belum ada catatan untuk dipratinjau...'
-                                        : 'No notes to preview yet...'}
-                                </span>
-                            )}
-                        </div>
-                    ) : (
-                        <textarea
-                            ref={textareaRef}
-                            rows={3}
-                            placeholder="e.g. Program pagi favorit dengan **info lalu lintas** & *kuis*"
-                            value={schedNotes}
-                            onChange={(e) => setSchedNotes(e.target.value)}
-                            onKeyDown={handleTextareaKeyDown}
-                            className="mac-input w-full px-3 py-2 rounded-[7px] text-[12px] resize-y min-h-[72px]"
-                        />
-                    )}
+                        {/* Content Area (Textarea or Preview) */}
+                        {showNotesPreview ? (
+                            <div className="min-h-[80px] max-h-40 overflow-y-auto px-3 py-2.5 text-[12px] text-foreground bg-transparent">
+                                {schedNotes.trim() ? (
+                                    renderFormattedNotes(schedNotes)
+                                ) : (
+                                    <span className="text-secondary/60 italic text-[11px]">
+                                        {lang === 'id'
+                                            ? 'Belum ada catatan untuk dipratinjau...'
+                                            : 'No notes to preview yet...'}
+                                    </span>
+                                )}
+                            </div>
+                        ) : (
+                            <textarea
+                                ref={textareaRef}
+                                rows={3}
+                                placeholder="e.g. Program pagi favorit dengan **info lalu lintas** & *kuis*"
+                                value={schedNotes}
+                                onChange={(e) => setSchedNotes(e.target.value)}
+                                onKeyDown={handleTextareaKeyDown}
+                                className="w-full bg-transparent border-0 px-3 py-2 text-[12px] text-foreground focus:outline-none resize-y min-h-[72px] placeholder:text-secondary/50"
+                            />
+                        )}
+                    </div>
                 </div>
 
                 {/* Modal Actions */}

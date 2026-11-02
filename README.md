@@ -10,18 +10,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/mrbvrz/squelch/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" />
-  </a>
-  <a href="https://github.com/mrbvrz/squelch/releases">
-    <img src="https://img.shields.io/badge/Version-0.1.1-emerald.svg" alt="Version 0.1.1" />
-  </a>
-  <a href="https://tauri.app/">
-    <img src="https://img.shields.io/badge/Built%20with-Tauri%20v2%20%26%20Rust-orange.svg" alt="Tauri v2" />
-  </a>
-  <a href="https://github.com/mrbvrz/squelch">
-    <img src="https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" alt="Platform" />
-  </a>
+  <a href="https://github.com/mrbvrz/squelch/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
+  <a href="https://github.com/mrbvrz/squelch/releases"><img src="https://img.shields.io/badge/Version-0.1.1-emerald.svg" alt="Version 0.1.1" /></a>
+  <a href="https://tauri.app/"><img src="https://img.shields.io/badge/Built%20with-Tauri%20v2%20%26%20Rust-orange.svg" alt="Tauri v2" /></a>
+  <a href="https://github.com/mrbvrz/squelch"><img src="https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" alt="Platform" /></a>
 </p>
 
 ---
@@ -98,13 +90,8 @@ Download the ready-to-run package from GitHub Releases:
 ## Support the Project
 
 <p align="left">
-  <a href="https://trakteer.id/mrbvrz" target="_blank">
-    <img src="https://edge-cdn.trakteer.id/images/embed/trbtn-red-1.png" height="42" style="border: 0px; height: 42px;" alt="Trakteer Saya" />
-  </a>
-  &nbsp;&nbsp;
-  <a href="https://www.buymeacoffee.com/mrbvrz" target="_blank">
-    <img src="https://www.owlstown.com/assets/icons/bmc-yellow-button-941f96a1.png" height="42" style="border: 0px; height: 42px;" alt="Buy Me A Coffee" />
-  </a>
+  <a href="https://trakteer.id/mrbvrz" target="_blank"><img src="https://edge-cdn.trakteer.id/images/embed/trbtn-red-1.png" height="42" style="border: 0; height: 42px;" alt="Trakteer Saya" /></a>&nbsp;
+  <a href="https://www.buymeacoffee.com/mrbvrz" target="_blank"><img src="https://www.owlstown.com/assets/icons/bmc-yellow-button-941f96a1.png" height="42" style="border: 0; height: 42px;" alt="Buy Me A Coffee" /></a>
 </p>
 
 - 🇮🇩 **Trakteer**: [https://trakteer.id/mrbvrz](https://trakteer.id/mrbvrz)

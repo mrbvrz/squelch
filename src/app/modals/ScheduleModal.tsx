@@ -10,6 +10,7 @@ import {
 } from '../../components/Icons';
 import { MacToggle } from '../../components/MacToggle';
 import { StationAvatar } from '../../components/StationAvatar';
+import { renderFormattedNotes } from '../../utils/text-format';
 
 export interface DayLabelItem {
     day: number;
@@ -78,8 +79,85 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
 }) => {
     const [isStationDropdownOpen, setIsStationDropdownOpen] = useState(false);
     const [stationSearchQuery, setStationSearchQuery] = useState('');
+    const [showNotesPreview, setShowNotesPreview] = useState(false);
     const stationDropdownContainerRef = useRef<HTMLDivElement>(null);
     const stationSearchInputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const applyFormatting = (
+        prefix: string,
+        suffix: string,
+        defaultPlaceholder: string
+    ) => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const currentText = schedNotes;
+        const selectedText = currentText.substring(start, end);
+
+        const replacement = selectedText
+            ? `${prefix}${selectedText}${suffix}`
+            : `${prefix}${defaultPlaceholder}${suffix}`;
+
+        const newText =
+            currentText.substring(0, start) +
+            replacement +
+            currentText.substring(end);
+
+        setSchedNotes(newText);
+
+        requestAnimationFrame(() => {
+            textarea.focus();
+            if (selectedText) {
+                textarea.setSelectionRange(
+                    start + prefix.length,
+                    start + prefix.length + selectedText.length
+                );
+            } else {
+                textarea.setSelectionRange(
+                    start + prefix.length,
+                    start + prefix.length + defaultPlaceholder.length
+                );
+            }
+        });
+    };
+
+    const insertBullet = () => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const currentText = schedNotes;
+        const lastNewline = currentText.lastIndexOf('\n', start - 1);
+        const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
+
+        const newText =
+            currentText.substring(0, lineStart) +
+            '- ' +
+            currentText.substring(lineStart);
+
+        setSchedNotes(newText);
+
+        requestAnimationFrame(() => {
+            textarea.focus();
+            textarea.setSelectionRange(start + 2, start + 2);
+        });
+    };
+
+    const handleTextareaKeyDown = (
+        e: React.KeyboardEvent<HTMLTextAreaElement>
+    ) => {
+        const isMod = e.metaKey || e.ctrlKey;
+        if (isMod && (e.key === 'b' || e.key === 'B')) {
+            e.preventDefault();
+            applyFormatting('**', '**', lang === 'id' ? 'tebal' : 'bold');
+        } else if (isMod && (e.key === 'i' || e.key === 'I')) {
+            e.preventDefault();
+            applyFormatting('*', '*', lang === 'id' ? 'miring' : 'italic');
+        }
+    };
 
     // Close station dropdown on click outside or Escape
     useEffect(() => {
@@ -122,6 +200,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
         if (!isOpen) {
             setIsStationDropdownOpen(false);
             setStationSearchQuery('');
+            setShowNotesPreview(false);
         }
     }, [isOpen]);
 
@@ -505,18 +584,128 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                     </div>
                 </div>
 
-                {/* Notes */}
+                {/* Notes & Description with Rich Formatting */}
                 <div>
-                    <label className="block font-semibold mb-1.5">
-                        {t.scheduleNotes}
-                    </label>
-                    <input
-                        type="text"
-                        placeholder="e.g. Program pagi favorit dengan info lalu lintas & kuis"
-                        value={schedNotes}
-                        onChange={(e) => setSchedNotes(e.target.value)}
-                        className="mac-input w-full px-3 py-2 rounded-[7px]"
-                    />
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label className="font-semibold text-foreground">
+                            {t.scheduleNotes}
+                        </label>
+                        <div className="flex items-center gap-1">
+                            {/* Toolbar buttons */}
+                            <div className="flex items-center gap-0.5 mr-1.5">
+                                <button
+                                    type="button"
+                                    title="Tebal (⌘B / Ctrl+B)"
+                                    onClick={() =>
+                                        applyFormatting(
+                                            '**',
+                                            '**',
+                                            lang === 'id' ? 'tebal' : 'bold'
+                                        )
+                                    }
+                                    className="w-6 h-6 rounded-[5px] flex items-center justify-center font-bold text-[12px] hover:bg-black/10 dark:hover:bg-white/10 text-secondary hover:text-foreground transition cursor-pointer"
+                                >
+                                    B
+                                </button>
+                                <button
+                                    type="button"
+                                    title="Miring (⌘I / Ctrl+I)"
+                                    onClick={() =>
+                                        applyFormatting(
+                                            '*',
+                                            '*',
+                                            lang === 'id' ? 'miring' : 'italic'
+                                        )
+                                    }
+                                    className="w-6 h-6 rounded-[5px] flex items-center justify-center italic font-serif text-[12px] hover:bg-black/10 dark:hover:bg-white/10 text-secondary hover:text-foreground transition cursor-pointer"
+                                >
+                                    I
+                                </button>
+                                <button
+                                    type="button"
+                                    title="Coret"
+                                    onClick={() =>
+                                        applyFormatting(
+                                            '~~',
+                                            '~~',
+                                            lang === 'id' ? 'coret' : 'strike'
+                                        )
+                                    }
+                                    className="w-6 h-6 rounded-[5px] flex items-center justify-center line-through text-[12px] hover:bg-black/10 dark:hover:bg-white/10 text-secondary hover:text-foreground transition cursor-pointer"
+                                >
+                                    S
+                                </button>
+                                <button
+                                    type="button"
+                                    title="Daftar Butir"
+                                    onClick={insertBullet}
+                                    className="px-1.5 h-6 rounded-[5px] flex items-center gap-1 text-[11px] hover:bg-black/10 dark:hover:bg-white/10 text-secondary hover:text-foreground transition cursor-pointer"
+                                >
+                                    • List
+                                </button>
+                                <button
+                                    type="button"
+                                    title="Kode"
+                                    onClick={() =>
+                                        applyFormatting('`', '`', 'kode')
+                                    }
+                                    className="w-6 h-6 rounded-[5px] flex items-center justify-center font-mono text-[11px] hover:bg-black/10 dark:hover:bg-white/10 text-secondary hover:text-foreground transition cursor-pointer"
+                                >
+                                    {'</>'}
+                                </button>
+                            </div>
+
+                            {/* Write / Preview Tab Pill */}
+                            <div className="flex items-center p-0.5 rounded-[5px] bg-black/5 dark:bg-white/10 text-[10px]">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNotesPreview(false)}
+                                    className={`px-2 py-0.5 rounded-[4px] cursor-pointer font-medium transition ${
+                                        !showNotesPreview
+                                            ? 'bg-accent text-white shadow-xs'
+                                            : 'text-secondary hover:text-foreground'
+                                    }`}
+                                >
+                                    {lang === 'id' ? 'Tulis' : 'Write'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNotesPreview(true)}
+                                    className={`px-2 py-0.5 rounded-[4px] cursor-pointer font-medium transition ${
+                                        showNotesPreview
+                                            ? 'bg-accent text-white shadow-xs'
+                                            : 'text-secondary hover:text-foreground'
+                                    }`}
+                                >
+                                    {lang === 'id' ? 'Pratinjau' : 'Preview'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {showNotesPreview ? (
+                        <div className="min-h-[82px] max-h-36 overflow-y-auto px-3 py-2 rounded-[7px] bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-[12px] text-foreground">
+                            {schedNotes.trim() ? (
+                                renderFormattedNotes(schedNotes)
+                            ) : (
+                                <span className="text-secondary/60 italic">
+                                    {lang === 'id'
+                                        ? 'Belum ada catatan untuk dipratinjau...'
+                                        : 'No notes to preview yet...'}
+                                </span>
+                            )}
+                        </div>
+                    ) : (
+                        <textarea
+                            ref={textareaRef}
+                            rows={3}
+                            placeholder="e.g. Program pagi favorit dengan **info lalu lintas** & *kuis*"
+                            value={schedNotes}
+                            onChange={(e) => setSchedNotes(e.target.value)}
+                            onKeyDown={handleTextareaKeyDown}
+                            className="mac-input w-full px-3 py-2 rounded-[7px] text-[12px] resize-y min-h-[72px]"
+                        />
+                    )}
                 </div>
 
                 {/* Modal Actions */}

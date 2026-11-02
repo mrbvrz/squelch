@@ -5,6 +5,7 @@ import type { SquelchWindowApi } from '../types';
 import { DAY_LABELS } from '../types';
 import { StationAvatar } from '../../components/StationAvatar';
 import { MacToggle } from '../../components/MacToggle';
+import { renderFormattedNotes } from '../../utils/text-format';
 import {
     IconBell,
     IconCalendar,
@@ -311,8 +312,8 @@ export const SchedulesTab: React.FC<SchedulesTabProps> = ({
                                 </div>
 
                                 {sched.notes && (
-                                    <div className="mt-2 pt-2 border-t mac-divider text-[11px] text-secondary italic">
-                                        “{sched.notes}”
+                                    <div className="mt-2 pt-2 border-t mac-divider text-[11px] text-secondary">
+                                        {renderFormattedNotes(sched.notes)}
                                     </div>
                                 )}
                             </div>

@@ -118,6 +118,11 @@ export const idLocale: TranslationDictionary = {
     discoverSearchCountryPlaceholder: 'Cari negara…',
     discoverCountriesFound: 'negara ditemukan',
     discoverNoCountryMatch: 'Tidak ada negara yang cocok',
+    discoverFilterBitrate: 'Filter Kualitas',
+    discoverAllBitrates: 'Semua Bitrate',
+    discoverSortDefault: 'Urutan Bawaan',
+    discoverSortBitrate: 'Bitrate Tertinggi',
+    discoverSortName: 'Nama (A-Z)',
 
     // Listening Stats Tab (Harian, Mingguan, Bulanan, Tahunan)
     statsTitle: 'Aktivitas Mendengarkan',

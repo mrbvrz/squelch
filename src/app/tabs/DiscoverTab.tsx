@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import type {
     DiscoverStationItem,
     RadioBrowserCountry,
@@ -8,6 +8,7 @@ import type { TranslationDictionary } from '../../i18n';
 import type { SquelchWindowApi } from '../types';
 import { StationAvatar } from '../../components/StationAvatar';
 import { SearchableCountryPicker } from '../../components/SearchableCountryPicker';
+import { MacSelect } from '../../components/MacSelect';
 import { countryCodeToFlag } from '../../utils/appearance';
 import {
     IconCheck,
@@ -65,6 +66,23 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
     api,
     t
 }) => {
+    const [bitrateFilter, setBitrateFilter] = useState<string>('all');
+    const [sortMode, setSortMode] = useState<string>('default');
+
+    const displayedResults = useMemo(() => {
+        let res = [...discResults];
+        if (bitrateFilter !== 'all') {
+            const minKbps = parseInt(bitrateFilter, 10);
+            res = res.filter((item) => (item.bitrate || 0) >= minKbps);
+        }
+        if (sortMode === 'bitrate') {
+            res.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
+        } else if (sortMode === 'name') {
+            res.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        return res;
+    }, [discResults, bitrateFilter, sortMode]);
+
     return (
         <div
             key="tab-discover"
@@ -153,11 +171,43 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
             )}
 
             <div className="relative z-10">
-                <h2 className="text-[13px] font-bold mb-2 px-1">
-                    {t.discoverAvailableHeader} ({discResults.length})
-                </h2>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-2 px-1">
+                    <h2 className="text-[13px] font-bold">
+                        {t.discoverAvailableHeader} ({displayedResults.length})
+                    </h2>
+
+                    {discResults.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <MacSelect
+                                value={bitrateFilter}
+                                onChange={setBitrateFilter}
+                                options={[
+                                    { value: 'all', label: t.discoverAllBitrates },
+                                    { value: '64', label: '≥ 64 kbps' },
+                                    { value: '128', label: '≥ 128 kbps' },
+                                    { value: '192', label: '≥ 192 kbps' },
+                                    { value: '320', label: '≥ 320 kbps' }
+                                ]}
+                                className="w-[130px]"
+                                ariaLabel="Filter Bitrate"
+                            />
+                            <MacSelect
+                                value={sortMode}
+                                onChange={setSortMode}
+                                options={[
+                                    { value: 'default', label: t.discoverSortDefault },
+                                    { value: 'bitrate', label: t.discoverSortBitrate },
+                                    { value: 'name', label: t.discoverSortName }
+                                ]}
+                                className="w-[145px]"
+                                ariaLabel="Urutan Hasil"
+                            />
+                        </div>
+                    )}
+                </div>
+
                 <div className="mac-settings-card mac-inset-list overflow-hidden">
-                    {discResults.map((item) => {
+                    {displayedResults.map((item) => {
                         const alreadyAdded = stations.some(
                             (s) =>
                                 s.streamUrl.toLowerCase() ===

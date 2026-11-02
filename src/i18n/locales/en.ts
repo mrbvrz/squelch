@@ -118,6 +118,11 @@ export const enLocale: TranslationDictionary = {
     discoverSearchCountryPlaceholder: 'Search country…',
     discoverCountriesFound: 'countries found',
     discoverNoCountryMatch: 'No matching country',
+    discoverFilterBitrate: 'Quality Filter',
+    discoverAllBitrates: 'All Bitrates',
+    discoverSortDefault: 'Default Order',
+    discoverSortBitrate: 'Highest Bitrate',
+    discoverSortName: 'Name (A-Z)',
 
     // Listening Stats Tab (Daily, Weekly, Monthly, Yearly)
     statsTitle: 'Listening Activity',

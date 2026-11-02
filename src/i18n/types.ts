@@ -121,6 +121,11 @@ export interface TranslationDictionary {
     discoverSearchCountryPlaceholder: string;
     discoverCountriesFound: string;
     discoverNoCountryMatch: string;
+    discoverFilterBitrate: string;
+    discoverAllBitrates: string;
+    discoverSortDefault: string;
+    discoverSortBitrate: string;
+    discoverSortName: string;
 
     // Listening Stats Tab (Harian, Mingguan, Bulanan, Tahunan)
     statsTitle: string;

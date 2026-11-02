@@ -5,6 +5,8 @@ node_modules/
 dist/
 dist-ui/
 release/
+src-tauri/target/
+target/
 
 # Logs and runtime
 *.log

@@ -1,14 +1,18 @@
 {
     "compilerOptions": {
         "target": "ES2022",
-        "module": "CommonJS",
-        "moduleResolution": "Node",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "jsx": "react-jsx",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
-        "declaration": false,
-        "sourceMap": true
-    }
+        "isolatedModules": true,
+        "noEmit": true
+    },
+    "include": ["src/**/*", "tests/**/*", "vite.config.ts"],
+    "exclude": ["node_modules", "dist", "dist-ui", "src-tauri/target"]
 }

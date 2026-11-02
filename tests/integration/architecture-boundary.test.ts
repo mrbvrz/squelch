@@ -19,17 +19,19 @@ function getAllTypeScriptFiles(dir: string): string[] {
     return results;
 }
 
-describe('Core Architecture Boundary', () => {
-    it('ensures src/core/ does not import electron or OS-specific platform adapters', () => {
-        const coreDir = path.resolve(__dirname, '../../src/core');
-        const files = getAllTypeScriptFiles(coreDir);
+describe('Clean Architecture Boundary (Tauri Native)', () => {
+    it('ensures src/ has zero imports of electron or legacy platform adapters', () => {
+        const srcDir = path.resolve(__dirname, '../../src');
+        const files = getAllTypeScriptFiles(srcDir);
         expect(files.length).toBeGreaterThan(0);
 
         for (const file of files) {
             const content = fs.readFileSync(file, 'utf8');
             expect(content).not.toMatch(/from\s+['"]electron['"]/);
             expect(content).not.toMatch(/require\(\s*['"]electron['"]\s*\)/);
+            expect(content).not.toMatch(/from\s+['"]electron-builder['"]/);
             expect(content).not.toMatch(/from\s+['"].*\/platform\//);
+            expect(content).not.toMatch(/from\s+['"].*\/main\//);
         }
     });
 });

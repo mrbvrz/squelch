@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.2] - 2026-11-03
+
+### Polish, Modern Stats Analytics, macOS Design System & CI/CD Automation
+
+- **GitHub Actions Automation**:
+  - Added `.github/workflows/ci.yml` for automated linting, TypeScript typechecking, Vitest unit testing, and Rust cargo checks.
+  - Added `.github/workflows/release.yml` for automated macOS packaging (DMG and ZIP) and GitHub Releases publishing.
+- **Modern Listening Analytics with Recharts**:
+  - Replaced legacy static chart with responsive, interactive area charts supporting **Harian (Daily)**, **Mingguan (Weekly)**, **Bulanan (Monthly)**, and **Tahunan (Yearly)** timeframes.
+  - Dynamically calculated integer hour increments (1h, 2h, 4h, 5h/10h) on the Y-axis.
+  - Dead-center empty state with direct action to start listening.
+- **macOS HIG Control Consistency & Custom Dropdowns**:
+  - Developed custom **`MacSelect`** component with glass popover, keyboard navigation (Esc, Arrow keys, Enter), and active checkmarks, eliminating WebKit Aqua menulist rendering quirks.
+  - Unified input dimensions (`h-[30px]`, `rounded-[7px]`, `w-[200px]` dropdowns) across Preferences, Schedules, Stations, and Discover.
+  - High-contrast macOS System Red primary action for factory reset ("Kembalikan Pengaturan Bawaan").
+- **Granular Data Management & System Insets**:
+  - Introduced selective data deletion dropdown ("Semua Data", "Stasiun Radio", "Jadwal Siaran", "Statistik Dengar") separate from factory settings reset.
+  - Standardized macOS inset list divider lines (`mac-inset-list`) across shortcut lists and settings cards.
+- **Window Lifecycle & Tray Interoperability**:
+  - Intercepted `WindowEvent::CloseRequested` to keep the application alive in the menu bar tray when the main window is closed.
+  - Robust restoration and unhiding of windows when invoked from tray menu actions.
+- **Station Management Enhancements**:
+  - Added automatic stream type detection (.mp3, .aac, .m3u8, .ogg) with lock indicator.
+  - Dead-center empty states across all empty views without card wrappers.
+
+---
+
 ## [0.1.1] - 2026-11-02
 
 ### Migrated to Tauri v2 & Rust Native Architecture

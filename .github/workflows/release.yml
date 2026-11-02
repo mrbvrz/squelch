@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Release macOS Bundle
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Frontend UI
+        run: npm run build:ui
+
+      - name: Build Tauri Application
+        run: npx @tauri-apps/cli build --bundles app
+
+      - name: Package macOS DMG & ZIP
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          BUNDLE_DIR="src-tauri/target/release/bundle/macos"
+          APP_PATH="${BUNDLE_DIR}/Squelch.app"
+          
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Error: Squelch.app not found in $BUNDLE_DIR"
+            exit 1
+          fi
+          
+          echo "Ad-hoc code signing Squelch.app..."
+          codesign --force --deep --sign - "$APP_PATH"
+          
+          DMG_NAME="Squelch-${VERSION}-arm64.dmg"
+          ZIP_NAME="Squelch-${VERSION}-arm64.zip"
+          
+          echo "Creating DMG package: ${DMG_NAME}..."
+          hdiutil create -volname Squelch -srcfolder "$APP_PATH" -ov -format UDZO "${BUNDLE_DIR}/${DMG_NAME}"
+          
+          echo "Creating ZIP package: ${ZIP_NAME}..."
+          cd "$BUNDLE_DIR"
+          zip -r -9 "${ZIP_NAME}" Squelch.app
+          cd -
+          
+          echo "DMG_PATH=${BUNDLE_DIR}/${DMG_NAME}" >> $GITHUB_ENV
+          echo "ZIP_PATH=${BUNDLE_DIR}/${ZIP_NAME}" >> $GITHUB_ENV
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Squelch v${{ env.VERSION }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            ${{ env.DMG_PATH }}
+            ${{ env.ZIP_PATH }}

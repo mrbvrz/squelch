@@ -131,7 +131,7 @@ export const SearchableFontPicker: React.FC<SearchableFontPickerProps> = ({
                 aria-expanded={isOpen}
                 aria-label={ariaLabel}
                 onClick={() => setIsOpen((prev) => !prev)}
-                className="mac-input px-3 py-1.5 rounded-[7px] text-[12px] w-48 cursor-pointer flex items-center justify-between gap-2 text-left hover:border-accent/40 transition shadow-sm"
+                className="mac-input px-3 rounded-[7px] text-[12px] w-48 h-[30px] cursor-pointer flex items-center justify-between gap-2 text-left hover:border-accent/40 transition shadow-sm"
             >
                 <span
                     className="truncate flex-1 font-medium"

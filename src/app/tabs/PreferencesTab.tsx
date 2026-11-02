@@ -288,7 +288,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                                         .value as AppSettings['language']
                                 })
                             }
-                            className="mac-input px-3 py-1.5 rounded-[7px] text-[12px] w-56 cursor-pointer"
+                            className="mac-input px-3 rounded-[7px] text-[12px] w-48 h-[30px] cursor-pointer hover:border-accent/40 transition shadow-sm"
                         >
                             {SUPPORTED_LOCALES.map((loc) => (
                                 <option key={loc.code} value={loc.code}>

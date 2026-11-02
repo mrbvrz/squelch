@@ -161,6 +161,9 @@ export const enLocale: TranslationDictionary = {
     prefGeneral: 'General & Behavior',
     prefLanguage: 'Interface Language',
     prefLaunchAtLogin: 'Launch at system login',
+    prefHideFromDock: 'Hide app from macOS Dock (Menu Bar Only Mode)',
+    prefHideFromDockDesc:
+        'Run Squelch as a clean background menu bar utility without taking space in the macOS Dock.',
     prefAutoPlay: 'Auto-play last station on launch',
     prefNotifySong: 'Show notification when song title changes',
     prefConfirmQuit: 'Ask for confirmation before quitting app',

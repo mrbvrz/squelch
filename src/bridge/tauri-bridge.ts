@@ -1421,6 +1421,11 @@ export function initTauriBridge() {
                 const res: any = await invoke('update_settings', { partial });
                 if (res?.settings) {
                     applyAppearanceVariables(res.settings);
+                    if (partial?.hideFromDock !== undefined) {
+                        void invoke('set_dock_visibility', {
+                            visible: !partial.hideFromDock
+                        });
+                    }
                     if (partial?.equalizer !== undefined) {
                         void emit('squelch:audio:eq', res.settings.equalizer);
                     }

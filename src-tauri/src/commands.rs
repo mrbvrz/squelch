@@ -103,6 +103,21 @@ pub fn start_window_drag(window: tauri::WebviewWindow) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn set_dock_visibility(app: AppHandle, visible: bool) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        let policy = if visible {
+            tauri::ActivationPolicy::Regular
+        } else {
+            tauri::ActivationPolicy::Accessory
+        };
+        app.set_activation_policy(policy)
+            .map_err(|e| format!("Gagal mengubah visibilitas dock: {}", e))?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub fn get_proxy_port(store: State<Arc<AppStore>>) -> u16 {
     *store.proxy_port.lock().unwrap()
 }
@@ -226,7 +241,8 @@ pub fn get_settings(store: State<Arc<AppStore>>) -> Value {
                 "prevStation": "CommandOrControl+Shift+Left"
             },
             "hasCompletedOnboarding": false,
-            "autoCheckUpdates": true
+            "autoCheckUpdates": true,
+            "hideFromDock": false
         }),
     );
     let data_dir = store.data_dir.to_string_lossy().to_string();
@@ -284,7 +300,8 @@ pub fn reset_settings(store: State<Arc<AppStore>>) -> Result<Value, String> {
             "prevStation": "CommandOrControl+Shift+Left"
         },
         "hasCompletedOnboarding": false,
-        "autoCheckUpdates": true
+        "autoCheckUpdates": true,
+        "hideFromDock": false
     });
     store.write_json("settings.json", &default_val)?;
     Ok(json!({

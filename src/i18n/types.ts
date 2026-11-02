@@ -160,6 +160,8 @@ export interface TranslationDictionary {
     prefGeneral: string;
     prefLanguage: string;
     prefLaunchAtLogin: string;
+    prefHideFromDock: string;
+    prefHideFromDockDesc: string;
     prefAutoPlay: string;
     prefNotifySong: string;
     prefConfirmQuit: string;

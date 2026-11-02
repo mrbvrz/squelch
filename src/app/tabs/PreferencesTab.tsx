@@ -343,6 +343,26 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                     </div>
 
                     <div className="px-4 py-3 flex items-center justify-between">
+                        <div className="min-w-0 pr-4">
+                            <span className="text-[13px] font-medium block">
+                                {t.prefHideFromDock}
+                            </span>
+                            <span className="text-[11px] text-secondary block mt-0.5">
+                                {t.prefHideFromDockDesc}
+                            </span>
+                        </div>
+                        <MacToggle
+                            checked={settings.hideFromDock ?? false}
+                            label={t.prefHideFromDock}
+                            onChange={(next) =>
+                                void api.updateSettings({
+                                    hideFromDock: next
+                                })
+                            }
+                        />
+                    </div>
+
+                    <div className="px-4 py-3 flex items-center justify-between">
                         <span className="text-[13px] font-medium">
                             {t.prefAutoPlay}
                         </span>

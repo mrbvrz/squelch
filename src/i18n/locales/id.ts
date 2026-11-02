@@ -160,6 +160,9 @@ export const idLocale: TranslationDictionary = {
     prefGeneral: 'Umum & Perilaku',
     prefLanguage: 'Bahasa Antarmuka',
     prefLaunchAtLogin: 'Jalankan saat login sistem',
+    prefHideFromDock: 'Sembunyikan ikon dari macOS Dock (Mode Menu Bar Saja)',
+    prefHideFromDockDesc:
+        'Jalankan Squelch secara minimalis di bilah menu atas tanpa memakan ruang pada Dock aplikasi.',
     prefAutoPlay: 'Putar otomatis stasiun terakhir saat dibuka',
     prefNotifySong: 'Notifikasi sistem saat judul lagu berganti',
     prefConfirmQuit: 'Tampilkan konfirmasi sebelum keluar aplikasi',

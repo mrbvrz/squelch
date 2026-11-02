@@ -148,6 +148,7 @@ export interface AppSettings {
     shortcuts: GlobalShortcutsConfig;
     hasCompletedOnboarding?: boolean;
     autoCheckUpdates?: boolean;
+    hideFromDock?: boolean;
 }
 
 export interface AppRuntimeState {
@@ -160,6 +161,7 @@ export function createDefaultSettings(): AppSettings {
         schemaVersion: 1,
         hasCompletedOnboarding: false,
         autoCheckUpdates: true,
+        hideFromDock: false,
         launchAtLogin: false,
         autoPlayLastStation: false,
         autoReconnect: true,

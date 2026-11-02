@@ -172,6 +172,19 @@ pub fn run() {
             let store = Arc::new(AppStore::new(&app_handle, proxy_port));
             app.manage(store.clone());
 
+            // 2b. Apply macOS Dock Visibility Policy
+            #[cfg(target_os = "macos")]
+            {
+                let settings = store.read_json("settings.json", serde_json::json!({}));
+                let hide_from_dock = settings
+                    .get("hideFromDock")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                if hide_from_dock {
+                    let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+                }
+            }
+
             // 3. Configure macOS Vibrancy effects
             #[cfg(target_os = "macos")]
             {
@@ -389,6 +402,7 @@ pub fn run() {
             commands::quit_app,
             commands::open_external,
             commands::start_window_drag,
+            commands::set_dock_visibility,
             commands::check_for_updates,
             commands::start_download_update,
             commands::cancel_update_download,

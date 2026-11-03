@@ -369,47 +369,30 @@ pub fn run() {
 
             let _ = tray.set_icon_as_template(true);
 
-            // 7. Background Task: Tray Icon Waveform Animation
+            // 7. Background Task: Tray Icon State Synchronization (event-driven, zero CPU when stable)
             let anim_handle = app.handle().clone();
             let anim_store = store.clone();
             tauri::async_runtime::spawn(async move {
-                let mut frame_idx = 0usize;
                 let mut last_state = String::from("idle");
                 loop {
-                    tokio::time::sleep(tokio::time::Duration::from_millis(90)).await;
+                    tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
                     let current_state = {
                         let guard = anim_store.tray_state.lock().unwrap();
                         guard.clone()
                     };
 
-                    if current_state == "playing"
-                        || current_state == "buffering"
-                        || current_state == "reconnecting"
-                    {
-                        frame_idx = (frame_idx + 1) % 12;
-                        let bytes = if current_state == "playing" {
-                            PLAYING_ICONS[frame_idx]
-                        } else {
-                            BUFFERING_ICONS[frame_idx]
+                    if last_state != current_state {
+                        let bytes = match current_state.as_str() {
+                            "playing" => PLAYING_ICONS[0],
+                            "buffering" | "reconnecting" | "connecting" => BUFFERING_ICONS[0],
+                            "error" => ERROR_ICON,
+                            _ => IDLE_ICON,
                         };
                         if let Some(tray) = anim_handle.tray_by_id("main-tray") {
                             if let Ok(img) = Image::from_bytes(bytes) {
                                 let _ = tray.set_icon_with_as_template(Some(img), true);
                             }
                         }
-                        last_state = current_state;
-                    } else if last_state != current_state {
-                        let bytes = if current_state == "error" {
-                            ERROR_ICON
-                        } else {
-                            IDLE_ICON
-                        };
-                        if let Some(tray) = anim_handle.tray_by_id("main-tray") {
-                            if let Ok(img) = Image::from_bytes(bytes) {
-                                let _ = tray.set_icon_with_as_template(Some(img), true);
-                            }
-                        }
-                        frame_idx = 0;
                         last_state = current_state;
                     }
                 }

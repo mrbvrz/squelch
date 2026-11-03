@@ -194,7 +194,48 @@ export function useTrayPopoverState(api: SquelchTrayPopoverApi) {
     useEffect(() => {
         void loadData();
         const unbindScroll = bindActiveScrollbars();
-        const unsub = api.onStateChanged(() => {
+        const unsub = api.onStateChanged((evt: unknown) => {
+            const data = evt as {
+                state?: PlayerState;
+                currentStation?: Station | null;
+                streamTitle?: string | null;
+                reconnectAttempt?: number | null;
+                sleepTimerMinutes?: number | null;
+                sleepTimerRemainingSec?: number | null;
+                volume?: number;
+                isMuted?: boolean;
+            };
+
+            if (data?.state !== undefined) {
+                setPlayerState(data.state);
+                if (data.currentStation !== undefined) {
+                    setCurrentStation(data.currentStation);
+                }
+                if (data.streamTitle !== undefined) {
+                    setStreamTitle(data.streamTitle);
+                }
+                if (data.reconnectAttempt !== undefined) {
+                    setReconnectAttempt(data.reconnectAttempt ?? null);
+                }
+                if (data.sleepTimerMinutes !== undefined) {
+                    setSleepMinutes(data.sleepTimerMinutes ?? null);
+                }
+                if (data.sleepTimerRemainingSec !== undefined) {
+                    setSleepRemainingSec(data.sleepTimerRemainingSec ?? null);
+                }
+                if (!isInteractingVolume.current) {
+                    if (typeof data.volume === 'number') {
+                        const raw = data.volume;
+                        const normalized = raw > 1 ? raw / 100 : raw;
+                        setVolume(Math.max(0, Math.min(1, normalized)));
+                    }
+                    if (typeof data.isMuted === 'boolean') {
+                        setIsMuted(data.isMuted);
+                    }
+                }
+                return;
+            }
+
             void loadData();
         });
         return () => {

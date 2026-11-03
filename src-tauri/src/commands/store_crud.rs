@@ -57,7 +57,6 @@ pub fn update_player_status(
     }
 
     let _ = app.emit("squelch:player-sync", &status);
-    let _ = app.emit("ui:state-changed", &status);
     Ok(())
 }
 

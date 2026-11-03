@@ -125,14 +125,43 @@ export function useAppCoreData({
         void api.getAppIconDataUrl().then(setAppIconDataUrl);
 
         const unsub = api.onStateChanged((evt: unknown) => {
-            const data = evt as { type?: string; tab?: string };
+            const data = evt as {
+                type?: string;
+                tab?: string;
+                state?: PlayerState;
+                currentStation?: Station | null;
+                streamTitle?: string | null;
+                reconnectAttempt?: number | null;
+                sleepTimerRemainingSec?: number | null;
+            };
+
             if (data?.type === 'navigate' && data.tab) {
                 const targetTab: ActiveTab =
                     data.tab === 'diagnostics'
                         ? 'preferences'
                         : (data.tab as ActiveTab);
                 setActiveTab(targetTab);
+                return;
             }
+
+            // Player status update: mutate in-memory state without redundant disk I/O and CSS reflows
+            if (data?.state !== undefined) {
+                setPlayerState(data.state);
+                if (data.currentStation !== undefined) {
+                    setCurrentStation(data.currentStation);
+                }
+                if (data.streamTitle !== undefined) {
+                    setStreamTitle(data.streamTitle);
+                }
+                if (data.reconnectAttempt !== undefined) {
+                    setReconnectAttempt(data.reconnectAttempt ?? null);
+                }
+                if (data.sleepTimerRemainingSec !== undefined) {
+                    setSleepRemainingSec(data.sleepTimerRemainingSec ?? null);
+                }
+                return;
+            }
+
             void refreshAll();
         });
 

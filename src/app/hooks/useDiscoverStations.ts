@@ -95,7 +95,7 @@ export function useDiscoverStations({
                 city: item.city,
                 country: item.country,
                 tags: item.tags,
-                group: 'Pop & Anak Muda',
+                group: item.tags?.[0] || '',
                 isFavorite: false,
                 status: 'online'
             });

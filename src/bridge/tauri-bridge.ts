@@ -916,7 +916,7 @@ export function initTauriBridge() {
 
             deleteGroup: async (
                 groupName: string,
-                moveToGroup = 'Lainnya & Nostalgia'
+                moveToGroup = ''
             ) => {
                 const res = await invoke('delete_group', {
                     groupName,

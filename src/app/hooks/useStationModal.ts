@@ -24,7 +24,7 @@ export function useStationModal({
     const [formGenre, setFormGenre] = useState<string>('Pop');
     const [formCity, setFormCity] = useState<string>('Jakarta');
     const [formCountry, setFormCountry] = useState<string>('ID');
-    const [formGroup, setFormGroup] = useState<string>('Pop & Anak Muda');
+    const [formGroup, setFormGroup] = useState<string>('');
     const [formType, setFormType] = useState<StreamType>('mp3');
     const [formTags, setFormTags] = useState<string>('');
     const [isTestingStream, setIsTestingStream] = useState<boolean>(false);
@@ -41,7 +41,7 @@ export function useStationModal({
         setFormGroup(
             selectedGroup !== 'ALL'
                 ? selectedGroup
-                : groups[0] || 'Pop & Anak Muda'
+                : groups[0] || ''
         );
         setFormType('mp3');
         setFormTags('');
@@ -104,7 +104,7 @@ export function useStationModal({
             genre: formGenre.trim() || 'Radio',
             city: formCity.trim() || 'Indonesia',
             country: formCountry.trim() || 'ID',
-            group: formGroup.trim() || 'Pop & Anak Muda',
+            group: formGroup.trim() || (groups[0] || ''),
             tags: formTags
                 .split(',')
                 .map((tag) => tag.trim())

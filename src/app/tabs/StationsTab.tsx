@@ -4,6 +4,7 @@ import type { TranslationDictionary } from '../../i18n';
 import type { ActiveTab, SquelchWindowApi } from '../types';
 import { StationAvatar } from '../../components/StationAvatar';
 import {
+    IconClose,
     IconCompass,
     IconEdit,
     IconPlay,
@@ -83,6 +84,35 @@ export const StationsTab: React.FC<StationsTabProps> = ({
     refreshAll,
     t
 }) => {
+    const popoverRef = React.useRef<HTMLDivElement>(null);
+    const addGroupInputRef = React.useRef<HTMLInputElement>(null);
+
+    React.useEffect(() => {
+        if (!isAddingGroup) return;
+        requestAnimationFrame(() => {
+            addGroupInputRef.current?.focus();
+        });
+        const handleClickOutside = (e: MouseEvent) => {
+            if (
+                popoverRef.current &&
+                !popoverRef.current.contains(e.target as Node)
+            ) {
+                setIsAddingGroup(false);
+            }
+        };
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setIsAddingGroup(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isAddingGroup, setIsAddingGroup]);
+
     return (
         <div
             key="tab-stations"
@@ -154,19 +184,20 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                 </div>
             ) : (
                 <>
-                    {/* Category Filter Pills & Stream Health Tools */}
-            <div className="mac-settings-card px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-1.5">
+            {/* Category Filter Pills (WhatsApp / Segmented style) & Stream Health Tools */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1">
+                {/* Segmented Category Pill Tabs */}
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
                     <button
                         type="button"
                         onClick={() => {
                             setSelectedGroup('ALL');
                             setFavoritesOnly(false);
                         }}
-                        className={`px-2.5 py-1 rounded-[6px] text-[11px] font-medium tabular-nums cursor-pointer transition ${
+                        className={`px-3 py-1 rounded-full text-[11px] font-medium tabular-nums cursor-pointer transition whitespace-nowrap shadow-xs ${
                             selectedGroup === 'ALL' && !favoritesOnly
-                                ? 'bg-accent text-white'
-                                : 'mac-glass-pill'
+                                ? 'bg-accent text-white font-semibold'
+                                : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
                         }`}
                     >
                         {t.allGroups} ({stations.length})
@@ -178,10 +209,10 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                             setSelectedGroup('ALL');
                             setFavoritesOnly(true);
                         }}
-                        className={`px-2.5 py-1 rounded-[6px] text-[11px] font-medium tabular-nums flex items-center gap-1 cursor-pointer transition ${
+                        className={`px-3 py-1 rounded-full text-[11px] font-medium tabular-nums flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap shadow-xs ${
                             favoritesOnly
-                                ? 'bg-accent text-white'
-                                : 'mac-glass-pill'
+                                ? 'bg-accent text-white font-semibold'
+                                : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
                         }`}
                     >
                         <IconStar size={11} filled={favoritesOnly} />
@@ -200,10 +231,10 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                                     setSelectedGroup(grp);
                                     setFavoritesOnly(false);
                                 }}
-                                className={`px-2.5 py-1 rounded-[6px] text-[11px] font-medium cursor-pointer transition ${
+                                className={`px-3 py-1 rounded-full text-[11px] font-medium cursor-pointer transition whitespace-nowrap shadow-xs ${
                                     active
-                                        ? 'bg-accent text-white'
-                                        : 'mac-glass-pill'
+                                        ? 'bg-accent text-white font-semibold'
+                                        : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
                                 }`}
                             >
                                 {grp}
@@ -211,35 +242,81 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                         );
                     })}
 
-                    <button
-                        type="button"
-                        onClick={() => setIsAddingGroup((v) => !v)}
-                        className="mac-glass-pill px-2.5 py-1 rounded-[6px] text-[11px] font-medium cursor-pointer"
-                    >
-                        {t.addGroupBtn}
-                    </button>
+                    {/* Popover / Tooltip Input for Adding Category */}
+                    <div className="relative inline-block" ref={popoverRef}>
+                        <button
+                            type="button"
+                            onClick={() => setIsAddingGroup((v) => !v)}
+                            className="mac-glass-pill px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1 cursor-pointer hover:bg-black/10 dark:hover:bg-white/15 transition text-secondary hover:text-foreground shadow-xs"
+                            title={t.addGroupTitle}
+                            aria-expanded={isAddingGroup}
+                        >
+                            <IconPlus size={11} />
+                            <span>{t.addGroupBtn}</span>
+                        </button>
+
+                        {isAddingGroup && (
+                            <div className="absolute left-0 top-full mt-1.5 z-50 w-60 mac-modal-surface rounded-xl shadow-2xl p-2.5 backdrop-blur-xl animate-scale-enter border border-black/10 dark:border-white/10">
+                                <form onSubmit={handleAddGroup} className="flex flex-col gap-2">
+                                    <div className="flex items-center justify-between px-0.5 text-[11px] font-semibold text-foreground">
+                                        <span>{t.addGroupTitle}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsAddingGroup(false)}
+                                            className="text-secondary hover:text-foreground p-0.5 cursor-pointer rounded"
+                                            aria-label="Tutup"
+                                        >
+                                            <IconClose size={12} />
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <input
+                                            ref={addGroupInputRef}
+                                            type="text"
+                                            value={newGroupName}
+                                            onChange={(e) => setNewGroupName(e.target.value)}
+                                            placeholder={t.addGroupPlaceholder}
+                                            className="mac-input flex-1 px-2.5 py-1 rounded-[6px] text-[11px] text-foreground focus:outline-none"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Escape') setIsAddingGroup(false);
+                                            }}
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={!newGroupName.trim() || groups.includes(newGroupName.trim())}
+                                            className="bg-accent disabled:opacity-40 text-white px-2.5 py-1 rounded-[6px] text-[11px] font-medium cursor-pointer transition shrink-0 shadow-xs"
+                                        >
+                                            {t.saveGroupBtn}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Stream Health Tools */}
-                <div className="flex items-center gap-1.5">
+                {/* Stream Health & Filter Utility Tools */}
+                <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
                     <button
                         type="button"
                         onClick={() => setHideOffline((v) => !v)}
-                        className={`px-2.5 py-1 rounded-[6px] text-[11px] font-medium cursor-pointer transition ${
+                        className={`px-2.5 py-1 rounded-[7px] text-[11px] font-medium cursor-pointer transition flex items-center gap-1.5 shadow-xs ${
                             hideOffline
-                                ? 'bg-accent text-white'
-                                : 'mac-glass-pill'
+                                ? 'bg-accent text-white font-semibold'
+                                : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
                         }`}
+                        title="Sembunyikan stasiun radio yang sedang offline"
                     >
-                        {t.hideOffline}
+                        <span>{t.hideOffline}</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => void handleRunHealthCheck()}
                         disabled={isCheckingHealth}
-                        className="mac-glass-pill px-2.5 py-1 rounded-[6px] text-[11px] font-medium flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                        className="mac-glass-pill px-2.5 py-1 rounded-[7px] text-[11px] font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:bg-black/5 dark:hover:bg-white/10 transition text-secondary hover:text-foreground shadow-xs"
+                        title="Periksa konektivitas dan status aliran stasiun radio"
                     >
-                        <IconPulse size={12} />
+                        <IconPulse size={12} className={isCheckingHealth ? 'animate-pulse text-accent' : ''} />
                         <span>
                             {isCheckingHealth
                                 ? t.checkingHealth
@@ -254,37 +331,15 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                                     .removeOfflineStations()
                                     .then(refreshAll)
                             }
-                            className="mac-glass-pill px-2.5 py-1 rounded-[6px] text-[#FF453A] text-[11px] font-medium cursor-pointer"
+                            className="mac-glass-pill px-2.5 py-1 rounded-[7px] text-[#FF453A] hover:bg-[#FF453A]/10 text-[11px] font-medium cursor-pointer transition flex items-center gap-1 shadow-xs"
+                            title="Hapus stasiun radio yang terdeteksi offline"
                         >
-                            {t.removeOffline}
+                            <IconTrash size={11} />
+                            <span>{t.removeOffline}</span>
                         </button>
                     )}
                 </div>
             </div>
-
-            {isAddingGroup && (
-                <form
-                    onSubmit={handleAddGroup}
-                    className="mac-settings-card animate-collapse-enter px-4 py-3 flex items-center justify-between gap-3 text-xs"
-                >
-                    <span className="font-medium">{t.addGroupTitle}</span>
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="text"
-                            value={newGroupName}
-                            onChange={(e) => setNewGroupName(e.target.value)}
-                            placeholder={t.addGroupPlaceholder}
-                            className="mac-input px-3 py-1 rounded-[7px] text-xs w-52"
-                        />
-                        <button
-                            type="submit"
-                            className="bg-accent text-white px-3 py-1 rounded-[7px] text-xs font-medium cursor-pointer"
-                        >
-                            {t.saveGroupBtn}
-                        </button>
-                    </div>
-                </form>
-            )}
 
             {/* Section: My Stations */}
             <div>
@@ -293,16 +348,17 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                         <h2 className="text-[13px] font-bold">
                             {currentHeadingTitle} ({filteredStations.length})
                         </h2>
-                        {selectedGroup !== 'ALL' && groups.length > 1 && (
+                        {selectedGroup !== 'ALL' && groups.includes(selectedGroup) && (
                             <button
                                 type="button"
                                 onClick={() => {
                                     void api.deleteGroup(selectedGroup);
                                     setSelectedGroup('ALL');
                                 }}
-                                className="text-[11px] text-[#FF453A] hover:underline cursor-pointer"
+                                className="text-[11px] text-[#FF453A] hover:underline cursor-pointer flex items-center gap-1"
                             >
-                                {t.deleteGroupBtn}
+                                <IconTrash size={11} />
+                                <span>{t.deleteGroupBtn}</span>
                             </button>
                         )}
                     </div>

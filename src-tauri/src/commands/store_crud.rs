@@ -81,11 +81,7 @@ pub fn get_stations_data(store: State<Arc<AppStore>>) -> Value {
     let empty_initial = json!({
         "schemaVersion": 1,
         "stations": [],
-        "groups": [
-            "Pop & Anak Muda",
-            "Nasional & Berita",
-            "Lainnya & Nostalgia"
-        ]
+        "groups": []
     });
 
     let stations_file = store.data_dir.join("stations.json");
@@ -280,11 +276,7 @@ pub fn clear_stations_data(store: State<Arc<AppStore>>) -> Result<(), String> {
     let empty_data = json!({
         "schemaVersion": 1,
         "stations": [],
-        "groups": [
-            "Pop & Anak Muda",
-            "Nasional & Berita",
-            "Lainnya & Nostalgia"
-        ]
+        "groups": []
     });
     store.write_json("stations.json", &empty_data)
 }

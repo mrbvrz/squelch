@@ -297,11 +297,7 @@ export const App: React.FC = () => {
             if (resetTarget === 'stations') {
                 await api.clearStationsData();
                 appCoreData.setStations([]);
-                appCoreData.setGroups([
-                    'Pop & Anak Muda',
-                    'Nasional & Berita',
-                    'Lainnya & Nostalgia'
-                ]);
+                appCoreData.setGroups([]);
             } else if (resetTarget === 'schedules') {
                 await api.clearSchedulesData();
                 setSchedulesRef.current([]);
@@ -312,11 +308,7 @@ export const App: React.FC = () => {
                 // 'all' or 'settings' -> "Kembalikan Bawaan": reset ALL data (stations, schedules, stats, settings)
                 const res = await api.resetAllData();
                 appCoreData.setStations([]);
-                appCoreData.setGroups([
-                    'Pop & Anak Muda',
-                    'Nasional & Berita',
-                    'Lainnya & Nostalgia'
-                ]);
+                appCoreData.setGroups([]);
                 setSchedulesRef.current([]);
                 appCoreData.setStatsSummary(null);
                 if (res) {

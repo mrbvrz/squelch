@@ -11,6 +11,14 @@ import {
     parseM3uPlaylist,
     parsePlsPlaylist
 } from '../utils/playlist';
+import type {
+    ListeningStatsSchema,
+    ListeningStatsSummary
+} from '../types/stats';
+import {
+    buildListeningStatsSummary,
+    recordListeningSeconds
+} from '../utils/listening-stats';
 
 interface PlayerStatus {
     state:
@@ -45,45 +53,6 @@ function syncPlayerStatusToRust() {
     }).catch(() => {});
 }
 
-interface ListeningStatsSchema {
-    schemaVersion: number;
-    dailySeconds: Record<string, number>;
-    hourlySeconds?: Record<string, number>;
-    monthlySeconds: Record<string, number>;
-    stationSeconds: Record<string, number>;
-    stationNames?: Record<string, string>;
-    stationLogos?: Record<string, string>;
-    totalSeconds: number;
-}
-
-interface StatSeriesPoint {
-    key: string;
-    date?: string;
-    month?: string;
-    label: string;
-    seconds: number;
-}
-
-interface StationStatPoint {
-    stationId: string;
-    stationName?: string;
-    logoUrl?: string;
-    seconds: number;
-}
-
-interface ListeningStatsSummary {
-    todaySeconds: number;
-    thisWeekSeconds: number;
-    thisMonthSeconds: number;
-    thisYearSeconds: number;
-    totalSeconds: number;
-    dailySeries: StatSeriesPoint[];
-    weeklySeries: StatSeriesPoint[];
-    monthlySeries: StatSeriesPoint[];
-    yearlySeries: StatSeriesPoint[];
-    topStations: StationStatPoint[];
-}
-
 let statsData: ListeningStatsSchema = {
     schemaVersion: 1,
     dailySeconds: {},
@@ -98,19 +67,6 @@ let isStatsLoaded = false;
 let statsDirty = false;
 let lastTickTimeMs: number | null = null;
 let statsSaveTimeout: ReturnType<typeof setTimeout> | null = null;
-
-function formatDateKey(d: Date): string {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-function formatMonthKey(d: Date): string {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    return `${year}-${month}`;
-}
 
 async function ensureStatsLoaded(): Promise<ListeningStatsSchema> {
     if (!isStatsLoaded) {
@@ -169,165 +125,14 @@ function recordListeningTick(now = new Date()): void {
 
     lastTickTimeMs += elapsedSec * 1000;
 
-    const dayKey = formatDateKey(now);
-    const hourKey = `${dayKey}-${String(now.getHours()).padStart(2, '0')}`;
-    const monthKey = formatMonthKey(now);
-    const stationId = playerStatus.currentStation?.id;
-    const stationName = playerStatus.currentStation?.name;
-    const logoUrl = playerStatus.currentStation?.logoUrl;
-
-    statsData.dailySeconds[dayKey] =
-        (statsData.dailySeconds[dayKey] ?? 0) + elapsedSec;
-    if (!statsData.hourlySeconds) statsData.hourlySeconds = {};
-    statsData.hourlySeconds[hourKey] =
-        (statsData.hourlySeconds[hourKey] ?? 0) + elapsedSec;
-    statsData.monthlySeconds[monthKey] =
-        (statsData.monthlySeconds[monthKey] ?? 0) + elapsedSec;
-    if (stationId) {
-        statsData.stationSeconds[stationId] =
-            (statsData.stationSeconds[stationId] ?? 0) + elapsedSec;
-        if (!statsData.stationNames) statsData.stationNames = {};
-        if (stationName) {
-            statsData.stationNames[stationId] = stationName;
-        }
-        if (!statsData.stationLogos) statsData.stationLogos = {};
-        if (logoUrl) {
-            statsData.stationLogos[stationId] = logoUrl;
-        }
-    }
-    statsData.totalSeconds = (statsData.totalSeconds ?? 0) + elapsedSec;
+    recordListeningSeconds(
+        statsData,
+        elapsedSec,
+        playerStatus.currentStation,
+        now
+    );
     statsDirty = true;
     scheduleStatsSave();
-}
-
-function buildListeningStatsSummary(
-    data: ListeningStatsSchema,
-    now = new Date()
-): ListeningStatsSummary {
-    const todayKey = formatDateKey(now);
-    const thisMonthKey = formatMonthKey(now);
-    const currentYearPrefix = `${now.getFullYear()}-`;
-
-    // 1. Weekly series (Last 7 days)
-    const weeklySeries: StatSeriesPoint[] = [];
-    let thisWeekSeconds = 0;
-    for (let i = 6; i >= 0; i--) {
-        const d = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() - i
-        );
-        const key = formatDateKey(d);
-        const dayLabel = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
-        const sec = data.dailySeconds[key] ?? 0;
-        thisWeekSeconds += sec;
-        weeklySeries.push({ key, date: key, label: dayLabel, seconds: sec });
-    }
-
-    // 2. Daily series (24 Hours of Today: 00:00 - 23:00)
-    const dailySeries: StatSeriesPoint[] = [];
-    const currentHour = now.getHours();
-    for (let h = 0; h < 24; h++) {
-        const hourStr = String(h).padStart(2, '0');
-        const key = `${todayKey}-${hourStr}`;
-        const label = `${hourStr}:00`;
-        let sec = data.hourlySeconds?.[key] ?? 0;
-        if (sec === 0 && h === currentHour && data.dailySeconds[todayKey]) {
-            const recordedHourly = Object.entries(data.hourlySeconds || {})
-                .filter(([k]) => k.startsWith(todayKey))
-                .reduce((acc, [, val]) => acc + (val as number), 0);
-            const remainder = Math.max(
-                0,
-                (data.dailySeconds[todayKey] ?? 0) - recordedHourly
-            );
-            if (remainder > 0) {
-                sec = remainder;
-            }
-        }
-        dailySeries.push({
-            key,
-            date: todayKey,
-            label,
-            seconds: sec
-        });
-    }
-
-    // 3. Monthly series (Last 30 days)
-    const monthlySeries: StatSeriesPoint[] = [];
-    for (let i = 29; i >= 0; i--) {
-        const d = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() - i
-        );
-        const key = formatDateKey(d);
-        const dayLabel = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
-        monthlySeries.push({
-            key,
-            date: key,
-            month: formatMonthKey(d),
-            label: dayLabel,
-            seconds: data.dailySeconds[key] ?? 0
-        });
-    }
-
-    // 4. Yearly series (Last 12 months)
-    const monthNames = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'Mei',
-        'Jun',
-        'Jul',
-        'Agu',
-        'Sep',
-        'Okt',
-        'Nov',
-        'Des'
-    ];
-    const yearlySeries: StatSeriesPoint[] = [];
-    for (let i = 11; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const key = formatMonthKey(d);
-        const label = `${monthNames[d.getMonth()]} ${String(d.getFullYear()).slice(-2)}`;
-        yearlySeries.push({
-            key,
-            month: key,
-            label,
-            seconds: data.monthlySeconds[key] ?? 0
-        });
-    }
-
-    let thisYearSeconds = 0;
-    for (const [mKey, sec] of Object.entries(data.monthlySeconds)) {
-        if (mKey.startsWith(currentYearPrefix)) {
-            thisYearSeconds += sec;
-        }
-    }
-
-    const topStations: StationStatPoint[] = Object.entries(data.stationSeconds)
-        .map(([stationId, seconds]) => ({
-            stationId,
-            stationName: data.stationNames?.[stationId],
-            logoUrl: data.stationLogos?.[stationId],
-            seconds
-        }))
-        .sort((a, b) => b.seconds - a.seconds)
-        .slice(0, 6);
-
-    return {
-        todaySeconds: data.dailySeconds[todayKey] ?? 0,
-        thisWeekSeconds,
-        thisMonthSeconds: data.monthlySeconds[thisMonthKey] ?? 0,
-        thisYearSeconds,
-        totalSeconds: data.totalSeconds ?? 0,
-        dailySeries,
-        weeklySeries,
-        monthlySeries,
-        yearlySeries,
-        topStations
-    };
 }
 
 export function initTauriBridge() {

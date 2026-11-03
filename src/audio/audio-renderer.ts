@@ -1,4 +1,4 @@
-import Hls from 'hls.js';
+import type Hls from 'hls.js';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { initTauriBridge } from '../bridge/tauri-bridge';
@@ -550,44 +550,55 @@ class AudioEqualizerEngine {
                 ? `${cmd.url}${cmd.url.includes('?') ? '&' : '?'}_t=${Date.now()}`
                 : cmd.url;
 
-        if (isHlsStream && Hls.isSupported()) {
-            hlsInstance = new Hls({
-                enableWorker: false,
-                lowLatencyMode: currentBufferLengthSeconds <= 3,
-                maxBufferLength: currentBufferLengthSeconds,
-                maxMaxBufferLength: currentBufferLengthSeconds * 2,
-                backBufferLength: 30
-            });
-
-            hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                audioEl.muted = true;
-                void audioEl
-                    .play()
-                    .then(() => {
-                        audioEl.muted = currentMuted;
-                        audioEl.volume = currentVolume;
-                        eqEngine.resume();
-                    })
-                    .catch((err: unknown) => {
-                        const msg =
-                            err instanceof Error
-                                ? err.message
-                                : 'HLS play failed';
-                        void handleNetworkIssue(msg);
+        let isHlsInitialized = false;
+        if (isHlsStream) {
+            try {
+                const { default: HlsClass } = await import('hls.js');
+                if (HlsClass.isSupported()) {
+                    isHlsInitialized = true;
+                    hlsInstance = new HlsClass({
+                        enableWorker: false,
+                        lowLatencyMode: currentBufferLengthSeconds <= 3,
+                        maxBufferLength: currentBufferLengthSeconds,
+                        maxMaxBufferLength: currentBufferLengthSeconds * 2,
+                        backBufferLength: 30
                     });
-            });
 
-            hlsInstance.on(Hls.Events.ERROR, (_event, data) => {
-                if (data.fatal) {
-                    void handleNetworkIssue(
-                        `HLS ${data.type}: ${data.details}`
-                    );
+                    hlsInstance.on(HlsClass.Events.MANIFEST_PARSED, () => {
+                        audioEl.muted = true;
+                        void audioEl
+                            .play()
+                            .then(() => {
+                                audioEl.muted = currentMuted;
+                                audioEl.volume = currentVolume;
+                                eqEngine.resume();
+                            })
+                            .catch((err: unknown) => {
+                                const msg =
+                                    err instanceof Error
+                                        ? err.message
+                                        : 'HLS play failed';
+                                void handleNetworkIssue(msg);
+                            });
+                    });
+
+                    hlsInstance.on(HlsClass.Events.ERROR, (_event, data) => {
+                        if (data.fatal) {
+                            void handleNetworkIssue(
+                                `HLS ${data.type}: ${data.details}`
+                            );
+                        }
+                    });
+
+                    hlsInstance.loadSource(streamUrl);
+                    hlsInstance.attachMedia(audioEl);
                 }
-            });
+            } catch (hlsErr) {
+                console.error('Failed to load HLS engine:', hlsErr);
+            }
+        }
 
-            hlsInstance.loadSource(streamUrl);
-            hlsInstance.attachMedia(audioEl);
-        } else {
+        if (!isHlsInitialized) {
             audioEl.pause();
             audioEl.src = streamUrl;
             audioEl.load();

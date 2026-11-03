@@ -12,22 +12,15 @@ import type {
     ListeningStatsSummary,
     PlayerState,
     RadioBrowserCountry,
-    Station,
-    StreamTestResult,
-    StreamType
+    Station
 } from '../types';
 import {
     applyAppearanceVariables,
     bindActiveScrollbars,
     FALLBACK_COUNTRIES
 } from '../utils/appearance';
-import { detectStreamTypeFromUrl } from '../utils/stream';
 import { OnboardingModal } from '../components/OnboardingModal';
-import {
-    UpdateModal,
-    type UpdateCheckResult,
-    type UpdateDownloadProgress
-} from '../components/UpdateModal';
+import { UpdateModal } from '../components/UpdateModal';
 import { IconSpinner, IconCheck } from '../components/Icons';
 
 import type { ActiveTab, SquelchWindowApi, StatsPeriodMode } from './types';
@@ -60,6 +53,10 @@ import {
     useScheduleManagement,
     isScheduleCurrentlyOnAir
 } from './hooks/useScheduleManagement';
+import { useAppUpdates } from './hooks/useAppUpdates';
+import { useStationModal } from './hooks/useStationModal';
+import { useImportExportModal } from './hooks/useImportExportModal';
+import { useAppShortcuts } from './hooks/useAppShortcuts';
 
 declare global {
     interface Window {
@@ -117,31 +114,6 @@ export const App: React.FC = () => {
     );
     const [isCheckingHealth, setIsCheckingHealth] = useState<boolean>(false);
 
-    // Add/Edit Station Modal
-    const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
-    const [editingStation, setEditingStation] = useState<Station | null>(null);
-    const [formName, setFormName] = useState<string>('');
-    const [formUrl, setFormUrl] = useState<string>('');
-    const [formLogo, setFormLogo] = useState<string>('');
-    const [formGenre, setFormGenre] = useState<string>('Pop');
-    const [formCity, setFormCity] = useState<string>('Jakarta');
-    const [formCountry, setFormCountry] = useState<string>('ID');
-    const [formGroup, setFormGroup] = useState<string>('Pop & Anak Muda');
-    const [formType, setFormType] = useState<StreamType>('mp3');
-    const [formTags, setFormTags] = useState<string>('');
-    const [isTestingStream, setIsTestingStream] = useState<boolean>(false);
-    const [testResult, setTestResult] = useState<StreamTestResult | null>(null);
-
-    // Import/Export Modal
-    const [isImportExportOpen, setIsImportExportOpen] =
-        useState<boolean>(false);
-    const [ieFormat, setIeFormat] = useState<'json' | 'm3u' | 'pls'>('json');
-    const [ieDuplicateStrategy, setIeDuplicateStrategy] = useState<
-        'skip' | 'overwrite' | 'duplicate'
-    >('skip');
-    const [ieTextContent, setIeTextContent] = useState<string>('');
-    const [ieStatusMessage, setIeStatusMessage] = useState<string>('');
-
     // Discover Tab
     const [discCountries, setDiscCountries] =
         useState<RadioBrowserCountry[]>(FALLBACK_COUNTRIES);
@@ -168,104 +140,79 @@ export const App: React.FC = () => {
     const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
     const [isQuitConfirmOpen, setIsQuitConfirmOpen] = useState<boolean>(false);
     const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
-    const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(
-        null
-    );
-    const [isCheckingUpdate, setIsCheckingUpdate] = useState<boolean>(false);
-    const [updateCheckError, setUpdateCheckError] = useState<string | null>(
-        null
-    );
-    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
-    const [updateDownloadProgress, setUpdateDownloadProgress] =
-        useState<UpdateDownloadProgress | null>(null);
     const [notifTestSuccess, setNotifTestSuccess] = useState<boolean>(false);
 
-    useEffect(() => {
-        if (api.onUpdateDownloadProgress) {
-            const unsub = api.onUpdateDownloadProgress((progress) => {
-                setUpdateDownloadProgress(progress);
-            });
-            return () => {
-                unsub();
-            };
-        }
-    }, [api]);
+    // Modularized App Updates Hook
+    const {
+        updateInfo,
+        setUpdateInfo,
+        isCheckingUpdate,
+        updateCheckError,
+        isUpdateModalOpen,
+        setIsUpdateModalOpen,
+        updateDownloadProgress,
+        handleStartDownloadUpdate,
+        handleCancelDownloadUpdate,
+        handleInstallUpdate,
+        handleRevealUpdateInFinder,
+        handleCheckForUpdates
+    } = useAppUpdates({
+        api,
+        autoCheckUpdates: settings?.autoCheckUpdates !== false
+    });
 
-    const handleStartDownloadUpdate = useCallback(
-        async (url: string, filename?: string) => {
-            if (api.startDownloadUpdate) {
-                setUpdateDownloadProgress({
-                    status: 'downloading',
-                    transferred: 0,
-                    total: 0,
-                    percent: 0,
-                    fileName: filename
-                });
-                try {
-                    await api.startDownloadUpdate(url, filename);
-                } catch (err: any) {
-                    setUpdateDownloadProgress({
-                        status: 'error',
-                        transferred: 0,
-                        total: 0,
-                        percent: 0,
-                        error: err?.message || String(err)
-                    });
-                }
-            }
-        },
-        [api]
-    );
+    // Modularized Station Form Modal Hook
+    const {
+        isFormOpen,
+        setIsFormOpen,
+        editingStation,
+        formName,
+        setFormName,
+        formUrl,
+        setFormUrl,
+        formLogo,
+        setFormLogo,
+        formGenre,
+        setFormGenre,
+        formCity,
+        setFormCity,
+        formGroup,
+        setFormGroup,
+        formType,
+        setFormType,
+        formTags,
+        setFormTags,
+        isTestingStream,
+        testResult,
+        openAddStationModal,
+        openEditStationModal,
+        handleTestStream,
+        handleSaveStation
+    } = useStationModal({
+        groups,
+        selectedGroup,
+        api,
+        refreshAll: () => refreshAll()
+    });
 
-    const handleCancelDownloadUpdate = useCallback(async () => {
-        if (api.cancelDownloadUpdate) {
-            await api.cancelDownloadUpdate();
-            setUpdateDownloadProgress(null);
-        }
-    }, [api]);
-
-    const handleInstallUpdate = useCallback(
-        async (filePath: string) => {
-            if (api.openUpdateInstaller) {
-                await api.openUpdateInstaller(filePath);
-            }
-        },
-        [api]
-    );
-
-    const handleRevealUpdateInFinder = useCallback(
-        async (filePath: string) => {
-            if (api.revealUpdateInFinder) {
-                await api.revealUpdateInFinder(filePath);
-            }
-        },
-        [api]
-    );
-
-    const handleCheckForUpdates = useCallback(
-        async (manual = true) => {
-            if (manual) {
-                setIsUpdateModalOpen(true);
-            }
-            setIsCheckingUpdate(true);
-            setUpdateCheckError(null);
-            try {
-                const res = await api.checkForUpdates();
-                setUpdateInfo(res);
-                if (res.hasUpdate) {
-                    setIsUpdateModalOpen(true);
-                }
-            } catch (err: any) {
-                console.error('Update check failed:', err);
-                if (manual) {
-                    setUpdateCheckError(err?.message || String(err));
-                }
-            } finally {
-                setIsCheckingUpdate(false);
-            }
-        },
-        [api]
-    );
+    // Modularized Import / Export Modal Hook
+    const {
+        isImportExportOpen,
+        setIsImportExportOpen,
+        ieFormat,
+        ieDuplicateStrategy,
+        setIeDuplicateStrategy,
+        ieTextContent,
+        setIeTextContent,
+        ieStatusMessage,
+        setIeStatusMessage,
+        handleExportLoad,
+        handleImportExecute
+    } = useImportExportModal({
+        stationsCount: stations.length,
+        api,
+        refreshAll: () => refreshAll()
+    });
 
     // Show Schedules
     const {
@@ -534,141 +481,33 @@ export const App: React.FC = () => {
         }
     }, [settings?.hasCompletedOnboarding]);
 
-    // Auto-check for updates quietly 3s after startup
-    useEffect(() => {
-        if (settings && settings.autoCheckUpdates !== false) {
-            const timer = setTimeout(() => {
-                void handleCheckForUpdates(false);
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [settings?.autoCheckUpdates]);
+    const handleCloseAllModals = useCallback(() => {
+        setIsFormOpen(false);
+        setIsImportExportOpen(false);
+        setIsAddingGroup(false);
+        setIsResetConfirmOpen(false);
+        setIsAboutModalOpen(false);
+        setIsQuitConfirmOpen(false);
+        setUpdateInfo(null);
+        setIsScheduleModalOpen(false);
+        setIsUpdateModalOpen(false);
+        setIsOnboardingOpen(false);
+    }, [
+        setIsFormOpen,
+        setIsImportExportOpen,
+        setUpdateInfo,
+        setIsScheduleModalOpen,
+        setIsUpdateModalOpen
+    ]);
 
-    // Comprehensive In-App Keyboard Shortcuts & Navigation
-    useEffect(() => {
-        const handleInAppKeyDown = (e: KeyboardEvent) => {
-            // When actively recording a shortcut in Preferences, do not intercept
-            if (recordingShortcutKey) return;
-
-            const target = e.target as HTMLElement | null;
-            const isEditingText =
-                target &&
-                (target.tagName === 'INPUT' ||
-                    target.tagName === 'TEXTAREA' ||
-                    target.isContentEditable);
-
-            // Escape closes open modals or clears active search
-            if (e.key === 'Escape') {
-                if (isEditingText) {
-                    target.blur();
-                    return;
-                }
-                setIsFormOpen(false);
-                setIsImportExportOpen(false);
-                setIsAddingGroup(false);
-                setIsResetConfirmOpen(false);
-                setIsAboutModalOpen(false);
-                setIsQuitConfirmOpen(false);
-                setUpdateInfo(null);
-                setIsScheduleModalOpen(false);
-                setIsUpdateModalOpen(false);
-                setIsOnboardingOpen(false);
-                return;
-            }
-
-            // ⌘F or Ctrl+F (or '/' when not editing text): Focus search
-            if (
-                ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') ||
-                (!isEditingText && e.key === '/' && !e.metaKey && !e.ctrlKey)
-            ) {
-                e.preventDefault();
-                searchInputRef.current?.focus();
-                searchInputRef.current?.select();
-                return;
-            }
-
-            // ⌘, or Ctrl+, : Open Preferences
-            if ((e.metaKey || e.ctrlKey) && e.key === ',') {
-                e.preventDefault();
-                navigateToTab('preferences');
-                return;
-            }
-
-            // ⌘1 to ⌘6: Quick switch tabs
-            if (e.metaKey || e.ctrlKey) {
-                const tabNum = parseInt(e.key, 10);
-                const tabs: ActiveTab[] = [
-                    'stations',
-                    'schedules',
-                    'discover',
-                    'stats',
-                    'preferences',
-                    'about'
-                ];
-                if (!isNaN(tabNum) && tabNum >= 1 && tabNum <= tabs.length) {
-                    e.preventDefault();
-                    navigateToTab(tabs[tabNum - 1]);
-                    return;
-                }
-            }
-
-            // ⌘R or F5: Reconnect stream
-            if (
-                ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'r') ||
-                e.key === 'F5'
-            ) {
-                if (currentStation) {
-                    e.preventDefault();
-                    void api.playStation(currentStation.id);
-                    return;
-                }
-            }
-
-            // The following controls are only active when NOT editing text
-            if (isEditingText) return;
-
-            // Space: Toggle Play/Pause
-            if (e.code === 'Space') {
-                e.preventDefault();
-                void api.togglePlayPause();
-                return;
-            }
-
-            // ArrowRight / ArrowLeft: Next / Prev station
-            if (e.key === 'ArrowRight' || e.key === 'l') {
-                e.preventDefault();
-                void api.nextStation();
-                return;
-            }
-            if (e.key === 'ArrowLeft' || e.key === 'h') {
-                e.preventDefault();
-                void api.prevStation();
-                return;
-            }
-
-            // ArrowUp / ArrowDown: Volume adjustments
-            if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                void api.changeVolume(0.05);
-                return;
-            }
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                void api.changeVolume(-0.05);
-                return;
-            }
-
-            // 'm' or 'M': Toggle Mute
-            if (e.key.toLowerCase() === 'm') {
-                e.preventDefault();
-                void api.toggleMute();
-                return;
-            }
-        };
-
-        window.addEventListener('keydown', handleInAppKeyDown);
-        return () => window.removeEventListener('keydown', handleInAppKeyDown);
-    }, [recordingShortcutKey, currentStation, navigateToTab, api]);
+    useAppShortcuts({
+        recordingShortcutKey,
+        currentStation,
+        searchInputRef,
+        navigateToTab,
+        onCloseAllModals: handleCloseAllModals,
+        api
+    });
 
     const isPlaying = playerState === 'playing';
     const isBusy =
@@ -817,96 +656,6 @@ export const App: React.FC = () => {
         }
     }, [resetTarget, t]);
 
-    const openAddStationModal = () => {
-        setEditingStation(null);
-        setFormName('');
-        setFormUrl('');
-        setFormLogo('');
-        setFormGenre('Pop');
-        setFormCity('Jakarta');
-        setFormCountry('ID');
-        setFormGroup(
-            selectedGroup !== 'ALL'
-                ? selectedGroup
-                : groups[0] || 'Pop & Anak Muda'
-        );
-        setFormType('mp3');
-        setFormTags('');
-        setTestResult(null);
-        setIsFormOpen(true);
-    };
-
-    const openEditStationModal = (st: Station) => {
-        setEditingStation(st);
-        setFormName(st.name);
-        setFormUrl(st.streamUrl);
-        setFormLogo(st.logoUrl || '');
-        setFormGenre(st.genre);
-        setFormCity(st.city);
-        setFormCountry(st.country);
-        setFormGroup(st.group);
-        setFormType(st.streamType);
-        setFormTags(st.tags.join(', '));
-        setTestResult(null);
-        setIsFormOpen(true);
-    };
-
-    const handleTestStream = async () => {
-        if (!formUrl.trim()) return;
-        setIsTestingStream(true);
-        setTestResult(null);
-        try {
-            const res = await api.testStreamUrl(formUrl.trim());
-            setTestResult(res);
-            if (res.ok) {
-                setFormType(res.streamType);
-                if (res.resolvedUrl && res.resolvedUrl !== formUrl.trim()) {
-                    setFormUrl(res.resolvedUrl);
-                }
-                if (!formName.trim() && res.icyName) {
-                    setFormName(res.icyName);
-                }
-                if (!formLogo.trim() && res.noiceCatalogInfo?.logoUrl) {
-                    setFormLogo(res.noiceCatalogInfo.logoUrl);
-                }
-            }
-        } finally {
-            setIsTestingStream(false);
-        }
-    };
-
-    const handleSaveStation = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!formName.trim() || !formUrl.trim()) return;
-
-        const detected = detectStreamTypeFromUrl(formUrl.trim());
-        const finalStreamType = detected || formType;
-
-        await api.saveStation({
-            id: editingStation?.id,
-            name: formName.trim(),
-            streamUrl: formUrl.trim(),
-            streamType: finalStreamType,
-            logoUrl: formLogo.trim() || null,
-            genre: formGenre.trim() || 'Radio',
-            city: formCity.trim() || 'Indonesia',
-            country: formCountry.trim() || 'ID',
-            group: formGroup.trim() || 'Pop & Anak Muda',
-            tags: formTags
-                .split(',')
-                .map((tag) => tag.trim())
-                .filter(Boolean),
-            isFavorite: editingStation?.isFavorite ?? false,
-            notes: editingStation?.notes ?? '',
-            status: testResult?.ok
-                ? 'online'
-                : (editingStation?.status ?? 'online')
-        });
-
-        setIsFormOpen(false);
-        await refreshAll();
-    };
-
     const handleAddGroup = async (e: React.FormEvent) => {
         e.preventDefault();
         const trimmed = newGroupName.trim();
@@ -1003,30 +752,6 @@ export const App: React.FC = () => {
         await refreshAll();
         if (playImmediately) {
             await api.playStation(saved.id);
-        }
-    };
-
-    const handleExportLoad = async (format: 'json' | 'm3u' | 'pls') => {
-        setIeFormat(format);
-        const content = await api.exportStations(format);
-        setIeTextContent(content);
-        setIeStatusMessage(`${stations.length} (${format.toUpperCase()})`);
-    };
-
-    const handleImportExecute = async () => {
-        if (!ieTextContent.trim()) return;
-        try {
-            const res = await api.importStations({
-                content: ieTextContent,
-                format: ieFormat,
-                duplicateStrategy: ieDuplicateStrategy
-            });
-            setIeStatusMessage(`+${res.importedCount} / ~${res.skippedCount}`);
-            await refreshAll();
-        } catch (err) {
-            setIeStatusMessage(
-                err instanceof Error ? err.message : 'Invalid playlist format'
-            );
         }
     };
 

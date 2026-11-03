@@ -11,10 +11,7 @@ import {
     parseM3uPlaylist,
     parsePlsPlaylist
 } from '../utils/playlist';
-import type {
-    ListeningStatsSchema,
-    ListeningStatsSummary
-} from '../types/stats';
+import type { ListeningStatsSchema } from '../types/stats';
 import {
     buildListeningStatsSummary,
     recordListeningSeconds

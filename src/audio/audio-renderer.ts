@@ -290,6 +290,11 @@ class AudioEqualizerEngine {
 
     const destroyHls = () => {
         if (hlsInstance) {
+            try {
+                hlsInstance.detachMedia();
+            } catch {
+                // Ignore detach errors if already disconnected
+            }
             hlsInstance.destroy();
             hlsInstance = null;
         }
@@ -561,7 +566,9 @@ class AudioEqualizerEngine {
                         lowLatencyMode: currentBufferLengthSeconds <= 3,
                         maxBufferLength: currentBufferLengthSeconds,
                         maxMaxBufferLength: currentBufferLengthSeconds * 2,
-                        backBufferLength: 30
+                        maxBufferSize: 4 * 1024 * 1024,
+                        maxBufferHole: 0.5,
+                        backBufferLength: 10
                     });
 
                     hlsInstance.on(HlsClass.Events.MANIFEST_PARSED, () => {

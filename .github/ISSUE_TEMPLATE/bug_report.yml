@@ -1,0 +1,96 @@
+name: 🐛 Bug Report
+description: Create a report to help us fix a bug or issue in Squelch
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue! Please check existing issues first to avoid duplicates.
+
+  - type: input
+    id: version
+    attributes:
+      label: Squelch Version
+      description: What version of Squelch are you using? (Found in Preferences ➔ About or Menu Bar)
+      placeholder: "e.g., v0.1.3"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: macOS Version
+      description: Which version of macOS are you running?
+      options:
+        - "macOS 15 Sequoia"
+        - "macOS 14 Sonoma"
+        - "macOS 13 Ventura"
+        - "Other / Older macOS version"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: arch
+    attributes:
+      label: Hardware Architecture
+      description: Is your Mac powered by Apple Silicon or Intel?
+      options:
+        - "Apple Silicon (M1 / M2 / M3 / M4)"
+        - "Intel x86_64"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: "Describe what happened..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps To Reproduce
+      description: Detailed steps explaining how to reproduce the bug.
+      value: |
+        1. Open Squelch
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+      placeholder: "What should have happened instead?"
+    validations:
+      required: true
+
+  - type: input
+    id: stream_url
+    attributes:
+      label: Relevant Stream URL (Optional)
+      description: If this issue is related to audio playback, stream decoding, or ICY metadata, please provide the URL.
+      placeholder: "http://example.com/live.mp3"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and Screenshots (Optional)
+      description: Drag and drop screenshots or paste diagnostics / terminal logs here.
+      placeholder: "Paste console logs or copy snippet from Preferences ➔ Diagnostics & Logs"
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have searched existing issues and confirmed this is not a duplicate.
+          required: true
+        - label: I am using the latest available release of Squelch.
+          required: true

@@ -1,0 +1,48 @@
+name: 💡 Feature Request
+description: Suggest an idea or enhancement for Squelch
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an enhancement to Squelch! We value community ideas to make this macOS radio player even better.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is your feature request related to a problem? Please describe.
+      description: A clear and concise description of what the problem or limitation is.
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the solution you'd like
+      description: A clear and concise description of what you want to happen.
+      placeholder: "I would like Squelch to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Describe alternatives you've considered
+      description: A clear and concise description of any alternative solutions or features you've considered.
+      placeholder: "An alternative approach could be..."
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context & Mockups (Optional)
+      description: Add any other context, UI sketches, or screenshots about the feature request here.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have searched existing issues and feature requests to confirm this is not a duplicate.
+          required: true

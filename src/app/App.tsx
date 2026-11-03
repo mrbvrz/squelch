@@ -16,33 +16,15 @@ import {
     applyAppearanceVariables,
     bindActiveScrollbars
 } from '../utils/appearance';
-import { OnboardingModal } from '../components/OnboardingModal';
-import { UpdateModal } from '../components/UpdateModal';
-import { IconSpinner, IconCheck } from '../components/Icons';
-
 import type { ActiveTab, SquelchWindowApi, StatsPeriodMode } from './types';
-import { DAY_LABELS } from './types';
 
 // Shell & Navigation Components
 import { Sidebar } from './components/Sidebar';
 import { HeaderBar } from './components/HeaderBar';
 import { SleepCountdownBanner } from './components/SleepCountdownBanner';
-
-// Tabs
-import { StationsTab } from './tabs/StationsTab';
-import { SchedulesTab } from './tabs/SchedulesTab';
-import { DiscoverTab } from './tabs/DiscoverTab';
-import { StatsTab } from './tabs/StatsTab';
-import { PreferencesTab } from './tabs/PreferencesTab';
-import { AboutTab } from './tabs/AboutTab';
-
-// Modals
-import { StationModal } from './modals/StationModal';
-import { ScheduleModal } from './modals/ScheduleModal';
-import { ImportExportModal } from './modals/ImportExportModal';
-import { ResetConfirmModal } from './modals/ResetConfirmModal';
-import { QuitConfirmModal } from './modals/QuitConfirmModal';
-import { AboutModal } from './modals/AboutModal';
+import { StandaloneAboutView } from './components/StandaloneAboutView';
+import { TabContentHost } from './components/TabContentHost';
+import { AppModalsHost } from './components/AppModalsHost';
 
 // Custom Modular Hooks
 import { useTabNavigation } from './hooks/useTabNavigation';
@@ -692,16 +674,12 @@ export const App: React.FC = () => {
 
     if (isStandaloneAbout) {
         return (
-            <div className="mac-window-shell flex flex-col h-screen select-none overflow-hidden p-6">
-                <div
-                    onMouseDown={handleWindowDragMouseDown}
-                    style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
-                    className="h-8 w-full shrink-0 -mt-2 -mx-2"
-                />
-                <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 px-4 overflow-y-auto">
-                    <AboutTab appIconDataUrl={appIconDataUrl} api={api} t={t} />
-                </div>
-            </div>
+            <StandaloneAboutView
+                appIconDataUrl={appIconDataUrl}
+                api={api}
+                t={t}
+                onWindowDragMouseDown={handleWindowDragMouseDown}
+            />
         );
     }
 
@@ -749,358 +727,267 @@ export const App: React.FC = () => {
                         t={t}
                     />
 
-                    {activeTab === 'stations' && (
-                        <StationsTab
-                            stations={stations}
-                            filteredStations={filteredStations}
-                            groups={groups}
-                            selectedGroup={selectedGroup}
-                            setSelectedGroup={setSelectedGroup}
-                            favoritesOnly={favoritesOnly}
-                            setFavoritesOnly={setFavoritesOnly}
-                            favCount={favCount}
-                            hideOffline={hideOffline}
-                            setHideOffline={setHideOffline}
-                            isCheckingHealth={isCheckingHealth}
-                            handleRunHealthCheck={handleRunHealthCheck}
-                            isAddingGroup={isAddingGroup}
-                            setIsAddingGroup={setIsAddingGroup}
-                            newGroupName={newGroupName}
-                            setNewGroupName={setNewGroupName}
-                            handleAddGroup={handleAddGroup}
-                            currentHeadingTitle={currentHeadingTitle}
-                            openAddStationModal={openAddStationModal}
-                            openEditStationModal={openEditStationModal}
-                            handleExportLoad={handleExportLoad}
-                            setIsImportExportOpen={setIsImportExportOpen}
-                            setActiveTab={setActiveTab}
-                            isPlayingStation={isPlayingStation}
-                            draggedStationId={draggedStationId}
-                            setDraggedStationId={setDraggedStationId}
-                            handleDropStation={handleDropStation}
-                            api={api}
-                            refreshAll={refreshAll}
-                            t={t}
-                        />
-                    )}
-
-                    {activeTab === 'schedules' && (
-                        <SchedulesTab
-                            schedules={schedules}
-                            stations={stations}
-                            currentStation={currentStation}
-                            isPlaying={isPlaying}
-                            isBusy={isBusy}
-                            lang={lang}
-                            openAddScheduleModal={openAddScheduleModal}
-                            openEditScheduleModal={openEditScheduleModal}
-                            handleDeleteSchedule={handleDeleteSchedule}
-                            handleToggleSchedule={handleToggleSchedule}
-                            handleToggleScheduleAutoPlay={
-                                handleToggleScheduleAutoPlay
-                            }
-                            isScheduleCurrentlyOnAir={isScheduleCurrentlyOnAir}
-                            api={api}
-                            t={t}
-                        />
-                    )}
-
-                    {activeTab === 'discover' && (
-                        <DiscoverTab
-                            discCountry={discCountry}
-                            setDiscCountry={setDiscCountry}
-                            handleCountryChange={handleCountryChange}
-                            discCountries={discCountries}
-                            discName={discName}
-                            setDiscName={setDiscName}
-                            discTag={discTag}
-                            setDiscTag={setDiscTag}
-                            isSearchingOnline={isSearchingOnline}
-                            discError={discError}
-                            discResults={discResults}
-                            stations={stations}
-                            currentStation={currentStation}
-                            isPlaying={isPlaying}
-                            isBusy={isBusy}
-                            handleDiscoverSearch={handleDiscoverSearch}
-                            handleAddFromDiscover={handleAddFromDiscover}
-                            api={api}
-                            t={t}
-                        />
-                    )}
-
-                    {activeTab === 'stats' && statsSummary && (
-                        <StatsTab
-                            statsSummary={statsSummary}
-                            statsViewMode={statsViewMode}
-                            setStatsViewMode={setStatsViewMode}
-                            activeChartPoints={activeChartPoints}
-                            maxChartSeconds={maxChartSeconds}
-                            stations={stations}
-                            isPlayingStation={isPlayingStation}
-                            api={api}
-                            lang={lang}
-                            t={t}
-                            setActiveTab={setActiveTab}
-                        />
-                    )}
-
-                    {activeTab === 'preferences' && settings && (
-                        <PreferencesTab
-                            settings={settings}
-                            systemFonts={systemFonts}
-                            isLoadingFonts={isLoadingFonts}
-                            lang={lang}
-                            recordingShortcutKey={recordingShortcutKey}
-                            setRecordingShortcutKey={setRecordingShortcutKey}
-                            backupStatusMsg={backupStatusMsg}
-                            handleRestoreData={handleRestoreData}
-                            handleBackupData={handleBackupData}
-                            updateInfo={updateInfo}
-                            updateCheckError={updateCheckError}
-                            isCheckingUpdate={isCheckingUpdate}
-                            updateDownloadProgress={updateDownloadProgress}
-                            handleCheckForUpdates={handleCheckForUpdates}
-                            setIsUpdateModalOpen={setIsUpdateModalOpen}
-                            setIsOnboardingOpen={setIsOnboardingOpen}
-                            notifTestSuccess={notifTestSuccess}
-                            setNotifTestSuccess={setNotifTestSuccess}
-                            dataDir={dataDir}
-                            copiedDiag={copiedDiag}
-                            setCopiedDiag={setCopiedDiag}
-                            showDiagReport={showDiagReport}
-                            setShowDiagReport={setShowDiagReport}
-                            diagnosticsText={diagnosticsText}
-                            setDiagnosticsText={setDiagnosticsText}
-                            setIsResetConfirmOpen={setIsResetConfirmOpen}
-                            onRequestReset={handleRequestReset}
-                            api={api}
-                            t={t}
-                        />
-                    )}
-
-                    {activeTab === 'about' && (
-                        <AboutTab
-                            appIconDataUrl={appIconDataUrl}
-                            api={api}
-                            t={t}
-                        />
-                    )}
+                    <TabContentHost
+                        activeTab={activeTab}
+                        stationsProps={{
+                            stations,
+                            filteredStations,
+                            groups,
+                            selectedGroup,
+                            setSelectedGroup,
+                            favoritesOnly,
+                            setFavoritesOnly,
+                            favCount,
+                            hideOffline,
+                            setHideOffline,
+                            isCheckingHealth,
+                            handleRunHealthCheck,
+                            isAddingGroup,
+                            setIsAddingGroup,
+                            newGroupName,
+                            setNewGroupName,
+                            handleAddGroup,
+                            currentHeadingTitle,
+                            openAddStationModal,
+                            openEditStationModal,
+                            handleExportLoad,
+                            setIsImportExportOpen,
+                            setActiveTab,
+                            isPlayingStation,
+                            draggedStationId,
+                            setDraggedStationId,
+                            handleDropStation,
+                            api,
+                            refreshAll,
+                            t
+                        }}
+                        schedulesProps={{
+                            schedules,
+                            stations,
+                            currentStation,
+                            isPlaying,
+                            isBusy,
+                            lang,
+                            openAddScheduleModal,
+                            openEditScheduleModal,
+                            handleDeleteSchedule,
+                            handleToggleSchedule,
+                            handleToggleScheduleAutoPlay,
+                            isScheduleCurrentlyOnAir,
+                            api,
+                            t
+                        }}
+                        discoverProps={{
+                            discCountry,
+                            setDiscCountry,
+                            handleCountryChange,
+                            discCountries,
+                            discName,
+                            setDiscName,
+                            discTag,
+                            setDiscTag,
+                            isSearchingOnline,
+                            discError,
+                            discResults,
+                            stations,
+                            currentStation,
+                            isPlaying,
+                            isBusy,
+                            handleDiscoverSearch,
+                            handleAddFromDiscover,
+                            api,
+                            t
+                        }}
+                        statsSummary={statsSummary}
+                        statsProps={{
+                            statsSummary: statsSummary!,
+                            statsViewMode,
+                            setStatsViewMode,
+                            activeChartPoints,
+                            maxChartSeconds,
+                            stations,
+                            isPlayingStation,
+                            api,
+                            lang,
+                            t,
+                            setActiveTab
+                        }}
+                        settings={settings}
+                        preferencesProps={{
+                            settings: settings!,
+                            systemFonts,
+                            isLoadingFonts,
+                            lang,
+                            recordingShortcutKey,
+                            setRecordingShortcutKey,
+                            backupStatusMsg,
+                            handleRestoreData,
+                            handleBackupData,
+                            updateInfo,
+                            updateCheckError,
+                            isCheckingUpdate,
+                            updateDownloadProgress,
+                            handleCheckForUpdates,
+                            setIsUpdateModalOpen,
+                            setIsOnboardingOpen,
+                            notifTestSuccess,
+                            setNotifTestSuccess,
+                            dataDir,
+                            copiedDiag,
+                            setCopiedDiag,
+                            showDiagReport,
+                            setShowDiagReport,
+                            diagnosticsText,
+                            setDiagnosticsText,
+                            setIsResetConfirmOpen,
+                            onRequestReset: handleRequestReset,
+                            api,
+                            t
+                        }}
+                        aboutProps={{
+                            appIconDataUrl,
+                            api,
+                            t
+                        }}
+                    />
                 </main>
             </div>
 
-            {/* MODALS */}
-            <StationModal
-                isOpen={isFormOpen}
-                onClose={() => setIsFormOpen(false)}
-                onSave={handleSaveStation}
-                editingStation={editingStation}
-                formName={formName}
-                setFormName={setFormName}
-                formUrl={formUrl}
-                setFormUrl={setFormUrl}
-                formGroup={formGroup}
-                setFormGroup={setFormGroup}
-                formGenre={formGenre}
-                setFormGenre={setFormGenre}
-                formCity={formCity}
-                setFormCity={setFormCity}
-                formType={formType}
-                setFormType={setFormType}
-                formLogo={formLogo}
-                setFormLogo={setFormLogo}
-                formTags={formTags}
-                setFormTags={setFormTags}
-                groups={groups}
-                onTestStream={() => void handleTestStream()}
-                isTestingStream={isTestingStream}
-                testResult={testResult}
-                onResolveLogo={(url) => api.resolveStationLogo(url)}
+            {/* MODALS & FLOATING BADGES */}
+            <AppModalsHost
+                api={api}
                 t={t}
-            />
-
-            <ImportExportModal
-                isOpen={isImportExportOpen}
-                onClose={() => setIsImportExportOpen(false)}
-                onExportLoad={(format) => void handleExportLoad(format)}
-                ieFormat={ieFormat}
-                ieDuplicateStrategy={ieDuplicateStrategy}
-                setIeDuplicateStrategy={setIeDuplicateStrategy}
-                ieTextContent={ieTextContent}
-                setIeTextContent={setIeTextContent}
-                ieStatusMessage={ieStatusMessage}
-                onCopyExport={() => {
-                    void navigator.clipboard.writeText(ieTextContent);
-                    setIeStatusMessage(t.copiedDiagBtn);
-                }}
-                onImportExecute={() => void handleImportExecute()}
-                t={t}
-            />
-
-            <ResetConfirmModal
-                isOpen={isResetConfirmOpen}
-                onClose={() => setIsResetConfirmOpen(false)}
-                onConfirm={async () => {
-                    setIsResetConfirmOpen(false);
-                    if (resetTarget === 'stations') {
-                        await api.clearStationsData();
-                    } else if (resetTarget === 'schedules') {
-                        await api.clearSchedulesData();
-                    } else if (resetTarget === 'stats') {
-                        await api.clearListeningStats();
-                    } else if (resetTarget === 'all') {
-                        await api.clearStationsData();
-                        await api.clearSchedulesData();
-                        await api.clearListeningStats();
-                    } else {
-                        await api.resetSettings();
-                    }
-                    await refreshAll();
-                }}
-                title={resetModalMeta.title}
-                description={resetModalMeta.description}
-                cancelBtnText={t.cancelBtn}
-                confirmBtnText={resetModalMeta.confirmBtn}
-            />
-
-            <QuitConfirmModal
-                isOpen={isQuitConfirmOpen}
-                onClose={() => setIsQuitConfirmOpen(false)}
-                onConfirm={() => void api.quitApp()}
-                appIconDataUrl={appIconDataUrl}
-                language={lang as 'en' | 'id'}
-                cancelBtnText={t.cancelBtn}
-            />
-
-            <AboutModal
-                isOpen={isAboutModalOpen}
-                onClose={() => {
-                    setIsAboutModalOpen(false);
-                    if (
-                        window.location.hash === '#about' ||
-                        window.location.hash === '#about-window'
-                    ) {
-                        window.location.hash = '';
-                    }
-                }}
-                appIconDataUrl={appIconDataUrl}
-                tagline={t.aboutTagline}
-                description={t.aboutDescription}
-                websiteBtnText={t.aboutWebsiteBtn}
-                specLinkText={t.aboutSpecLink}
-                changelogLinkText={t.aboutChangelogLink}
-                onOpenExternalUrl={(url) => void api.openExternalUrl(url)}
-            />
-
-            <ScheduleModal
-                isOpen={isScheduleModalOpen}
-                onClose={() => setIsScheduleModalOpen(false)}
-                onSave={handleSaveSchedule}
-                editingSchedule={editingSchedule}
-                stations={stations}
-                schedStationId={schedStationId}
-                setSchedStationId={setSchedStationId}
-                schedShowName={schedShowName}
-                setSchedShowName={setSchedShowName}
-                schedHost={schedHost}
-                setSchedHost={setSchedHost}
-                schedDays={schedDays}
-                setSchedDays={setSchedDays}
-                schedStartTime={schedStartTime}
-                setSchedStartTime={setSchedStartTime}
-                schedEndTime={schedEndTime}
-                setSchedEndTime={setSchedEndTime}
-                schedAutoPlay={schedAutoPlay}
-                setSchedAutoPlay={setSchedAutoPlay}
-                schedReminderMinutes={schedReminderMinutes}
-                setSchedReminderMinutes={setSchedReminderMinutes}
-                schedNotes={schedNotes}
-                setSchedNotes={setSchedNotes}
-                dayLabels={DAY_LABELS}
                 lang={lang}
-                t={t}
-                onResolveLogo={(url) => api.resolveStationLogo(url)}
-            />
-
-            {settings && (
-                <OnboardingModal
-                    isOpen={isOnboardingOpen}
-                    onClose={() => setIsOnboardingOpen(false)}
-                    settings={settings}
-                    onUpdateSettings={api.updateSettings}
-                    appIconDataUrl={appIconDataUrl}
-                    t={t}
-                    lang={lang}
-                />
-            )}
-
-            <UpdateModal
-                isOpen={isUpdateModalOpen}
-                onClose={() => setIsUpdateModalOpen(false)}
-                updateInfo={updateInfo}
                 appIconDataUrl={appIconDataUrl}
-                onOpenExternalUrl={(url: string) =>
-                    void api.openExternalUrl(url)
-                }
-                t={t}
-                isChecking={isCheckingUpdate}
-                error={updateCheckError}
-                onCheckAgain={() => void handleCheckForUpdates(true)}
-                downloadProgress={updateDownloadProgress}
-                onStartDownload={handleStartDownloadUpdate}
-                onCancelDownload={handleCancelDownloadUpdate}
-                onInstallUpdate={handleInstallUpdate}
-                onRevealInFinder={handleRevealUpdateInFinder}
+                settings={settings}
+                stations={stations}
+                groups={groups}
+                refreshAll={refreshAll}
+                stationModalProps={{
+                    isOpen: isFormOpen,
+                    onClose: () => setIsFormOpen(false),
+                    onSave: handleSaveStation,
+                    editingStation,
+                    formName,
+                    setFormName,
+                    formUrl,
+                    setFormUrl,
+                    formGroup,
+                    setFormGroup,
+                    formGenre,
+                    setFormGenre,
+                    formCity,
+                    setFormCity,
+                    formType,
+                    setFormType,
+                    formLogo,
+                    setFormLogo,
+                    formTags,
+                    setFormTags,
+                    onTestStream: () => void handleTestStream(),
+                    isTestingStream,
+                    testResult
+                }}
+                importExportModalProps={{
+                    isOpen: isImportExportOpen,
+                    onClose: () => setIsImportExportOpen(false),
+                    onExportLoad: (format) => void handleExportLoad(format),
+                    ieFormat,
+                    ieDuplicateStrategy,
+                    setIeDuplicateStrategy,
+                    ieTextContent,
+                    setIeTextContent,
+                    ieStatusMessage,
+                    onCopyExport: () => {
+                        void navigator.clipboard.writeText(ieTextContent);
+                        setIeStatusMessage(t.copiedDiagBtn);
+                    },
+                    onImportExecute: () => void handleImportExecute()
+                }}
+                resetModalProps={{
+                    isOpen: isResetConfirmOpen,
+                    onClose: () => setIsResetConfirmOpen(false),
+                    onConfirm: async () => {
+                        setIsResetConfirmOpen(false);
+                        if (resetTarget === 'stations') {
+                            await api.clearStationsData();
+                        } else if (resetTarget === 'schedules') {
+                            await api.clearSchedulesData();
+                        } else if (resetTarget === 'stats') {
+                            await api.clearListeningStats();
+                        } else if (resetTarget === 'all') {
+                            await api.clearStationsData();
+                            await api.clearSchedulesData();
+                            await api.clearListeningStats();
+                        } else {
+                            await api.resetSettings();
+                        }
+                        await refreshAll();
+                    },
+                    title: resetModalMeta.title,
+                    description: resetModalMeta.description,
+                    confirmBtnText: resetModalMeta.confirmBtn
+                }}
+                quitModalProps={{
+                    isOpen: isQuitConfirmOpen,
+                    onClose: () => setIsQuitConfirmOpen(false),
+                    onConfirm: () => void api.quitApp()
+                }}
+                aboutModalProps={{
+                    isOpen: isAboutModalOpen,
+                    onClose: () => {
+                        setIsAboutModalOpen(false);
+                        if (
+                            window.location.hash === '#about' ||
+                            window.location.hash === '#about-window'
+                        ) {
+                            window.location.hash = '';
+                        }
+                    }
+                }}
+                scheduleModalProps={{
+                    isOpen: isScheduleModalOpen,
+                    onClose: () => setIsScheduleModalOpen(false),
+                    onSave: handleSaveSchedule,
+                    editingSchedule,
+                    schedStationId,
+                    setSchedStationId,
+                    schedShowName,
+                    setSchedShowName,
+                    schedHost,
+                    setSchedHost,
+                    schedDays,
+                    setSchedDays,
+                    schedStartTime,
+                    setSchedStartTime,
+                    schedEndTime,
+                    setSchedEndTime,
+                    schedAutoPlay,
+                    setSchedAutoPlay,
+                    schedReminderMinutes,
+                    setSchedReminderMinutes,
+                    schedNotes,
+                    setSchedNotes
+                }}
+                onboardingModalProps={{
+                    isOpen: isOnboardingOpen,
+                    onClose: () => setIsOnboardingOpen(false)
+                }}
+                updateModalProps={{
+                    isOpen: isUpdateModalOpen,
+                    onOpen: () => setIsUpdateModalOpen(true),
+                    onClose: () => setIsUpdateModalOpen(false),
+                    updateInfo,
+                    isCheckingUpdate,
+                    updateCheckError,
+                    updateDownloadProgress,
+                    onCheckAgain: () => void handleCheckForUpdates(true),
+                    onStartDownload: handleStartDownloadUpdate,
+                    onCancelDownload: handleCancelDownloadUpdate,
+                    onInstallUpdate: handleInstallUpdate,
+                    onRevealInFinder: handleRevealUpdateInFinder
+                }}
             />
-
-            {/* Non-intrusive floating indicator when downloading in background and modal is closed */}
-            {updateDownloadProgress?.status === 'downloading' &&
-                !isUpdateModalOpen && (
-                    <button
-                        type="button"
-                        onClick={() => setIsUpdateModalOpen(true)}
-                        className="fixed bottom-4 right-4 z-40 mac-modal-surface shadow-2xl border border-accent/40 rounded-xl px-4 py-2.5 flex items-center gap-3 animate-fade-in hover:scale-[1.02] transition cursor-pointer text-xs"
-                        title="Klik untuk membuka jendela pembaruan"
-                    >
-                        <div className="w-6 h-6 rounded-full bg-accent/15 text-accent flex items-center justify-center shrink-0">
-                            <IconSpinner size={13} className="animate-spin" />
-                        </div>
-                        <div className="text-left">
-                            <div className="font-semibold text-foreground flex items-center gap-2">
-                                <span>{t.updatesDownloadingBadge}</span>
-                                <span className="font-mono text-accent text-[11px] font-bold tabular-nums">
-                                    {updateDownloadProgress.percent.toFixed(0)}%
-                                </span>
-                            </div>
-                            <div className="text-[10px] text-secondary">
-                                {t.updatesBackgroundNote}
-                            </div>
-                        </div>
-                    </button>
-                )}
-
-            {/* Non-intrusive floating indicator when download completed and modal is closed */}
-            {updateDownloadProgress?.status === 'completed' &&
-                !isUpdateModalOpen && (
-                    <button
-                        type="button"
-                        onClick={() => setIsUpdateModalOpen(true)}
-                        className="fixed bottom-4 right-4 z-40 mac-modal-surface shadow-2xl border border-[#30D158]/50 rounded-xl px-4 py-2.5 flex items-center gap-3 animate-fade-in hover:scale-[1.02] transition cursor-pointer text-xs"
-                        title="Klik untuk memasang pembaruan"
-                    >
-                        <div className="w-6 h-6 rounded-full bg-[#30D158]/20 text-[#30D158] flex items-center justify-center shrink-0">
-                            <IconCheck size={14} />
-                        </div>
-                        <div className="text-left">
-                            <div className="font-semibold text-foreground">
-                                {t.updatesDownloadedBadge}
-                            </div>
-                            <div className="text-[10px] text-secondary">
-                                {t.updatesReadySubtitle}
-                            </div>
-                        </div>
-                    </button>
-                )}
         </div>
     );
 };

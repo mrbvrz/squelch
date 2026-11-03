@@ -121,7 +121,7 @@ export const MacSelect = <T extends string = string>({
                     aria-label={ariaLabel}
                     className={`absolute ${
                         align === 'right' ? 'right-0' : 'left-0'
-                    } top-full mt-1.5 ${widthClass} z-50 mac-modal-surface rounded-[8px] shadow-2xl p-1 text-[12px] border border-card-border backdrop-blur-xl animate-scale-enter overflow-hidden`}
+                    } top-full mt-1.5 min-w-full ${widthClass} w-max max-w-[280px] z-50 mac-modal-surface rounded-[10px] shadow-2xl p-1 text-[12px] border border-black/10 dark:border-white/15 backdrop-blur-2xl animate-scale-enter max-h-[220px] overflow-y-auto no-scrollbar`}
                 >
                     {options.map((opt, index) => {
                         const isSelected = opt.value === value;
@@ -136,9 +136,9 @@ export const MacSelect = <T extends string = string>({
                                     setIsOpen(false);
                                 }}
                                 onMouseEnter={() => setFocusedIndex(index)}
-                                className={`px-2.5 py-1.5 rounded-[5px] flex items-center justify-between gap-2 cursor-pointer transition select-none ${
+                                className={`px-2.5 py-1.5 rounded-[6px] text-[12px] font-medium flex items-center justify-between gap-2 cursor-pointer transition select-none ${
                                     isSelected
-                                        ? 'bg-accent text-white font-medium shadow-xs'
+                                        ? 'bg-accent text-white font-semibold shadow-xs'
                                         : isFocused
                                           ? 'bg-black/5 dark:bg-white/10 text-foreground'
                                           : 'text-foreground hover:bg-black/5 dark:hover:bg-white/10'
@@ -149,7 +149,7 @@ export const MacSelect = <T extends string = string>({
                                     <span className="truncate">{opt.label}</span>
                                 </span>
                                 {isSelected && (
-                                    <IconCheck size={13} className="shrink-0 text-white" />
+                                    <IconCheck size={12} className="shrink-0 text-white" />
                                 )}
                             </div>
                         );

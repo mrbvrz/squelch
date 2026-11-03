@@ -1,6 +1,7 @@
 import React from 'react';
 import type { TranslationDictionary } from '../../../i18n';
 import {
+    IconCheck,
     IconChevronDown,
     IconChevronUp,
     IconCopy,
@@ -52,16 +53,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({
                             <IconFolder size={13} />
                             <span>{t.openLogsBtn}</span>
                         </button>
-                        <button
-                            type="button"
-                            onClick={onCopyDiagnostics}
-                            className="mac-glass-pill px-3.5 h-[30px] rounded-[7px] text-[12px] font-medium flex items-center gap-1.5 cursor-pointer"
-                        >
-                            <IconCopy size={13} />
-                            <span>
-                                {copiedDiag ? t.copiedDiagBtn : t.copyDiagBtn}
-                            </span>
-                        </button>
                     </div>
                 </div>
 
@@ -86,11 +77,30 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({
 
                 {showDiagReport && (
                     <div className="px-4 pb-4 animate-collapse-enter">
-                        <pre className="p-3.5 rounded-[8px] bg-black/25 border mac-divider text-[11px] font-mono overflow-x-auto tabular-nums max-h-64 whitespace-pre-wrap select-text">
-                            {typeof diagnosticsText === 'string'
-                                ? diagnosticsText
-                                : JSON.stringify(diagnosticsText, null, 2)}
-                        </pre>
+                        <div className="relative group">
+                            <pre className="p-3.5 pr-11 rounded-[8px] bg-black/25 border mac-divider text-[11px] font-mono overflow-x-auto tabular-nums max-h-64 whitespace-pre-wrap select-text">
+                                {typeof diagnosticsText === 'string'
+                                    ? diagnosticsText
+                                    : JSON.stringify(diagnosticsText, null, 2)}
+                            </pre>
+                            <button
+                                type="button"
+                                onClick={onCopyDiagnostics}
+                                title={copiedDiag ? t.copiedDiagBtn : t.copyDiagBtn}
+                                aria-label={copiedDiag ? t.copiedDiagBtn : t.copyDiagBtn}
+                                className={`absolute top-2.5 right-2.5 p-1.5 rounded-[6px] transition-all cursor-pointer shadow-xs active:scale-90 ${
+                                    copiedDiag
+                                        ? 'bg-emerald-500/20 text-emerald-400 scale-105 ring-1 ring-emerald-500/30'
+                                        : 'mac-glass-pill hover:bg-black/10 dark:hover:bg-white/15 text-secondary hover:text-foreground'
+                                }`}
+                            >
+                                {copiedDiag ? (
+                                    <IconCheck size={13} className="text-emerald-400 animate-scale-enter" />
+                                ) : (
+                                    <IconCopy size={13} className="transition-transform active:rotate-12" />
+                                )}
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

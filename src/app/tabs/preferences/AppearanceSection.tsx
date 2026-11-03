@@ -1,7 +1,7 @@
 import React from 'react';
 import type { AppSettings } from '../../../types';
 import type { TranslationDictionary } from '../../../i18n';
-import { ACCENT_SWATCHES } from '../../../utils/appearance';
+import { ACCENT_SWATCHES, applyAppearanceVariables } from '../../../utils/appearance';
 import { ThemePreviewCard } from '../../../components/ThemePreviewCard';
 import { SearchableFontPicker } from '../../../components/SearchableFontPicker';
 import { IconSwatch } from '../../../components/Icons';
@@ -73,11 +73,15 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({
                                     type="button"
                                     title={swatch.label}
                                     aria-label={swatch.label}
-                                    onClick={() =>
+                                    onClick={() => {
+                                        applyAppearanceVariables({
+                                            ...settings,
+                                            accentColor: swatch.hex
+                                        });
                                         onUpdateSettings({
                                             accentColor: swatch.hex
-                                        })
-                                    }
+                                        });
+                                    }}
                                     className={`w-[17px] h-[17px] rounded-full cursor-pointer transition-transform flex items-center justify-center shrink-0 ${
                                         selected
                                             ? 'scale-110 ring-2 ring-white/90 shadow-xs'
@@ -99,11 +103,15 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({
                                 value={settings.accentColor ?? '#0A84FF'}
                                 aria-label="Custom Accent Color"
                                 title="Custom Color"
-                                onChange={(e) =>
+                                onChange={(e) => {
+                                    applyAppearanceVariables({
+                                        ...settings,
+                                        accentColor: e.target.value
+                                    });
                                     onUpdateSettings({
                                         accentColor: e.target.value
-                                    })
-                                }
+                                    });
+                                }}
                                 className="w-[19px] h-[19px] rounded-full cursor-pointer bg-transparent border border-black/15 dark:border-white/20 p-0 overflow-hidden"
                             />
                         </div>

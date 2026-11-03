@@ -28,9 +28,9 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
                 <IconTrash size={14} className="text-[#FF453A]" />
                 <span>{t.prefDangerSection}</span>
             </h2>
-            <div className="mac-settings-card mac-inset-list border border-[#FF453A]/30 overflow-hidden">
+            <div className="space-y-3">
                 {/* 1. Dropdown Hapus Data Tertentu */}
-                <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="mac-settings-card border border-[#FF453A]/25 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
                         <div className="text-[13px] font-semibold text-foreground">
                             {t.prefClearDropdownLabel || 'Hapus Data'}
@@ -45,7 +45,7 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
                                     : t.prefResetAllDesc}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2.5 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0">
                         <MacSelect
                             value={selectedClearTarget}
                             ariaLabel={
@@ -78,7 +78,7 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
                                 },
                                 { value: 'stats', label: t.tabStats }
                             ]}
-                            widthClass="w-[200px]"
+                            widthClass="w-[140px]"
                         />
                         <button
                             type="button"
@@ -94,8 +94,8 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
                     </div>
                 </div>
 
-                {/* 2. Kembali ke Pengaturan Awal */}
-                <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {/* 2. Kembali ke Pengaturan Awal (Factory Reset) */}
+                <div className="mac-settings-card border border-[#FF453A]/25 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
                         <div className="text-[13px] font-semibold text-foreground">
                             {t.prefResetBtn}
@@ -108,7 +108,7 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
                         type="button"
                         onClick={() =>
                             onRequestReset
-                                ? onRequestReset('all')
+                                ? onRequestReset('settings')
                                 : setIsResetConfirmOpen(true)
                         }
                         className="bg-[#FF453A] hover:bg-[#D70015] text-white px-3.5 h-[30px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition shrink-0"

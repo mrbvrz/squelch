@@ -282,6 +282,11 @@ export const App: React.FC = () => {
                     confirmBtn: t.prefClearStatsBtn
                 };
             case 'all':
+                return {
+                    title: t.prefResetAllConfirmTitle,
+                    description: t.prefResetAllConfirmDesc,
+                    confirmBtn: t.prefResetAllBtn
+                };
             case 'settings':
             default:
                 return {
@@ -305,8 +310,19 @@ export const App: React.FC = () => {
             } else if (resetTarget === 'stats') {
                 await api.clearListeningStats();
                 appCoreData.setStatsSummary(null);
+            } else if (resetTarget === 'all') {
+                // Clear ONLY stations, schedules, and stats (preserve user settings/preferences)
+                await Promise.all([
+                    api.clearStationsData(),
+                    api.clearSchedulesData(),
+                    api.clearListeningStats()
+                ]);
+                appCoreData.setStations([]);
+                appCoreData.setGroups([]);
+                setSchedulesRef.current([]);
+                appCoreData.setStatsSummary(null);
             } else {
-                // 'all' or 'settings' -> "Kembalikan Bawaan": reset ALL data (stations, schedules, stats, settings)
+                // 'settings' -> "Kembalikan Bawaan": reset ALL data (stations, schedules, stats, settings)
                 const res = await api.resetAllData();
                 appCoreData.setStations([]);
                 appCoreData.setGroups([]);

@@ -48,6 +48,7 @@ export interface PreferencesTabProps {
     onRequestReset?: (
         target: 'settings' | 'stations' | 'schedules' | 'stats' | 'all'
     ) => void;
+    onUpdateSettings?: (patch: Partial<AppSettings>) => Promise<AppSettings | undefined> | void;
     api: SquelchWindowApi;
     t: TranslationDictionary;
 }
@@ -80,6 +81,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     setDiagnosticsText,
     setIsResetConfirmOpen,
     onRequestReset,
+    onUpdateSettings,
     api,
     t
 }) => {
@@ -116,7 +118,11 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     }, [api]);
 
     const handleUpdateSettings = (patch: Partial<AppSettings>) => {
-        void api.updateSettings(patch);
+        if (onUpdateSettings) {
+            void onUpdateSettings(patch);
+        } else {
+            void api.updateSettings(patch);
+        }
     };
 
     const handleUpdateShortcut = (key: ShortcutActionKey, newAccel: string) => {

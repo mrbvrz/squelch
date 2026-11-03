@@ -259,6 +259,7 @@ export const TabContentHost: React.FC<TabContentHostProps> = ({
                     setDiagnosticsText={appCoreData.setDiagnosticsText}
                     setIsResetConfirmOpen={setIsResetConfirmOpen}
                     onRequestReset={onRequestReset}
+                    onUpdateSettings={appCoreData.updateSettings}
                     api={api}
                     t={t}
                 />

@@ -85,6 +85,24 @@ export function useAppCoreData({
         }
     }, [api, onSchedulesLoaded]);
 
+    const updateSettings = useCallback(
+        async (patch: Partial<AppSettings>) => {
+            setSettings((prev) => {
+                if (!prev) return prev;
+                const next = { ...prev, ...patch };
+                applyAppearanceVariables(next);
+                return next;
+            });
+            const res = await api.updateSettings(patch);
+            if (res) {
+                setSettings(res);
+                applyAppearanceVariables(res);
+            }
+            return res;
+        },
+        [api]
+    );
+
     const loadAvailableSystemFonts = useCallback(async () => {
         setIsLoadingFonts(true);
         try {
@@ -366,6 +384,7 @@ export function useAppCoreData({
         sleepRemainingSec,
         diagnosticsText,
         setDiagnosticsText,
+        updateSettings,
         refreshAll
     };
 }

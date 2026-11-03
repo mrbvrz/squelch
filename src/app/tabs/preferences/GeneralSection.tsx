@@ -47,7 +47,7 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({
                                 </span>
                             )
                         }))}
-                        widthClass="w-[200px]"
+                        widthClass="w-[160px]"
                     />
                 </div>
 

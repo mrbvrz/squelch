@@ -1,21 +1,22 @@
 import { invoke } from '@tauri-apps/api/core';
 import { emit, listen } from '@tauri-apps/api/event';
-import {
-    applyAppearanceVariables,
-    countryCodeToFlag,
-    getFriendlyCountryName
-} from '../utils/appearance';
-import {
-    exportToM3u,
-    exportToPls,
-    parseM3uPlaylist,
-    parsePlsPlaylist
-} from '../utils/playlist';
+import { applyAppearanceVariables } from '../utils/appearance';
 import type { ListeningStatsSchema } from '../types/stats';
 import {
     buildListeningStatsSummary,
     recordListeningSeconds
 } from '../utils/listening-stats';
+import {
+    fetchOnlineCountries,
+    searchOnlineStations
+} from './radio-browser-api';
+import {
+    exportStationsData,
+    importStationsData,
+    backupAppDataBundle,
+    restoreAppDataBundle
+} from './backup-restore';
+import { setSleepTimer as handleSetSleepTimer } from './sleep-timer';
 
 interface PlayerStatus {
     state:
@@ -36,7 +37,6 @@ let playerStatus: PlayerStatus = {
     reconnectAttempt: null
 };
 
-let sleepInterval: any = null;
 let currentAudioVolume = 1.0;
 let isAudioMuted = false;
 
@@ -775,95 +775,17 @@ export function initTauriBridge() {
             },
 
             setSleepTimer: async (minutes: number | null) => {
-                if (sleepInterval) {
-                    clearInterval(sleepInterval);
-                    sleepInterval = null;
-                }
-                if (!minutes || minutes <= 0) {
-                    playerStatus.sleepTimerMinutes = null;
-                    playerStatus.sleepTimerRemainingSec = null;
-                    syncPlayerStatusToRust();
-                } else {
-                    playerStatus.sleepTimerMinutes = minutes;
-                    playerStatus.sleepTimerRemainingSec = minutes * 60;
-                    syncPlayerStatusToRust();
-                    sleepInterval = setInterval(async () => {
-                        if (
-                            playerStatus.sleepTimerRemainingSec &&
-                            playerStatus.sleepTimerRemainingSec > 0
-                        ) {
-                            playerStatus.sleepTimerRemainingSec -= 1;
-
-                            // 1 minute remaining warning notification
-                            if (playerStatus.sleepTimerRemainingSec === 60) {
-                                void (async () => {
-                                    try {
-                                        const cfg: any = await invoke(
-                                            'get_settings'
-                                        ).catch(() => null);
-                                        const isEn =
-                                            cfg?.settings?.language === 'en';
-                                        const title = isEn
-                                            ? 'Sleep Timer'
-                                            : 'Pengatur Waktu Tidur';
-                                        const stName =
-                                            playerStatus.currentStation?.name;
-                                        const body = isEn
-                                            ? `Radio playback will stop in 1 minute${stName ? ` (${stName})` : ''}.`
-                                            : `Siaran radio akan dinonaktifkan dalam 1 menit${stName ? ` (${stName})` : ''}.`;
-                                        await (
-                                            window as any
-                                        ).squelchApi.sendNotification(
-                                            title,
-                                            body
-                                        );
-                                    } catch {
-                                        // ignore
-                                    }
-                                })();
-                            }
-
-                            if (playerStatus.sleepTimerRemainingSec <= 0) {
-                                clearInterval(sleepInterval);
-                                sleepInterval = null;
-                                await (window as any).squelchApi.stopPlayback();
-                                void (async () => {
-                                    try {
-                                        const cfg: any = await invoke(
-                                            'get_settings'
-                                        ).catch(() => null);
-                                        const isEn =
-                                            cfg?.settings?.language === 'en';
-                                        const title = isEn
-                                            ? 'Sleep Timer'
-                                            : 'Pengatur Waktu Tidur';
-                                        const body = isEn
-                                            ? 'Radio playback has stopped.'
-                                            : 'Pemutaran radio telah dihentikan.';
-                                        await (
-                                            window as any
-                                        ).squelchApi.sendNotification(
-                                            title,
-                                            body
-                                        );
-                                    } catch {
-                                        // ignore
-                                    }
-                                })();
-                            }
-                            if (
-                                playerStatus.sleepTimerRemainingSec % 5 === 0 ||
-                                playerStatus.sleepTimerRemainingSec <= 0
-                            ) {
-                                syncPlayerStatusToRust();
-                            }
-                            await emit('ui:state-changed', { ...playerStatus });
-                        }
-                    }, 1000);
-                }
-                syncPlayerStatusToRust();
-                await emit('ui:state-changed', { ...playerStatus });
-                return true;
+                return await handleSetSleepTimer(
+                    minutes,
+                    playerStatus,
+                    syncPlayerStatusToRust,
+                    () => (window as any).squelchApi.stopPlayback(),
+                    (title, body) =>
+                        (window as any).squelchApi.sendNotification(
+                            title,
+                            body
+                        )
+                );
             },
 
             startDragging: async () => {
@@ -1032,18 +954,7 @@ export function initTauriBridge() {
             },
 
             exportStations: async (format: 'json' | 'm3u' | 'pls') => {
-                const data: any = await invoke('get_stations_data');
-                const stations: any[] = data?.stations || [];
-                if (format === 'json') {
-                    return JSON.stringify(stations, null, 2);
-                }
-                if (format === 'm3u') {
-                    return exportToM3u(stations);
-                }
-                if (format === 'pls') {
-                    return exportToPls(stations);
-                }
-                return '';
+                return await exportStationsData(format);
             },
 
             importStations: async (payload: {
@@ -1051,180 +962,17 @@ export function initTauriBridge() {
                 format: 'json' | 'm3u' | 'pls';
                 duplicateStrategy: 'skip' | 'overwrite' | 'duplicate';
             }) => {
-                const data: any = await invoke('get_stations_data');
-                const existing: any[] = data?.stations || [];
-                const parsed: any[] = [];
-                if (payload.format === 'json') {
-                    try {
-                        const arr = JSON.parse(payload.content);
-                        if (Array.isArray(arr)) parsed.push(...arr);
-                    } catch {}
-                } else if (payload.format === 'm3u') {
-                    parsed.push(...parseM3uPlaylist(payload.content));
-                } else if (payload.format === 'pls') {
-                    parsed.push(...parsePlsPlaylist(payload.content));
-                }
-                let importedCount = 0;
-                let skippedCount = 0;
-                for (const item of parsed) {
-                    if (!item.name || !item.streamUrl) continue;
-                    const exists = existing.find(
-                        (s: any) =>
-                            s.streamUrl === item.streamUrl ||
-                            s.name === item.name
-                    );
-                    if (exists) {
-                        if (payload.duplicateStrategy === 'skip') {
-                            skippedCount++;
-                            continue;
-                        } else if (payload.duplicateStrategy === 'overwrite') {
-                            Object.assign(exists, item);
-                            await invoke('save_station', { station: exists });
-                            importedCount++;
-                            continue;
-                        }
-                    }
-                    const newStation = {
-                        id:
-                            item.id ||
-                            `station-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-                        name: item.name,
-                        streamUrl: item.streamUrl,
-                        streamType:
-                            item.streamType ||
-                            (item.streamUrl.includes('.m3u8') ? 'hls' : 'mp3'),
-                        logoUrl: item.logoUrl || null,
-                        genre: item.genre || 'General',
-                        city: item.city || '',
-                        country: item.country || '',
-                        tags: item.tags || [],
-                        group: item.group || 'Umum',
-                        isFavorite: !!item.isFavorite,
-                        status: 'online'
-                    };
-                    await invoke('save_station', { station: newStation });
-                    importedCount++;
-                }
+                const res = await importStationsData(payload);
                 await emit('ui:state-changed', { ...playerStatus });
-                return { importedCount, skippedCount };
+                return res;
             },
 
             getOnlineCountries: async () => {
-                try {
-                    const res = await fetch(
-                        'https://de1.api.radio-browser.info/json/countries'
-                    );
-                    const list: any[] = await res.json();
-                    return list
-                        .filter((c) => c.iso_3166_1 && c.stationcount > 0)
-                        .map((c) => {
-                            const code = c.iso_3166_1.toUpperCase();
-                            return {
-                                code,
-                                name: getFriendlyCountryName(code, c.name),
-                                stationCount: c.stationcount,
-                                flag: countryCodeToFlag(code)
-                            };
-                        })
-                        .sort((a, b) => b.stationCount - a.stationCount);
-                } catch {
-                    return [];
-                }
+                return await fetchOnlineCountries();
             },
 
             searchOnlineStations: async (query: any) => {
-                try {
-                    const params = new URLSearchParams();
-                    if (query.name && query.name.trim()) {
-                        params.set('name', query.name.trim());
-                    }
-                    if (query.countrycode && query.countrycode.trim()) {
-                        params.set(
-                            'countrycode',
-                            query.countrycode.trim().toUpperCase()
-                        );
-                    }
-                    if (query.tag && query.tag.trim()) {
-                        params.set('tag', query.tag.trim());
-                    }
-
-                    // Order by popularity (votes) descending & filter out dead streams,
-                    // identical to https://www.radio-browser.info/search
-                    params.set('hidebroken', 'true');
-                    params.set('order', 'votes');
-                    params.set('reverse', 'true');
-                    params.set('limit', String(query.limit || 60));
-
-                    const res = await fetch(
-                        `https://de1.api.radio-browser.info/json/stations/search?${params.toString()}`
-                    );
-                    const list: any[] = await res.json();
-                    if (!Array.isArray(list)) return [];
-
-                    const targetCountry = query.countrycode
-                        ? query.countrycode.trim().toUpperCase()
-                        : '';
-
-                    const seen = new Set<string>();
-                    const deduplicated = [];
-                    for (const s of list) {
-                        const url = (s.url_resolved || s.url || '')
-                            .trim()
-                            .toLowerCase();
-                        const id = s.stationuuid;
-                        const key = url || id;
-                        if (!key || seen.has(key)) continue;
-
-                        // Ensure country filter matches strictly if provided
-                        if (
-                            targetCountry &&
-                            s.countrycode &&
-                            s.countrycode.trim().toUpperCase() !== targetCountry
-                        ) {
-                            continue;
-                        }
-
-                        seen.add(key);
-                        deduplicated.push(s);
-                    }
-
-                    return deduplicated.map((s) => {
-                        // Sanitize station name by trimming leading/trailing spaces and tabs
-                        const cleanName =
-                            (s.name || '')
-                                .replace(/^[\s\t\r\n]+/, '')
-                                .replace(/[\s\t\r\n]+$/, '')
-                                .replace(/\s+/g, ' ')
-                                .trim() || 'Radio Stream';
-
-                        const rawUrl = (s.url_resolved || s.url || '').trim();
-                        const tags = (s.tags || '')
-                            .split(',')
-                            .map((t: string) => t.trim())
-                            .filter(Boolean);
-
-                        return {
-                            id: s.stationuuid,
-                            name: cleanName,
-                            streamUrl: rawUrl,
-                            streamType: rawUrl.includes('.m3u8')
-                                ? ('hls' as const)
-                                : ('mp3' as const),
-                            logoUrl:
-                                s.favicon && s.favicon.trim()
-                                    ? s.favicon.trim()
-                                    : null,
-                            genre: tags[0] || 'General',
-                            city: (s.state || '').trim(),
-                            country: (s.countrycode || '').trim().toUpperCase(),
-                            tags,
-                            bitrate: s.bitrate || 128,
-                            votes: s.votes || 0
-                        };
-                    });
-                } catch {
-                    return [];
-                }
+                return await searchOnlineStations(query);
             },
 
             getSettings: async () => {
@@ -1368,86 +1116,11 @@ export function initTauriBridge() {
             },
 
             backupAppData: async () => {
-                try {
-                    const bundle = {
-                        app: 'Squelch',
-                        version: '0.1.0',
-                        exportedAt: new Date().toISOString(),
-                        stationsData: await invoke('get_stations_data'),
-                        settings: await invoke('get_settings'),
-                        schedules: await invoke('get_schedules'),
-                        listeningStats: await invoke('get_listening_stats')
-                    };
-                    const blob = new Blob([JSON.stringify(bundle, null, 2)], {
-                        type: 'application/json'
-                    });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    const filename = `squelch-backup-${new Date().toISOString().slice(0, 10)}.json`;
-                    a.href = url;
-                    a.download = filename;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    return { ok: true, filePath: filename };
-                } catch (err: any) {
-                    return {
-                        ok: false,
-                        error: err?.message || String(err)
-                    };
-                }
+                return await backupAppDataBundle();
             },
 
             restoreAppData: async () => {
-                return new Promise((resolve) => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = '.json';
-                    input.onchange = async () => {
-                        const file = input.files?.[0];
-                        if (!file) {
-                            resolve({ ok: false, canceled: true });
-                            return;
-                        }
-                        try {
-                            const text = await file.text();
-                            const data = JSON.parse(text);
-                            if (data.stationsData?.stations) {
-                                for (const s of data.stationsData.stations) {
-                                    await invoke('save_station', {
-                                        station: s
-                                    });
-                                }
-                                if (data.stationsData.groups) {
-                                    await invoke('save_groups', {
-                                        groups: data.stationsData.groups
-                                    });
-                                }
-                            }
-                            if (data.settings?.settings) {
-                                await invoke('update_settings', {
-                                    partial: data.settings.settings
-                                });
-                            }
-                            if (Array.isArray(data.schedules)) {
-                                for (const sc of data.schedules) {
-                                    await invoke('save_schedule', {
-                                        schedule: sc
-                                    });
-                                }
-                            }
-                            await emit('ui:state-changed', {
-                                type: 'settings'
-                            });
-                            resolve({ ok: true });
-                        } catch (err: any) {
-                            resolve({
-                                ok: false,
-                                error: err?.message || 'Invalid backup file'
-                            });
-                        }
-                    };
-                    input.click();
-                });
+                return await restoreAppDataBundle();
             },
 
             getListeningStats: async () => {

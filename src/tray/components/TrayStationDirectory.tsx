@@ -37,7 +37,6 @@ export const TrayStationDirectory: React.FC<TrayStationDirectoryProps> = ({
     filteredStations,
     onPlayStation,
     onToggleFavorite,
-    onOpenDiscover,
     t
 }) => {
     return (

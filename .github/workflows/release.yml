@@ -38,11 +38,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Frontend UI
-        run: npm run build:ui
-
       - name: Build Tauri Application
-        run: npx @tauri-apps/cli build --bundles app
+        run: npm run tauri:build
 
       - name: Package macOS DMG & ZIP
         run: |
@@ -67,20 +64,25 @@ jobs:
           echo "Creating ZIP package: ${ZIP_NAME}..."
           cd "$BUNDLE_DIR"
           zip -r -9 "${ZIP_NAME}" Squelch.app
+          shasum -a 256 "${DMG_NAME}" "${ZIP_NAME}" > SHA256SUMS.txt
           cd -
           
           echo "DMG_PATH=${BUNDLE_DIR}/${DMG_NAME}" >> $GITHUB_ENV
           echo "ZIP_PATH=${BUNDLE_DIR}/${ZIP_NAME}" >> $GITHUB_ENV
+          echo "CHECKSUM_PATH=${BUNDLE_DIR}/SHA256SUMS.txt" >> $GITHUB_ENV
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           name: Squelch v${{ env.VERSION }}
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ startsWith(github.ref_name, 'v') && github.ref_name || format('v{0}', env.VERSION) }}
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
             ${{ env.DMG_PATH }}
             ${{ env.ZIP_PATH }}
+            ${{ env.CHECKSUM_PATH }}

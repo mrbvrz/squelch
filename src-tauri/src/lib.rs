@@ -2,7 +2,18 @@ mod commands;
 mod icy_proxy;
 mod store;
 
-use std::sync::Arc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicU64, Ordering},
+};
+use std::time::{SystemTime, UNIX_EPOCH};
+
+fn current_time_millis() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
+}
 use store::AppStore;
 use tauri::{
     Emitter, Manager,
@@ -151,52 +162,34 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
             }
             let _ = app.emit("ui:open-update-modal", ());
         }
-        "tray_about_squelch" => {
-            if let Some(tray_win) = show_tray_popover(app) {
-                let _ = tray_win.emit("squelch:open-about", ());
+        "tray_about_squelch" | "about_squelch" => {
+            if let Some(tray_win) = app.get_webview_window("tray") {
+                let _ = tray_win.hide();
+            }
+            if let Some(win) = show_main_window(app) {
+                let _ = win.emit("squelch:open-about", ());
                 let _ =
-                    tray_win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about'));");
+                    win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about'));");
             }
         }
-        "tray_quit_squelch" => {
-            if let Some(tray_win) = show_tray_popover(app) {
-                let _ = tray_win.emit("squelch:confirm-quit", ());
-                let _ =
-                    tray_win.eval("window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));");
-            }
-        }
-        "about_squelch" => {
-            let main_visible = app
-                .get_webview_window("main")
-                .map(|w| w.is_visible().unwrap_or(false))
-                .unwrap_or(false);
-            if main_visible {
-                if let Some(win) = show_main_window(app) {
-                    let _ = win.emit("squelch:open-about", ());
-                    let _ =
-                        win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about'));");
+        "tray_quit_squelch" | "quit_squelch" => {
+            let store = app.state::<Arc<AppStore>>();
+            let settings = store.read_json("settings.json", serde_json::json!({}));
+            let confirm_quit = settings
+                .get("confirmBeforeQuit")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true);
+            if !confirm_quit {
+                app.exit(0);
+            } else {
+                if let Some(tray_win) = app.get_webview_window("tray") {
+                    let _ = tray_win.hide();
                 }
-            } else if let Some(tray_win) = show_tray_popover(app) {
-                let _ = tray_win.emit("squelch:open-about", ());
-                let _ =
-                    tray_win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about'));");
-            }
-        }
-        "quit_squelch" => {
-            let main_visible = app
-                .get_webview_window("main")
-                .map(|w| w.is_visible().unwrap_or(false))
-                .unwrap_or(false);
-            if main_visible {
                 if let Some(win) = show_main_window(app) {
                     let _ = win.emit("squelch:confirm-quit", ());
                     let _ =
                         win.eval("window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));");
                 }
-            } else if let Some(tray_win) = show_tray_popover(app) {
-                let _ = tray_win.emit("squelch:confirm-quit", ());
-                let _ =
-                    tray_win.eval("window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));");
             }
         }
         _ => {}
@@ -269,11 +262,16 @@ pub fn run() {
                 }
             }
 
-            // 4. Auto-hide tray popover when it loses focus
+            // 4. Auto-hide tray popover when it loses focus, tracking blur timestamp to prevent click bounce
+            let last_blur_time = Arc::new(AtomicU64::new(0));
+            let last_blur_for_win = Arc::clone(&last_blur_time);
+            let last_blur_for_tray = Arc::clone(&last_blur_time);
+
             if let Some(tray_win) = app.get_webview_window("tray") {
                 let tray_clone = tray_win.clone();
                 tray_win.on_window_event(move |event| {
                     if let tauri::WindowEvent::Focused(false) = event {
+                        last_blur_for_win.store(current_time_millis(), Ordering::SeqCst);
                         let _ = tray_clone.hide();
                     }
                 });
@@ -377,7 +375,7 @@ pub fn run() {
                 .on_menu_event(move |app, event| {
                     handle_menu_action(app, event.id().as_ref());
                 })
-                .on_tray_icon_event(|tray, event| {
+                .on_tray_icon_event(move |tray, event| {
                     tauri_plugin_positioner::on_tray_event(tray.app_handle(), &event);
                     if let TrayIconEvent::Click {
                         button: MouseButton::Left,
@@ -388,7 +386,13 @@ pub fn run() {
                         let app = tray.app_handle();
                         if let Some(window) = app.get_webview_window("tray") {
                             let is_visible = window.is_visible().unwrap_or(false);
-                            if is_visible {
+                            let now = current_time_millis();
+                            let last_blur = last_blur_for_tray.load(Ordering::SeqCst);
+                            let recently_blurred = now.saturating_sub(last_blur) < 300;
+
+                            // Standard macOS menu bar toggle behavior:
+                            // If popover was already visible or was just dismissed by this click, hide it.
+                            if is_visible || recently_blurred {
                                 let _ = window.hide();
                             } else {
                                 let _ = window.as_ref().window().move_window(Position::TrayCenter);
@@ -401,6 +405,61 @@ pub fn run() {
                 .build(app)?;
 
             let _ = tray.set_icon_as_template(true);
+
+            // 7. Spawn Tray Icon Animation Loop
+            let app_handle_for_anim = app.handle().clone();
+            let store_clone = app.state::<Arc<AppStore>>().inner().clone();
+            tauri::async_runtime::spawn(async move {
+                let mut current_frame = 0usize;
+                let mut last_rendered_state = String::new();
+
+                loop {
+                    let state = {
+                        let guard = store_clone.tray_state.lock().unwrap();
+                        guard.clone()
+                    };
+
+                    let is_animated = matches!(
+                        state.as_str(),
+                        "playing" | "buffering" | "connecting" | "reconnecting"
+                    );
+
+                    if is_animated {
+                        let icon_bytes = if state == "playing" {
+                            PLAYING_ICONS[current_frame % PLAYING_ICONS.len()]
+                        } else {
+                            BUFFERING_ICONS[current_frame % BUFFERING_ICONS.len()]
+                        };
+
+                        if let Some(tray) = app_handle_for_anim.tray_by_id("main-tray") {
+                            if let Ok(img) = Image::from_bytes(icon_bytes) {
+                                let _ = tray.set_icon_with_as_template(Some(img), true);
+                            }
+                        }
+
+                        current_frame = current_frame.wrapping_add(1);
+                        last_rendered_state = state;
+                        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                    } else {
+                        if last_rendered_state != state {
+                            let icon_bytes = if state == "error" {
+                                ERROR_ICON
+                            } else {
+                                IDLE_ICON
+                            };
+
+                            if let Some(tray) = app_handle_for_anim.tray_by_id("main-tray") {
+                                if let Ok(img) = Image::from_bytes(icon_bytes) {
+                                    let _ = tray.set_icon_with_as_template(Some(img), true);
+                                }
+                            }
+                            last_rendered_state = state;
+                            current_frame = 0;
+                        }
+                        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+                    }
+                }
+            });
 
             Ok(())
         })
@@ -426,6 +485,7 @@ pub fn run() {
             commands::delete_group,
             commands::open_window_tab,
             commands::open_about_window,
+            commands::prompt_quit,
             commands::toggle_tray_popover,
             commands::quit_app,
             commands::open_external,

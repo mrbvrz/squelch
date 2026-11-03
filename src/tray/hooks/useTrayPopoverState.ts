@@ -22,10 +22,6 @@ export function useTrayPopoverState(api: SquelchTrayPopoverApi) {
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const isInteractingVolume = useRef<boolean>(false);
 
-    const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
-    const [isQuitConfirmOpen, setIsQuitConfirmOpen] = useState<boolean>(false);
-    const [appIconDataUrl, setAppIconDataUrl] = useState<string | null>(null);
-
     const [stations, setStations] = useState<Station[]>([]);
     const [groups, setGroups] = useState<string[]>([]);
     const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -42,83 +38,11 @@ export function useTrayPopoverState(api: SquelchTrayPopoverApi) {
     const t = getTranslations(settings?.language);
 
     useEffect(() => {
-        if (api?.getAppIconDataUrl) {
-            void api.getAppIconDataUrl().then((url) => {
-                if (url) setAppIconDataUrl(url);
-            });
-        }
-    }, [api]);
-
-    useEffect(() => {
-        const handleOpenAbout = () => {
-            setIsQuitConfirmOpen(false);
-            setIsAboutOpen(true);
-        };
-
-        const handleConfirmQuit = () => {
-            setIsAboutOpen(false);
-            if (settingsRef.current?.confirmBeforeQuit === false) {
-                void api.quitApp();
-            } else {
-                setIsQuitConfirmOpen(true);
-            }
-        };
-
-        window.addEventListener('squelch:open-about', handleOpenAbout);
-        window.addEventListener('squelch:confirm-quit', handleConfirmQuit);
-
-        let unlistenAbout: (() => void) | null = null;
-        let unlistenQuit: (() => void) | null = null;
-
-        if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-            import('@tauri-apps/api/event')
-                .then(({ listen }) => {
-                    listen('squelch:open-about', () => {
-                        handleOpenAbout();
-                    }).then((u) => {
-                        unlistenAbout = u;
-                    });
-                    listen('squelch:confirm-quit', () => {
-                        handleConfirmQuit();
-                    }).then((u) => {
-                        unlistenQuit = u;
-                    });
-                })
-                .catch(() => {});
-        }
-
-        const handleWindowBlur = () => {
-            setIsAboutOpen(false);
-            setIsQuitConfirmOpen(false);
-        };
-        window.addEventListener('blur', handleWindowBlur);
-
-        return () => {
-            window.removeEventListener('squelch:open-about', handleOpenAbout);
-            window.removeEventListener(
-                'squelch:confirm-quit',
-                handleConfirmQuit
-            );
-            window.removeEventListener('blur', handleWindowBlur);
-            if (unlistenAbout) unlistenAbout();
-            if (unlistenQuit) unlistenQuit();
-        };
-    }, [api]);
-
-    useEffect(() => {
         const handlePopoverKeyDown = (e: KeyboardEvent) => {
             const target = e.target as HTMLElement | null;
             const isEditing = target && target.tagName === 'INPUT';
 
             if (e.key === 'Escape') {
-                if (isAboutOpen) {
-                    setIsAboutOpen(false);
-                    return;
-                }
-                if (isQuitConfirmOpen) {
-                    setIsQuitConfirmOpen(false);
-                    return;
-                }
                 if (searchText) {
                     setSearchText('');
                     target?.blur();
@@ -155,7 +79,7 @@ export function useTrayPopoverState(api: SquelchTrayPopoverApi) {
         window.addEventListener('keydown', handlePopoverKeyDown);
         return () =>
             window.removeEventListener('keydown', handlePopoverKeyDown);
-    }, [searchText, isAboutOpen, isQuitConfirmOpen, api]);
+    }, [searchText, api]);
 
     const loadData = async () => {
         const [status, stData, cfg] = await Promise.all([
@@ -365,11 +289,6 @@ export function useTrayPopoverState(api: SquelchTrayPopoverApi) {
         isMuted,
         setIsMuted,
         isInteractingVolume,
-        isAboutOpen,
-        setIsAboutOpen,
-        isQuitConfirmOpen,
-        setIsQuitConfirmOpen,
-        appIconDataUrl,
         stations,
         groups,
         settings,

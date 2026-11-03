@@ -1,7 +1,6 @@
 import React from 'react';
 import type { TranslationDictionary } from '../../i18n';
 import {
-    IconCompass,
     IconInfo,
     IconPlus,
     IconPower,
@@ -13,7 +12,6 @@ export interface TrayActionDockProps {
     favCount: number;
     groupCount: number;
     onOpenStationsTab: () => void;
-    onOpenDiscoverTab: () => void;
     onOpenPreferencesTab: () => void;
     onOpenAbout: () => void;
     onTriggerQuit: () => void;
@@ -25,7 +23,6 @@ export const TrayActionDock: React.FC<TrayActionDockProps> = ({
     favCount,
     groupCount,
     onOpenStationsTab,
-    onOpenDiscoverTab,
     onOpenPreferencesTab,
     onOpenAbout,
     onTriggerQuit,
@@ -41,14 +38,6 @@ export const TrayActionDock: React.FC<TrayActionDockProps> = ({
                 >
                     <IconPlus size={13} />
                     <span>{t.trayAddStation}</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={onOpenDiscoverTab}
-                    className="flex items-center gap-1 hover:text-foreground transition font-medium cursor-pointer"
-                >
-                    <IconCompass size={13} />
-                    <span>{t.trayDiscover}</span>
                 </button>
                 <button
                     type="button"

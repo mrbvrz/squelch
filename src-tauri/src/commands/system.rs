@@ -212,17 +212,24 @@ pub fn open_window_tab(app: AppHandle, tab: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn open_about_window(app: AppHandle) -> Result<(), String> {
-    let main_visible = app
-        .get_webview_window("main")
-        .map(|w| w.is_visible().unwrap_or(false))
-        .unwrap_or(false);
-    if main_visible {
-        if let Some(win) = crate::show_main_window(&app) {
-            let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);");
-            let _ = app.emit("squelch:open-about", ());
-        }
-    } else if let Some(tray_win) = crate::show_tray_popover(&app) {
-        let _ = tray_win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);");
+    if let Some(tray_win) = app.get_webview_window("tray") {
+        let _ = tray_win.hide();
+    }
+    if let Some(win) = crate::show_main_window(&app) {
+        let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);");
+        let _ = app.emit("squelch:open-about", ());
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn prompt_quit(app: AppHandle) -> Result<(), String> {
+    if let Some(tray_win) = app.get_webview_window("tray") {
+        let _ = tray_win.hide();
+    }
+    if let Some(win) = crate::show_main_window(&app) {
+        let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:confirm-quit')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:confirm-quit')); }, 50);");
+        let _ = app.emit("squelch:confirm-quit", ());
     }
     Ok(())
 }

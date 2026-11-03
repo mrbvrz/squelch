@@ -849,8 +849,13 @@ export function initTauriBridge() {
             getAppIconDataUrl: async () => null,
 
             openAboutWindow: async () => {
-                window.dispatchEvent(new CustomEvent('squelch:open-about'));
                 await invoke('open_about_window');
+                return true;
+            },
+
+            promptQuit: async () => {
+                await invoke('prompt_quit');
+                return true;
             },
 
             openUpdateModal: async () => {

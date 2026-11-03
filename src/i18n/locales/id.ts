@@ -32,7 +32,7 @@ export const idLocale: TranslationDictionary = {
     trayClickStationHint: 'Klik salah satu stasiun di bawah',
     trayAllFilter: 'Semua',
     trayFavFilter: 'Favorit',
-    traySearchPlaceholder: 'Cari stasiun (Jak, Gen, RRI, Elshinta)…',
+    traySearchPlaceholder: 'Cari stasiun…',
     trayAddStation: 'Tambah Siaran',
     trayDiscover: 'Direktori',
     traySettings: 'Pengaturan',

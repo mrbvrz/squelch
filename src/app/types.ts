@@ -61,6 +61,7 @@ export interface SquelchWindowApi {
     quitApp: () => Promise<boolean>;
     getAppIconDataUrl: () => Promise<string | null>;
     openAboutWindow: () => Promise<boolean>;
+    promptQuit?: () => Promise<boolean>;
     openExternalUrl: (url: string) => Promise<boolean>;
     getStationsData: () => Promise<StationsDataSchema>;
     getSchedules: () => Promise<ShowSchedule[]>;

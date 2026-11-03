@@ -56,8 +56,9 @@ export function renderTrayTemplatePng(
     };
 
     // 5 modern rounded-capsule audio waveform bars in an 18x18 coordinate space
-    const barX = [3.4, 6.2, 9.0, 11.8, 14.6];
-    const barRadius = 0.85;
+    // Scaled to fill standard macOS status bar icon dimensions with crisp prominence
+    const barX = [3.0, 6.0, 9.0, 12.0, 15.0];
+    const barRadius = 1.15;
     const centerY = 9.0;
 
     const t =
@@ -70,29 +71,29 @@ export function renderTrayTemplatePng(
 
     if (state === 'playing') {
         barHalfHeights = [
-            1.1 + 3.0 * (0.5 + 0.5 * Math.sin(t + 0.0)),
-            1.5 + 4.3 * (0.5 + 0.5 * Math.sin(t * 2 + 1.1)),
-            2.0 + 4.6 * (0.5 + 0.5 * Math.sin(t + 2.4)),
-            1.4 + 4.4 * (0.5 + 0.5 * Math.sin(t * 2 + 3.8)),
-            1.1 + 3.1 * (0.5 + 0.5 * Math.sin(t + 5.1))
+            1.2 + 3.0 * (0.5 + 0.5 * Math.sin(t + 0.0)),
+            1.8 + 3.8 * (0.5 + 0.5 * Math.sin(t * 2 + 1.1)),
+            2.4 + 3.8 * (0.5 + 0.5 * Math.sin(t + 2.4)),
+            1.8 + 3.8 * (0.5 + 0.5 * Math.sin(t * 2 + 3.8)),
+            1.2 + 3.0 * (0.5 + 0.5 * Math.sin(t + 5.1))
         ];
         barAlphas = [255, 255, 255, 255, 255];
     } else if (state === 'buffering') {
         barHalfHeights = barX.map((_, i) => {
             const wave = 0.5 + 0.5 * Math.sin(t - i * 0.95);
-            return 1.1 + 3.2 * wave;
+            return 1.8 + 3.8 * wave;
         });
         barAlphas = barX.map((_, i) => {
             const wave = 0.5 + 0.5 * Math.sin(t - i * 0.95);
-            return 140 + 115 * wave;
+            return 160 + 95 * wave;
         });
     } else if (state === 'error') {
-        barHalfHeights = [1.0, 2.0, 0.8, 2.0, 1.0];
+        barHalfHeights = [1.8, 3.2, 1.4, 3.2, 1.8];
         barAlphas = [160, 160, 255, 160, 160];
     } else {
-        // Calm symmetric waveform when idle / paused
-        barHalfHeights = [1.3, 3.0, 4.8, 3.0, 1.3];
-        barAlphas = [235, 235, 235, 235, 235];
+        // Calm, elegant symmetric waveform when idle / paused
+        barHalfHeights = [2.4, 4.4, 6.2, 4.4, 2.4];
+        barAlphas = [240, 240, 240, 240, 240];
     }
 
     // Signed Distance Field (SDF) rasterization with super-sampled anti-aliasing

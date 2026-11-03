@@ -32,7 +32,7 @@ export const enLocale: TranslationDictionary = {
     trayClickStationHint: 'Click any station below to start listening',
     trayAllFilter: 'All',
     trayFavFilter: 'Favorites',
-    traySearchPlaceholder: 'Search stations (Jak, Gen, RRI, Elshinta)…',
+    traySearchPlaceholder: 'Search stations…',
     trayAddStation: 'Add Station',
     trayDiscover: 'Discover',
     traySettings: 'Settings',

@@ -7,8 +7,6 @@ import {
     TrayStationDirectory,
     TrayActionDock
 } from './components';
-import { AboutModal } from '../app/modals/AboutModal';
-import { QuitConfirmModal } from '../app/modals/QuitConfirmModal';
 
 export const TrayPopoverApp: React.FC = () => {
     const api = window.squelchApi as SquelchTrayPopoverApi;
@@ -24,11 +22,6 @@ export const TrayPopoverApp: React.FC = () => {
         isMuted,
         setIsMuted,
         isInteractingVolume,
-        isAboutOpen,
-        setIsAboutOpen,
-        isQuitConfirmOpen,
-        setIsQuitConfirmOpen,
-        appIconDataUrl,
         stations,
         groups,
         settings,
@@ -121,48 +114,18 @@ export const TrayPopoverApp: React.FC = () => {
                 favCount={favCount}
                 groupCount={groups.length}
                 onOpenStationsTab={() => void api.openWindowTab('stations')}
-                onOpenDiscoverTab={() => void api.openWindowTab('discover')}
                 onOpenPreferencesTab={() =>
                     void api.openWindowTab('preferences')
                 }
-                onOpenAbout={() => setIsAboutOpen(true)}
+                onOpenAbout={() => void api.openAboutWindow?.()}
                 onTriggerQuit={() => {
                     if (settings?.confirmBeforeQuit ?? true) {
-                        setIsQuitConfirmOpen(true);
+                        void api.promptQuit?.();
                     } else {
                         void api.quitApp();
                     }
                 }}
                 t={t}
-            />
-
-            {/* 5. Direct Tray Popup Modals (About & Quit Confirmation) */}
-            <AboutModal
-                isOpen={isAboutOpen}
-                onClose={() => setIsAboutOpen(false)}
-                appIconDataUrl={appIconDataUrl}
-                version="v0.1.3"
-                tagline={t.aboutTagline}
-                description={t.aboutDescription}
-                websiteBtnText={t.aboutWebsiteBtn}
-                specLinkText={t.aboutSpecLink}
-                changelogLinkText={t.aboutChangelogLink}
-                onOpenExternalUrl={(url: string) => {
-                    if (api.openExternalUrl) {
-                        void api.openExternalUrl(url);
-                    } else {
-                        window.open(url, '_blank');
-                    }
-                }}
-            />
-
-            <QuitConfirmModal
-                isOpen={isQuitConfirmOpen}
-                onClose={() => setIsQuitConfirmOpen(false)}
-                onConfirm={() => void api.quitApp()}
-                appIconDataUrl={appIconDataUrl}
-                language={settings?.language || 'id'}
-                cancelBtnText={t.cancelBtn}
             />
         </div>
     );

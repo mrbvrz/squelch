@@ -3,6 +3,7 @@ import { SquircleAppIcon } from '../../components/SquircleAppIcon';
 
 export interface QuitConfirmModalProps {
     isOpen: boolean;
+    isStandalone?: boolean;
     onClose: () => void;
     onConfirm: () => void;
     appIconDataUrl: string | null;
@@ -12,6 +13,7 @@ export interface QuitConfirmModalProps {
 
 export const QuitConfirmModal: React.FC<QuitConfirmModalProps> = ({
     isOpen,
+    isStandalone = false,
     onClose,
     onConfirm,
     appIconDataUrl,
@@ -20,16 +22,21 @@ export const QuitConfirmModal: React.FC<QuitConfirmModalProps> = ({
 }) => {
     if (!isOpen) return null;
 
+    const backdropClass = isStandalone
+        ? 'fixed inset-0 flex items-center justify-center p-3 z-50 bg-transparent'
+        : 'fixed inset-0 mac-modal-backdrop flex items-center justify-center p-3 z-50 animate-fade-in';
+
     return (
         <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="quit-modal-title"
             onClick={onClose}
-            className="fixed inset-0 mac-modal-backdrop flex items-center justify-center p-3 z-50 animate-fade-in"
+            className={backdropClass}
         >
             <div
                 onClick={(e) => e.stopPropagation()}
+                data-tauri-drag-region
                 className="mac-modal-surface w-full max-w-[320px] p-5 space-y-3.5 text-xs flex flex-col items-center text-center shadow-2xl animate-scale-up"
             >
                 <SquircleAppIcon dataUrl={appIconDataUrl} size={52} />

@@ -104,6 +104,51 @@ pub(crate) fn show_tray_popover(app: &tauri::AppHandle) -> Option<tauri::Webview
     }
 }
 
+pub(crate) fn show_dialog_window(
+    app: &tauri::AppHandle,
+    dialog_type: &str,
+) -> Option<tauri::WebviewWindow> {
+    if let Some(tray_win) = app.get_webview_window("tray") {
+        let _ = tray_win.hide();
+    }
+    let (w, h) = if dialog_type == "about" {
+        (380.0, 500.0)
+    } else {
+        (340.0, 240.0)
+    };
+
+    let win = if let Some(w_obj) = app.get_webview_window("dialog") {
+        let _ = w_obj.set_size(tauri::Size::Logical(tauri::LogicalSize::new(w, h)));
+        let _ = w_obj.center();
+        w_obj
+    } else {
+        tauri::WebviewWindowBuilder::new(
+            app,
+            "dialog",
+            tauri::WebviewUrl::App("index.html#dialog".into()),
+        )
+        .title("Squelch")
+        .inner_size(w, h)
+        .resizable(false)
+        .decorations(false)
+        .transparent(true)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .center()
+        .build()
+        .ok()?
+    };
+
+    let _ = win.eval(&format!(
+        "window.dispatchEvent(new CustomEvent('squelch:set-dialog', {{ detail: '{}' }}));",
+        dialog_type
+    ));
+    let _ = app.emit("squelch:set-dialog", dialog_type);
+    let _ = win.show();
+    let _ = win.set_focus();
+    Some(win)
+}
+
 pub fn update_tray_icon(app: &tauri::AppHandle, state: &str) {
     let bytes = match state {
         "playing" => PLAYING_ICONS[0],
@@ -163,13 +208,18 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
             let _ = app.emit("ui:open-update-modal", ());
         }
         "tray_about_squelch" | "about_squelch" => {
-            if let Some(tray_win) = app.get_webview_window("tray") {
-                let _ = tray_win.hide();
-            }
-            if let Some(win) = show_main_window(app) {
-                let _ = win.emit("squelch:open-about", ());
-                let _ =
-                    win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about'));");
+            let main_visible = app
+                .get_webview_window("main")
+                .map(|w| w.is_visible().unwrap_or(false))
+                .unwrap_or(false);
+            if main_visible {
+                if let Some(win) = show_main_window(app) {
+                    let _ = win.emit("squelch:open-about", ());
+                    let _ =
+                        win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about'));");
+                }
+            } else {
+                show_dialog_window(app, "about");
             }
         }
         "tray_quit_squelch" | "quit_squelch" => {
@@ -182,13 +232,18 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
             if !confirm_quit {
                 app.exit(0);
             } else {
-                if let Some(tray_win) = app.get_webview_window("tray") {
-                    let _ = tray_win.hide();
-                }
-                if let Some(win) = show_main_window(app) {
-                    let _ = win.emit("squelch:confirm-quit", ());
-                    let _ =
-                        win.eval("window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));");
+                let main_visible = app
+                    .get_webview_window("main")
+                    .map(|w| w.is_visible().unwrap_or(false))
+                    .unwrap_or(false);
+                if main_visible {
+                    if let Some(win) = show_main_window(app) {
+                        let _ = win.emit("squelch:confirm-quit", ());
+                        let _ =
+                            win.eval("window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));");
+                    }
+                } else {
+                    show_dialog_window(app, "quit");
                 }
             }
         }
@@ -273,6 +328,16 @@ pub fn run() {
                     if let tauri::WindowEvent::Focused(false) = event {
                         last_blur_for_win.store(current_time_millis(), Ordering::SeqCst);
                         let _ = tray_clone.hide();
+                    }
+                });
+            }
+
+            // Auto-hide dialog window when it loses focus
+            if let Some(dialog_win) = app.get_webview_window("dialog") {
+                let dialog_clone = dialog_win.clone();
+                dialog_win.on_window_event(move |event| {
+                    if let tauri::WindowEvent::Focused(false) = event {
+                        let _ = dialog_clone.hide();
                     }
                 });
             }
@@ -486,6 +551,7 @@ pub fn run() {
             commands::open_window_tab,
             commands::open_about_window,
             commands::prompt_quit,
+            commands::hide_dialog_window,
             commands::toggle_tray_popover,
             commands::quit_app,
             commands::open_external,

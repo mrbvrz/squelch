@@ -55,6 +55,21 @@
         "transparent": true,
         "visible": false,
         "skipTaskbar": true
+      },
+      {
+        "label": "dialog",
+        "title": "Squelch Dialog",
+        "url": "index.html#dialog",
+        "width": 360,
+        "height": 480,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "visible": false,
+        "skipTaskbar": true,
+        "center": true,
+        "shadow": false
       }
     ],
     "security": {

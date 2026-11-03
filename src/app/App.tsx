@@ -14,7 +14,7 @@ import type { SquelchWindowApi } from './types';
 import { Sidebar } from './components/Sidebar';
 import { HeaderBar } from './components/HeaderBar';
 import { SleepCountdownBanner } from './components/SleepCountdownBanner';
-import { StandaloneAboutView } from './components/StandaloneAboutView';
+import { StandaloneDialogHost } from './components/StandaloneDialogHost';
 import { TabContentHost } from './components/TabContentHost';
 import { AppModalsHost } from './components/AppModalsHost';
 import { StreamHealthToast } from './components/StreamHealthToast';
@@ -384,18 +384,14 @@ export const App: React.FC = () => {
         }
     };
 
-    const isStandaloneAbout =
+    const isDialogWindow =
         typeof window !== 'undefined' &&
-        window.location.hash === '#about-window';
+        (window.location.hash.startsWith('#dialog') ||
+            window.location.hash === '#about-window');
 
-    if (isStandaloneAbout) {
+    if (isDialogWindow) {
         return (
-            <StandaloneAboutView
-                appIconDataUrl={appCoreData.appIconDataUrl}
-                api={api}
-                t={t}
-                onWindowDragMouseDown={handleWindowDragMouseDown}
-            />
+            <StandaloneDialogHost api={api} t={t} appCoreData={appCoreData} />
         );
     }
 

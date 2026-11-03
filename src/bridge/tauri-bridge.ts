@@ -858,6 +858,11 @@ export function initTauriBridge() {
                 return true;
             },
 
+            hideDialogWindow: async () => {
+                await invoke('hide_dialog_window');
+                return true;
+            },
+
             openUpdateModal: async () => {
                 window.dispatchEvent(new CustomEvent('squelch:check-updates'));
                 await invoke('open_window_tab', { tab: 'updates' });

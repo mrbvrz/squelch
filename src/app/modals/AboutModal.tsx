@@ -9,6 +9,7 @@ import {
 
 export interface AboutModalProps {
     isOpen: boolean;
+    isStandalone?: boolean;
     onClose: () => void;
     appIconDataUrl: string | null;
     version?: string;
@@ -26,6 +27,7 @@ export interface AboutModalProps {
 
 export const AboutModal: React.FC<AboutModalProps> = ({
     isOpen,
+    isStandalone = false,
     onClose,
     appIconDataUrl,
     version = 'v0.1.3',
@@ -42,16 +44,21 @@ export const AboutModal: React.FC<AboutModalProps> = ({
 }) => {
     if (!isOpen) return null;
 
+    const backdropClass = isStandalone
+        ? 'fixed inset-0 flex items-center justify-center p-3 z-50 bg-transparent'
+        : 'fixed inset-0 mac-modal-backdrop flex items-center justify-center p-3 z-50 animate-fade-in';
+
     return (
         <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="about-modal-title"
             onClick={onClose}
-            className="fixed inset-0 mac-modal-backdrop flex items-center justify-center p-3 z-50 animate-fade-in"
+            className={backdropClass}
         >
             <div
                 onClick={(e) => e.stopPropagation()}
+                data-tauri-drag-region
                 className="mac-modal-surface w-full max-w-[330px] p-5 space-y-3.5 text-xs relative flex flex-col items-center text-center shadow-2xl animate-scale-up"
             >
                 <button

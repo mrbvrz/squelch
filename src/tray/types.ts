@@ -26,6 +26,7 @@ export interface SquelchTrayPopoverApi {
     requestQuitConfirm: () => Promise<void>;
     promptQuit?: () => Promise<boolean>;
     openAboutWindow?: () => Promise<boolean>;
+    hideDialogWindow?: () => Promise<boolean>;
     getStationsData: () => Promise<StationsDataSchema>;
     resolveStationLogo: (logoUrl: string) => Promise<string | null>;
     getSettings: () => Promise<{

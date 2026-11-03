@@ -6,6 +6,7 @@ import React, {
     useState
 } from 'react';
 import { getTranslations } from '../i18n';
+import { applyAppearanceVariables } from '../utils/appearance';
 import type { ShowSchedule } from '../types';
 import type { SquelchWindowApi } from './types';
 

@@ -19,6 +19,8 @@ import {
     ClipboardDocumentIcon,
     ClockIcon,
     ExclamationTriangleIcon,
+    EyeIcon,
+    EyeSlashIcon,
     FolderOpenIcon,
     GlobeAltIcon,
     InformationCircleIcon,
@@ -72,6 +74,8 @@ export const IconGlobe = wrapHeroicon(GlobeAltIcon);
 export const IconSliders = wrapHeroicon(AdjustmentsHorizontalIcon);
 export const IconPower = wrapHeroicon(PowerIcon);
 export const IconTimer = wrapHeroicon(ClockIcon);
+export const IconEye = wrapHeroicon(EyeIcon);
+export const IconEyeSlash = wrapHeroicon(EyeSlashIcon);
 export const IconPulse = wrapHeroicon(BoltIcon);
 export const IconTransfer = wrapHeroicon(ArrowsUpDownIcon);
 export const IconFolder = wrapHeroicon(FolderOpenIcon);

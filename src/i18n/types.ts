@@ -65,6 +65,7 @@ export interface TranslationDictionary {
     saveGroupBtn: string;
     deleteGroupBtn: string;
     hideOffline: string;
+    showOffline: string;
     healthCheck: string;
     checkingHealth: string;
     removeOffline: string;

@@ -7,6 +7,8 @@ import {
     IconClose,
     IconCompass,
     IconEdit,
+    IconEye,
+    IconEyeSlash,
     IconPlay,
     IconPlus,
     IconPulse,
@@ -184,164 +186,121 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                 </div>
             ) : (
                 <>
-            {/* Category Filter Pills (WhatsApp / Segmented style) & Stream Health Tools */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1">
-                {/* Segmented Category Pill Tabs */}
-                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setSelectedGroup('ALL');
-                            setFavoritesOnly(false);
-                        }}
-                        className={`px-3 py-1 rounded-full text-[11px] font-medium tabular-nums cursor-pointer transition whitespace-nowrap shadow-xs ${
-                            selectedGroup === 'ALL' && !favoritesOnly
-                                ? 'bg-accent text-white font-semibold'
-                                : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
-                        }`}
-                    >
-                        {t.allGroups} ({stations.length})
-                    </button>
+            {/* Category Filter Pills (WhatsApp / Segmented style) */}
+            <div className="flex flex-wrap items-center gap-1.5 pb-2">
+                <button
+                    type="button"
+                    onClick={() => {
+                        setSelectedGroup('ALL');
+                        setFavoritesOnly(false);
+                    }}
+                    className={`px-3 py-1 rounded-full text-[11px] font-medium tabular-nums cursor-pointer transition whitespace-nowrap shadow-xs ${
+                        selectedGroup === 'ALL' && !favoritesOnly
+                            ? 'bg-accent text-white font-semibold'
+                            : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
+                    }`}
+                >
+                    {t.allGroups} ({stations.length})
+                </button>
 
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setSelectedGroup('ALL');
-                            setFavoritesOnly(true);
-                        }}
-                        className={`px-3 py-1 rounded-full text-[11px] font-medium tabular-nums flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap shadow-xs ${
-                            favoritesOnly
-                                ? 'bg-accent text-white font-semibold'
-                                : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
-                        }`}
-                    >
-                        <IconStar size={11} filled={favoritesOnly} />
-                        <span>
-                            {t.favoritesOnly} ({favCount})
-                        </span>
-                    </button>
+                <button
+                    type="button"
+                    onClick={() => {
+                        setSelectedGroup('ALL');
+                        setFavoritesOnly(true);
+                    }}
+                    className={`px-3 py-1 rounded-full text-[11px] font-medium tabular-nums flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap shadow-xs ${
+                        favoritesOnly
+                            ? 'bg-accent text-white font-semibold'
+                            : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
+                    }`}
+                >
+                    <IconStar size={11} filled={favoritesOnly} />
+                    <span>
+                        {t.favoritesOnly} ({favCount})
+                    </span>
+                </button>
 
-                    {groups.map((grp) => {
-                        const active = selectedGroup === grp && !favoritesOnly;
-                        return (
-                            <button
-                                key={grp}
-                                type="button"
-                                onClick={() => {
-                                    setSelectedGroup(grp);
-                                    setFavoritesOnly(false);
-                                }}
-                                className={`px-3 py-1 rounded-full text-[11px] font-medium cursor-pointer transition whitespace-nowrap shadow-xs ${
-                                    active
-                                        ? 'bg-accent text-white font-semibold'
-                                        : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
-                                }`}
-                            >
-                                {grp}
-                            </button>
-                        );
-                    })}
-
-                    {/* Popover / Tooltip Input for Adding Category */}
-                    <div className="relative inline-block" ref={popoverRef}>
+                {groups.map((grp) => {
+                    const active = selectedGroup === grp && !favoritesOnly;
+                    return (
                         <button
+                            key={grp}
                             type="button"
-                            onClick={() => setIsAddingGroup((v) => !v)}
-                            className="mac-glass-pill px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1 cursor-pointer hover:bg-black/10 dark:hover:bg-white/15 transition text-secondary hover:text-foreground shadow-xs"
-                            title={t.addGroupTitle}
-                            aria-expanded={isAddingGroup}
+                            onClick={() => {
+                                setSelectedGroup(grp);
+                                setFavoritesOnly(false);
+                            }}
+                            className={`px-3 py-1 rounded-full text-[11px] font-medium cursor-pointer transition whitespace-nowrap shadow-xs ${
+                                active
+                                    ? 'bg-accent text-white font-semibold'
+                                    : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
+                            }`}
                         >
-                            <IconPlus size={11} />
-                            <span>{t.addGroupBtn}</span>
+                            {grp}
                         </button>
+                    );
+                })}
 
-                        {isAddingGroup && (
-                            <div className="absolute left-0 top-full mt-1.5 z-50 w-60 mac-modal-surface rounded-xl shadow-2xl p-2.5 backdrop-blur-xl animate-scale-enter border border-black/10 dark:border-white/10">
-                                <form onSubmit={handleAddGroup} className="flex flex-col gap-2">
-                                    <div className="flex items-center justify-between px-0.5 text-[11px] font-semibold text-foreground">
-                                        <span>{t.addGroupTitle}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsAddingGroup(false)}
-                                            className="text-secondary hover:text-foreground p-0.5 cursor-pointer rounded"
-                                            aria-label="Tutup"
-                                        >
-                                            <IconClose size={12} />
-                                        </button>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <input
-                                            ref={addGroupInputRef}
-                                            type="text"
-                                            value={newGroupName}
-                                            onChange={(e) => setNewGroupName(e.target.value)}
-                                            placeholder={t.addGroupPlaceholder}
-                                            className="mac-input flex-1 px-2.5 py-1 rounded-[6px] text-[11px] text-foreground focus:outline-none"
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Escape') setIsAddingGroup(false);
-                                            }}
-                                        />
-                                        <button
-                                            type="submit"
-                                            disabled={!newGroupName.trim() || groups.includes(newGroupName.trim())}
-                                            className="bg-accent disabled:opacity-40 text-white px-2.5 py-1 rounded-[6px] text-[11px] font-medium cursor-pointer transition shrink-0 shadow-xs"
-                                        >
-                                            {t.saveGroupBtn}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Stream Health & Filter Utility Tools */}
-                <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                {/* Popover / Tooltip Input for Adding Category */}
+                <div className="relative inline-block" ref={popoverRef}>
                     <button
                         type="button"
-                        onClick={() => setHideOffline((v) => !v)}
-                        className={`px-2.5 py-1 rounded-[7px] text-[11px] font-medium cursor-pointer transition flex items-center gap-1.5 shadow-xs ${
-                            hideOffline
-                                ? 'bg-accent text-white font-semibold'
-                                : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
+                        onClick={() => setIsAddingGroup((v) => !v)}
+                        className={`mac-glass-pill px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1 cursor-pointer transition shadow-xs ${
+                            isAddingGroup
+                                ? 'bg-black/10 dark:bg-white/15 text-foreground'
+                                : 'hover:bg-black/10 dark:hover:bg-white/15 text-secondary hover:text-foreground'
                         }`}
-                        title="Sembunyikan stasiun radio yang sedang offline"
+                        aria-expanded={isAddingGroup}
                     >
-                        <span>{t.hideOffline}</span>
+                        <IconPlus size={11} />
+                        <span>{t.addGroupBtn}</span>
                     </button>
-                    <button
-                        type="button"
-                        onClick={() => void handleRunHealthCheck()}
-                        disabled={isCheckingHealth}
-                        className="mac-glass-pill px-2.5 py-1 rounded-[7px] text-[11px] font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:bg-black/5 dark:hover:bg-white/10 transition text-secondary hover:text-foreground shadow-xs"
-                        title="Periksa konektivitas dan status aliran stasiun radio"
-                    >
-                        <IconPulse size={12} className={isCheckingHealth ? 'animate-pulse text-accent' : ''} />
-                        <span>
-                            {isCheckingHealth
-                                ? t.checkingHealth
-                                : t.healthCheck}
-                        </span>
-                    </button>
-                    {stations.some((s) => s.status === 'offline') && (
-                        <button
-                            type="button"
-                            onClick={() =>
-                                void api
-                                    .removeOfflineStations()
-                                    .then(refreshAll)
-                            }
-                            className="mac-glass-pill px-2.5 py-1 rounded-[7px] text-[#FF453A] hover:bg-[#FF453A]/10 text-[11px] font-medium cursor-pointer transition flex items-center gap-1 shadow-xs"
-                            title="Hapus stasiun radio yang terdeteksi offline"
-                        >
-                            <IconTrash size={11} />
-                            <span>{t.removeOffline}</span>
-                        </button>
+
+                    {isAddingGroup && (
+                        <div className="absolute left-0 top-full mt-2 z-50 w-64 mac-modal-surface rounded-xl shadow-2xl p-2.5 backdrop-blur-xl animate-scale-enter border border-black/10 dark:border-white/10">
+                            {/* Caret pointing up to the button */}
+                            <div className="absolute -top-1.5 left-4 w-3 h-3 rotate-45 mac-modal-surface border-t border-l border-black/10 dark:border-white/10" />
+                            <form onSubmit={handleAddGroup} className="flex flex-col gap-2 relative z-10">
+                                <div className="flex items-center justify-between px-0.5 text-[11px] font-semibold text-foreground">
+                                    <span>{t.addGroupTitle}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAddingGroup(false)}
+                                        className="text-secondary hover:text-foreground p-0.5 cursor-pointer rounded"
+                                        aria-label="Tutup"
+                                    >
+                                        <IconClose size={12} />
+                                    </button>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <input
+                                        ref={addGroupInputRef}
+                                        type="text"
+                                        value={newGroupName}
+                                        onChange={(e) => setNewGroupName(e.target.value)}
+                                        placeholder={t.addGroupPlaceholder}
+                                        className="mac-input flex-1 px-2.5 py-1 rounded-[6px] text-[11px] text-foreground focus:outline-none"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Escape') setIsAddingGroup(false);
+                                        }}
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={!newGroupName.trim() || groups.includes(newGroupName.trim())}
+                                        className="bg-accent disabled:opacity-40 text-white px-2.5 py-1 rounded-[6px] text-[11px] font-medium cursor-pointer transition shrink-0 shadow-xs"
+                                    >
+                                        {t.saveGroupBtn}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     )}
                 </div>
             </div>
 
-            {/* Section: My Stations */}
+            {/* Section: My Stations Header & Controls */}
             <div>
                 <div className="flex items-center justify-between mb-2 px-1">
                     <div className="flex items-center gap-2.5">
@@ -363,22 +322,76 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                         )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    {/* Integrated Action Toolbar: Stream Health Icons + Import/Export + Add Station */}
+                    <div className="flex items-center gap-1.5">
+                        {/* Sembunyikan / Tampilkan Offline (Icon button) */}
+                        <button
+                            type="button"
+                            onClick={() => setHideOffline((v) => !v)}
+                            className={`w-7 h-7 rounded-[7px] flex items-center justify-center transition cursor-pointer shadow-xs ${
+                                hideOffline
+                                    ? 'bg-accent text-white font-semibold'
+                                    : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
+                            }`}
+                            title={hideOffline ? t.showOffline : t.hideOffline}
+                            aria-label={hideOffline ? t.showOffline : t.hideOffline}
+                        >
+                            {hideOffline ? <IconEyeSlash size={13} /> : <IconEye size={13} />}
+                        </button>
+
+                        {/* Periksa Stream (Icon button) */}
+                        <button
+                            type="button"
+                            onClick={() => void handleRunHealthCheck()}
+                            disabled={isCheckingHealth}
+                            className="w-7 h-7 rounded-[7px] mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center transition cursor-pointer disabled:opacity-50 text-secondary hover:text-foreground shadow-xs"
+                            title={isCheckingHealth ? t.checkingHealth : t.healthCheck}
+                            aria-label={t.healthCheck}
+                        >
+                            <IconPulse size={13} className={isCheckingHealth ? 'animate-pulse text-accent' : ''} />
+                        </button>
+
+                        {/* Hapus Offline jika ada stasiun offline (Badge icon button) */}
+                        {stations.some((s) => s.status === 'offline') && (
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    void api
+                                        .removeOfflineStations()
+                                        .then(refreshAll)
+                                }
+                                className="h-7 px-2 rounded-[7px] mac-glass-pill text-[#FF453A] hover:bg-[#FF453A]/10 text-[11px] font-medium flex items-center gap-1 transition cursor-pointer shadow-xs"
+                                title={t.removeOffline}
+                                aria-label={t.removeOffline}
+                            >
+                                <IconTrash size={12} />
+                                <span className="text-[10px] tabular-nums font-semibold">
+                                    {stations.filter((s) => s.status === 'offline').length}
+                                </span>
+                            </button>
+                        )}
+
+                        {/* Separator */}
+                        <div className="h-4 w-px bg-black/10 dark:bg-white/10 mx-0.5" />
+
+                        {/* Import & Export */}
                         <button
                             type="button"
                             onClick={() => {
                                 void handleExportLoad('json');
                                 setIsImportExportOpen(true);
                             }}
-                            className="mac-glass-pill px-2.5 py-1 rounded-[7px] text-[11px] font-medium flex items-center gap-1.5 cursor-pointer"
+                            className="mac-glass-pill px-2.5 h-7 rounded-[7px] text-[11px] font-medium flex items-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition text-secondary hover:text-foreground shadow-xs"
                         >
                             <IconTransfer size={12} />
                             <span>{t.importExport}</span>
                         </button>
+
+                        {/* Tambah Stasiun */}
                         <button
                             type="button"
                             onClick={openAddStationModal}
-                            className="bg-accent hover:opacity-90 text-white px-3 py-1 rounded-[7px] text-[11px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                            className="bg-accent hover:opacity-90 text-white px-3 h-7 rounded-[7px] text-[11px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
                         >
                             <IconPlus size={12} />
                             <span>{t.addStation}</span>

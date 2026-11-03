@@ -65,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div>
                 {/* Drag Region for macOS Traffic Lights */}
                 <div
-                    data-tauri-drag-region
+                    data-tauri-drag-region="deep"
                     style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
                     className="h-7 w-full shrink-0 mb-1"
                 />

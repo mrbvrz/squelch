@@ -794,7 +794,14 @@ export function initTauriBridge() {
             },
 
             startDragging: async () => {
-                await invoke('start_window_drag');
+                try {
+                    const { getCurrentWindow } = await import(
+                        '@tauri-apps/api/window'
+                    );
+                    await getCurrentWindow().startDragging();
+                } catch {
+                    await invoke('start_window_drag');
+                }
             },
 
             openWindowTab: async (tab: string) => {

@@ -420,6 +420,7 @@ export const App: React.FC = () => {
                     currentHeadingTitle={currentHeadingTitle}
                     updateInfo={appUpdates.updateInfo}
                     setIsUpdateModalOpen={appUpdates.setIsUpdateModalOpen}
+                    onMouseDown={handleWindowDragMouseDown}
                 />
 
                 <main className="flex-1 overflow-y-auto px-6 pt-1 pb-8 flex flex-col">

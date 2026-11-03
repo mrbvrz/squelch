@@ -10,6 +10,7 @@ export interface HeaderBarProps {
     currentHeadingTitle: string;
     updateInfo: UpdateCheckResult | null;
     setIsUpdateModalOpen: (open: boolean) => void;
+    onMouseDown?: (e: React.MouseEvent) => void;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -19,19 +20,22 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     goForward,
     currentHeadingTitle,
     updateInfo,
-    setIsUpdateModalOpen
+    setIsUpdateModalOpen,
+    onMouseDown
 }) => {
     return (
         <header
-            data-tauri-drag-region
+            data-tauri-drag-region="deep"
             style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
-            className="h-11 pt-1.5 px-6 flex items-center justify-between shrink-0 cursor-default"
+            onMouseDown={onMouseDown}
+            className="h-11 pt-1.5 px-6 flex items-center justify-between shrink-0 cursor-default select-none"
         >
-            <div
-                style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-                className="flex items-center gap-3.5"
-            >
-                <div className="inline-flex items-center rounded-[7px] mac-glass-pill divide-x mac-divider overflow-hidden">
+            <div className="flex items-center gap-3.5">
+                <div
+                    data-tauri-drag-region="false"
+                    style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+                    className="inline-flex items-center rounded-[7px] mac-glass-pill divide-x mac-divider overflow-hidden"
+                >
                     <button
                         type="button"
                         disabled={!canGoBack}
@@ -52,12 +56,16 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
                     </button>
                 </div>
 
-                <h1 className="text-[17px] font-bold tracking-tight">
+                <h1
+                    data-tauri-drag-region="deep"
+                    className="text-[17px] font-bold tracking-tight pointer-events-none select-none"
+                >
                     {currentHeadingTitle}
                 </h1>
             </div>
 
             <div
+                data-tauri-drag-region="false"
                 style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
                 className="flex items-center gap-2"
             >

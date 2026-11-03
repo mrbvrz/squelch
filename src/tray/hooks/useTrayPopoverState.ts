@@ -194,8 +194,15 @@ export function useTrayPopoverState(api: SquelchTrayPopoverApi) {
     useEffect(() => {
         void loadData();
         const unbindScroll = bindActiveScrollbars();
+
+        const handleFocus = () => {
+            void loadData();
+        };
+        window.addEventListener('focus', handleFocus);
+
         const unsub = api.onStateChanged((evt: unknown) => {
             const data = evt as {
+                type?: string;
                 state?: PlayerState;
                 currentStation?: Station | null;
                 streamTitle?: string | null;
@@ -205,6 +212,18 @@ export function useTrayPopoverState(api: SquelchTrayPopoverApi) {
                 volume?: number;
                 isMuted?: boolean;
             };
+
+            if (data?.type === 'stations' || data?.type === 'all') {
+                void loadData();
+                return;
+            }
+
+            if (data?.type === 'settings' && (data as any)?.settings) {
+                const s = (data as any).settings;
+                setSettings(s);
+                applyAppearanceVariables(s);
+                return;
+            }
 
             if (data?.state !== undefined) {
                 setPlayerState(data.state);
@@ -236,16 +255,10 @@ export function useTrayPopoverState(api: SquelchTrayPopoverApi) {
                 return;
             }
 
-            if ((data as any)?.type === 'settings' && (data as any)?.settings) {
-                const s = (data as any).settings;
-                setSettings(s);
-                applyAppearanceVariables(s);
-                return;
-            }
-
             void loadData();
         });
         return () => {
+            window.removeEventListener('focus', handleFocus);
             unbindScroll();
             unsub();
         };

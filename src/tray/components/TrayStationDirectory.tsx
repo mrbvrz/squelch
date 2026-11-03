@@ -18,7 +18,7 @@ export interface TrayStationDirectoryProps {
     filteredStations: Station[];
     onPlayStation: (id: string) => void;
     onToggleFavorite: (id: string) => void;
-    onOpenDiscover: () => void;
+    onOpenDiscover?: () => void;
     t: TranslationDictionary;
 }
 
@@ -100,30 +100,23 @@ export const TrayStationDirectory: React.FC<TrayStationDirectoryProps> = ({
                 />
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-0.5 pr-0.5">
+            <div className="flex-1 overflow-y-auto space-y-0.5 pr-0.5 flex flex-col">
                 {stations.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-secondary flex flex-col items-center justify-center gap-2">
-                        <div className="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center">
-                            <IconRadioTower size={20} />
+                    <div className="flex-1 flex flex-col items-center justify-center text-center p-3 gap-1.5 min-h-[110px]">
+                        <div className="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center shrink-0">
+                            <IconRadioTower size={16} />
                         </div>
-                        <span className="font-semibold">
+                        <span className="font-semibold text-foreground text-[11px]">
                             {t.emptyStationsTitle}
                         </span>
-                        <p className="text-[11px] text-muted max-w-[220px] leading-tight">
+                        <p className="text-[10px] text-muted max-w-[210px] leading-tight">
                             {t.emptyStationsDesc}
                         </p>
-                        <button
-                            type="button"
-                            onClick={onOpenDiscover}
-                            className="mt-1 bg-accent text-white hover:opacity-90 px-3 py-1.5 rounded-[6px] text-[11px] font-semibold transition cursor-pointer shadow-sm"
-                        >
-                            {t.trayDiscover}
-                        </button>
                     </div>
                 ) : filteredStations.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-secondary flex flex-col items-center justify-center gap-1.5">
-                        <IconSearch size={18} className="opacity-40" />
-                        <span>{t.emptyStationsText}</span>
+                    <div className="flex-1 flex flex-col items-center justify-center text-center p-3 gap-1 min-h-[90px]">
+                        <IconSearch size={16} className="opacity-40" />
+                        <span className="text-[11px] text-muted">{t.emptyStationsText}</span>
                     </div>
                 ) : (
                     filteredStations.map((st) => {
@@ -159,7 +152,9 @@ export const TrayStationDirectory: React.FC<TrayStationDirectoryProps> = ({
                                             className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                                                 st.status === 'online'
                                                     ? 'bg-[#30D158]/70'
-                                                    : 'bg-[#FF453A]/70'
+                                                    : st.status === 'offline'
+                                                      ? 'bg-[#FF453A]/70'
+                                                      : 'bg-muted/40'
                                             }`}
                                         />
                                     )}

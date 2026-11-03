@@ -110,7 +110,6 @@ export const TrayPopoverApp: React.FC = () => {
                 onToggleFavorite={(id) => {
                     void api.toggleFavorite(id).then(loadData);
                 }}
-                onOpenDiscover={() => void api.openWindowTab('discover')}
                 t={t}
             />
 

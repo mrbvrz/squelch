@@ -877,13 +877,13 @@ export function initTauriBridge() {
                     station.id = `station-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
                 }
                 await invoke('save_station', { station });
-                await emit('ui:state-changed', { ...playerStatus });
+                await emit('ui:state-changed', { type: 'stations' });
                 return station;
             },
 
             deleteStation: async (stationId: string) => {
                 await invoke('delete_station', { id: stationId });
-                await emit('ui:state-changed', { ...playerStatus });
+                await emit('ui:state-changed', { type: 'stations' });
             },
 
             toggleFavorite: async (stationId: string) => {
@@ -894,23 +894,23 @@ export function initTauriBridge() {
                 if (station) {
                     station.isFavorite = !station.isFavorite;
                     await invoke('save_station', { station });
-                    await emit('ui:state-changed', { ...playerStatus });
+                    await emit('ui:state-changed', { type: 'stations' });
                 }
             },
 
             reorderStations: async (orderedIds: string[]) => {
                 await invoke('reorder_stations', { orderedIds });
-                await emit('ui:state-changed', { ...playerStatus });
+                await emit('ui:state-changed', { type: 'stations' });
             },
 
             saveGroups: async (groups: string[]) => {
                 await invoke('save_groups', { groups });
-                await emit('ui:state-changed', { ...playerStatus });
+                await emit('ui:state-changed', { type: 'stations' });
             },
 
             renameGroup: async (oldName: string, newName: string) => {
                 const res = await invoke('rename_group', { oldName, newName });
-                await emit('ui:state-changed', { ...playerStatus });
+                await emit('ui:state-changed', { type: 'stations' });
                 return res;
             },
 
@@ -922,7 +922,7 @@ export function initTauriBridge() {
                     groupName,
                     moveToGroup
                 });
-                await emit('ui:state-changed', { ...playerStatus });
+                await emit('ui:state-changed', { type: 'stations' });
                 return res;
             },
 
@@ -964,7 +964,7 @@ export function initTauriBridge() {
                 for (const st of offline) {
                     await invoke('delete_station', { id: st.id });
                 }
-                await emit('ui:state-changed', { ...playerStatus });
+                await emit('ui:state-changed', { type: 'stations' });
                 return { removedCount: offline.length };
             },
 
@@ -978,7 +978,7 @@ export function initTauriBridge() {
                 duplicateStrategy: 'skip' | 'overwrite' | 'duplicate';
             }) => {
                 const res = await importStationsData(payload);
-                await emit('ui:state-changed', { ...playerStatus });
+                await emit('ui:state-changed', { type: 'stations' });
                 return res;
             },
 

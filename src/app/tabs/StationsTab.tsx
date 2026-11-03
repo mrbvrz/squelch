@@ -6,6 +6,7 @@ import { StationAvatar } from '../../components/StationAvatar';
 import {
     IconClose,
     IconCompass,
+    IconDots,
     IconEdit,
     IconEye,
     IconEyeSlash,
@@ -90,6 +91,37 @@ export const StationsTab: React.FC<StationsTabProps> = ({
     const popoverRef = React.useRef<HTMLDivElement>(null);
     const addGroupInputRef = React.useRef<HTMLInputElement>(null);
     const [popoverAlignRight, setPopoverAlignRight] = React.useState(false);
+
+    const moreMenuRef = React.useRef<HTMLDivElement>(null);
+    const [isMoreMenuOpen, setIsMoreMenuOpen] = React.useState(false);
+
+    const offlineCount = React.useMemo(
+        () => stations.filter((s) => s.status === 'offline').length,
+        [stations]
+    );
+
+    React.useEffect(() => {
+        if (!isMoreMenuOpen) return;
+        const handleClickOutside = (e: MouseEvent) => {
+            if (
+                moreMenuRef.current &&
+                !moreMenuRef.current.contains(e.target as Node)
+            ) {
+                setIsMoreMenuOpen(false);
+            }
+        };
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setIsMoreMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isMoreMenuOpen]);
 
     React.useEffect(() => {
         if (!isAddingGroup) return;
@@ -198,68 +230,70 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                 </div>
             ) : (
                 <>
-            {/* Category Filter Pills (WhatsApp / Segmented style) */}
-            <div className="flex flex-wrap items-center gap-1.5 pb-2">
-                <button
-                    type="button"
-                    onClick={() => {
-                        setSelectedGroup('ALL');
-                        setFavoritesOnly(false);
-                    }}
-                    className={`px-3 py-1 rounded-full text-[11px] font-medium tabular-nums cursor-pointer transition whitespace-nowrap shadow-xs ${
-                        selectedGroup === 'ALL' && !favoritesOnly
-                            ? 'bg-accent text-white font-semibold'
-                            : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
-                    }`}
-                >
-                    {t.allGroups} ({stations.length})
-                </button>
+            {/* Category Filter Bar: Single Row, Horizontally Scrollable */}
+            <div className="flex items-center gap-1.5 pb-2">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-nowrap flex-1 min-w-0 py-0.5">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setSelectedGroup('ALL');
+                            setFavoritesOnly(false);
+                        }}
+                        className={`px-3.5 h-[30px] rounded-[6px] text-[12px] font-medium tabular-nums cursor-pointer transition whitespace-nowrap shadow-xs shrink-0 flex items-center justify-center ${
+                            selectedGroup === 'ALL' && !favoritesOnly
+                                ? 'bg-accent text-white font-semibold'
+                                : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
+                        }`}
+                    >
+                        {t.allGroups} ({stations.length})
+                    </button>
 
-                <button
-                    type="button"
-                    onClick={() => {
-                        setSelectedGroup('ALL');
-                        setFavoritesOnly(true);
-                    }}
-                    className={`px-3 py-1 rounded-full text-[11px] font-medium tabular-nums flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap shadow-xs ${
-                        favoritesOnly
-                            ? 'bg-accent text-white font-semibold'
-                            : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
-                    }`}
-                >
-                    <IconStar size={11} filled={favoritesOnly} />
-                    <span>
-                        {t.favoritesOnly} ({favCount})
-                    </span>
-                </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setSelectedGroup('ALL');
+                            setFavoritesOnly(true);
+                        }}
+                        className={`px-3.5 h-[30px] rounded-[6px] text-[12px] font-medium tabular-nums flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap shadow-xs shrink-0 ${
+                            favoritesOnly
+                                ? 'bg-accent text-white font-semibold'
+                                : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
+                        }`}
+                    >
+                        <IconStar size={12} filled={favoritesOnly} />
+                        <span>
+                            {t.favoritesOnly} ({favCount})
+                        </span>
+                    </button>
 
-                {groups.map((grp) => {
-                    const active = selectedGroup === grp && !favoritesOnly;
-                    return (
-                        <button
-                            key={grp}
-                            type="button"
-                            onClick={() => {
-                                setSelectedGroup(grp);
-                                setFavoritesOnly(false);
-                            }}
-                            className={`px-3 py-1 rounded-full text-[11px] font-medium cursor-pointer transition whitespace-nowrap shadow-xs ${
-                                active
-                                    ? 'bg-accent text-white font-semibold'
-                                    : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
-                            }`}
-                        >
-                            {grp}
-                        </button>
-                    );
-                })}
+                    {groups.map((grp) => {
+                        const active = selectedGroup === grp && !favoritesOnly;
+                        return (
+                            <button
+                                key={grp}
+                                type="button"
+                                onClick={() => {
+                                    setSelectedGroup(grp);
+                                    setFavoritesOnly(false);
+                                }}
+                                className={`px-3.5 h-[30px] rounded-[6px] text-[12px] font-medium cursor-pointer transition whitespace-nowrap shadow-xs shrink-0 flex items-center justify-center ${
+                                    active
+                                        ? 'bg-accent text-white font-semibold'
+                                        : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
+                                }`}
+                            >
+                                {grp}
+                            </button>
+                        );
+                    })}
+                </div>
 
                 {/* Popover / Tooltip Input for Adding Category */}
-                <div className="relative inline-block z-40" ref={popoverRef}>
+                <div className="relative inline-block z-40 shrink-0" ref={popoverRef}>
                     <button
                         type="button"
                         onClick={() => setIsAddingGroup((v) => !v)}
-                        className={`mac-glass-pill w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition shadow-xs ${
+                        className={`mac-glass-pill w-[30px] h-[30px] rounded-[6px] flex items-center justify-center cursor-pointer transition shadow-xs ${
                             isAddingGroup
                                 ? 'bg-black/10 dark:bg-white/15 text-foreground'
                                 : 'hover:bg-black/10 dark:hover:bg-white/15 text-secondary hover:text-foreground'
@@ -268,7 +302,7 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                         aria-label={t.addGroupTitle}
                         aria-expanded={isAddingGroup}
                     >
-                        <IconPlus size={13} />
+                        <IconPlus size={14} />
                     </button>
 
                     {isAddingGroup && (
@@ -277,24 +311,26 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                                 popoverAlignRight ? 'right-0' : 'left-0'
                             } top-full mt-2 z-50 w-64 mac-modal-surface rounded-xl shadow-2xl p-2.5 backdrop-blur-2xl animate-scale-enter border border-black/10 dark:border-white/10`}
                         >
-                            {/* SVG Caret pointing up to the button */}
+                            {/* Seamless SVG Caret pointing up to the button */}
                             <svg
-                                className={`absolute -top-2 ${
-                                    popoverAlignRight ? 'right-2.5' : 'left-2.5'
+                                className={`absolute -top-[7px] ${
+                                    popoverAlignRight ? 'right-2' : 'left-2'
                                 } pointer-events-none drop-shadow-xs`}
-                                width="14"
+                                width="16"
                                 height="8"
-                                viewBox="0 0 14 8"
+                                viewBox="0 0 16 8"
                             >
-                                <path
-                                    d="M7 0L14 8H0L7 0Z"
-                                    fill="var(--surface-modal, #1e1e1e)"
+                                <polygon
+                                    points="0,8 8,0 16,8"
+                                    style={{ fill: 'var(--surface-modal, #202022)' }}
                                 />
                                 <path
-                                    d="M7 0.5L13.5 8M7 0.5L0.5 8"
-                                    stroke="var(--card-border, rgba(255,255,255,0.15))"
-                                    strokeWidth="1"
+                                    d="M0 8 L8 0.5 L16 8"
                                     fill="none"
+                                    strokeWidth="1"
+                                    className="stroke-black/15 dark:stroke-white/15"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
                                 />
                             </svg>
                             <form onSubmit={handleAddGroup} className="flex flex-col gap-2 relative z-10">
@@ -357,84 +393,116 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                         )}
                     </div>
 
-                    {/* Integrated Action Toolbar: Stream Health Icons + Import/Export + Add Station */}
-                    <div className="flex items-center gap-1.5">
-                        {/* Sembunyikan / Tampilkan Offline (Icon button) */}
-                        <button
-                            type="button"
-                            onClick={() => setHideOffline((v) => !v)}
-                            className={`w-7 h-7 rounded-[7px] flex items-center justify-center transition cursor-pointer shadow-xs ${
-                                hideOffline
-                                    ? 'bg-accent text-white font-semibold'
-                                    : 'mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 text-secondary hover:text-foreground'
-                            }`}
-                            title={hideOffline ? t.showOffline : t.hideOffline}
-                            aria-label={hideOffline ? t.showOffline : t.hideOffline}
-                        >
-                            {hideOffline ? <IconEyeSlash size={13} /> : <IconEye size={13} />}
-                        </button>
-
-                        {/* Periksa Stream (Icon button) */}
-                        <button
-                            type="button"
-                            onClick={() => void handleRunHealthCheck()}
-                            disabled={isCheckingHealth}
-                            className="w-7 h-7 rounded-[7px] mac-glass-pill hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center transition cursor-pointer disabled:opacity-50 text-secondary hover:text-foreground shadow-xs"
-                            title={isCheckingHealth ? t.checkingHealth : t.healthCheck}
-                            aria-label={t.healthCheck}
-                        >
-                            {isCheckingHealth ? (
-                                <IconSpinner size={13} className="animate-spin text-accent" />
-                            ) : (
-                                <IconPulse size={13} />
-                            )}
-                        </button>
-
-                        {/* Hapus Offline jika ada stasiun offline (Badge icon button) */}
-                        {stations.some((s) => s.status === 'offline') && (
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    void api
-                                        .removeOfflineStations()
-                                        .then(refreshAll)
-                                }
-                                className="h-7 px-2 rounded-[7px] mac-glass-pill text-[#FF453A] hover:bg-[#FF453A]/10 text-[11px] font-medium flex items-center gap-1 transition cursor-pointer shadow-xs"
-                                title={t.removeOffline}
-                                aria-label={t.removeOffline}
-                            >
-                                <IconTrash size={12} />
-                                <span className="text-[10px] tabular-nums font-semibold">
-                                    {stations.filter((s) => s.status === 'offline').length}
-                                </span>
-                            </button>
-                        )}
-
-                        {/* Separator */}
-                        <div className="h-4 w-px bg-black/10 dark:bg-white/10 mx-0.5" />
-
-                        {/* Import & Export */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                void handleExportLoad('json');
-                                setIsImportExportOpen(true);
-                            }}
-                            className="mac-glass-pill px-2.5 h-7 rounded-[7px] text-[11px] font-medium flex items-center gap-1.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition text-secondary hover:text-foreground shadow-xs"
-                        >
-                            <IconTransfer size={12} />
-                            <span>{t.importExport}</span>
-                        </button>
-
-                        {/* Tambah Stasiun */}
+                    {/* Button Group: + Add Station | 3-dot Dropdown */}
+                    <div className="relative inline-flex items-center" ref={moreMenuRef}>
+                        {/* Primary Action: Add Station */}
                         <button
                             type="button"
                             onClick={openAddStationModal}
-                            className="bg-accent hover:opacity-90 text-white px-3 h-7 rounded-[7px] text-[11px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                            className="bg-accent hover:opacity-95 text-white pl-3 pr-2.5 h-[30px] rounded-l-[7px] text-[12px] font-medium flex items-center gap-1.5 shadow-sm cursor-pointer transition"
                         >
-                            <IconPlus size={12} />
+                            <IconPlus size={13} />
                             <span>{t.addStation}</span>
                         </button>
+
+                        {/* Thin clean Divider */}
+                        <div className="w-[1px] h-[30px] bg-white/20" />
+
+                        {/* Secondary Action: 3-dot Ellipsis */}
+                        <button
+                            type="button"
+                            onClick={() => setIsMoreMenuOpen((v) => !v)}
+                            aria-expanded={isMoreMenuOpen}
+                            aria-label="More options"
+                            className={`bg-accent hover:opacity-95 text-white px-2 h-[30px] rounded-r-[7px] flex items-center justify-center shadow-sm cursor-pointer transition ${
+                                isMoreMenuOpen ? 'opacity-90' : ''
+                            }`}
+                        >
+                            <IconDots size={16} />
+                        </button>
+
+                        {/* Dropdown Menu for 3-dot Ellipsis */}
+                        {isMoreMenuOpen && (
+                            <div className="absolute right-0 top-full mt-1.5 z-50 w-52 mac-modal-surface rounded-xl shadow-2xl p-1.5 backdrop-blur-2xl animate-scale-enter border border-black/10 dark:border-white/10 flex flex-col gap-0.5">
+                                {/* 1. Import / Export */}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsMoreMenuOpen(false);
+                                        void handleExportLoad('json');
+                                        setIsImportExportOpen(true);
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-[7px] text-[12px] font-medium text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+                                >
+                                    <IconTransfer size={14} className="text-secondary shrink-0" />
+                                    <span className="flex-1 text-left">{t.importExport}</span>
+                                </button>
+
+                                {/* 2. Verify Stream */}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsMoreMenuOpen(false);
+                                        void handleRunHealthCheck();
+                                    }}
+                                    disabled={isCheckingHealth}
+                                    className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-[7px] text-[12px] font-medium text-foreground hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-50 transition cursor-pointer"
+                                >
+                                    {isCheckingHealth ? (
+                                        <IconSpinner size={14} className="animate-spin text-accent shrink-0" />
+                                    ) : (
+                                        <IconPulse size={14} className="text-secondary shrink-0" />
+                                    )}
+                                    <span className="flex-1 text-left">
+                                        {isCheckingHealth ? t.checkingHealth : t.healthCheck}
+                                    </span>
+                                </button>
+
+                                {/* 3. Hide Offline */}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setHideOffline((v) => !v);
+                                        setIsMoreMenuOpen(false);
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-[7px] text-[12px] font-medium text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+                                >
+                                    {hideOffline ? (
+                                        <IconEyeSlash size={14} className="text-secondary shrink-0" />
+                                    ) : (
+                                        <IconEye size={14} className="text-secondary shrink-0" />
+                                    )}
+                                    <span className="flex-1 text-left">
+                                        {hideOffline ? t.showOffline : t.hideOffline}
+                                    </span>
+                                    {hideOffline && (
+                                        <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+                                    )}
+                                </button>
+
+                                {/* Separator */}
+                                <div className="h-px bg-black/5 dark:bg-white/10 my-0.5" />
+
+                                {/* 4. Delete Offline */}
+                                <button
+                                    type="button"
+                                    disabled={offlineCount === 0}
+                                    onClick={() => {
+                                        setIsMoreMenuOpen(false);
+                                        void api.removeOfflineStations().then(refreshAll);
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-[7px] text-[12px] font-medium text-[#FF453A] hover:bg-[#FF453A]/10 disabled:opacity-35 disabled:hover:bg-transparent transition cursor-pointer"
+                                >
+                                    <IconTrash size={14} className="shrink-0" />
+                                    <span className="flex-1 text-left">{t.removeOffline}</span>
+                                    {offlineCount > 0 && (
+                                        <span className="text-[10px] tabular-nums font-semibold bg-[#FF453A]/15 px-1.5 py-0.5 rounded-full">
+                                            {offlineCount}
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 

@@ -18,6 +18,7 @@ import {
     ChevronUpIcon,
     ClipboardDocumentIcon,
     ClockIcon,
+    EllipsisHorizontalIcon,
     ExclamationTriangleIcon,
     EyeIcon,
     EyeSlashIcon,
@@ -143,3 +144,7 @@ export const IconStar: React.FC<IconProps & { filled?: boolean }> = ({
         />
     );
 };
+
+export const IconDots = wrapHeroicon(EllipsisHorizontalIcon);
+export const IconMore = IconDots;
+

@@ -248,11 +248,11 @@ export const enLocale: TranslationDictionary = {
     prefDataDirLabel: 'Data directory',
     prefDangerSection: 'Data Management & Reset',
     prefResetDesc:
-        'Restore all appearance, network, and keyboard shortcut preferences to factory defaults.',
+        'Reset the entire application to factory defaults, including all radio stations, schedules, listening statistics, and preferences.',
     prefResetBtn: 'Reset Defaults',
-    prefResetConfirmTitle: 'Reset to Default Settings?',
+    prefResetConfirmTitle: 'Reset to Factory Defaults?',
     prefResetConfirmDesc:
-        'All custom theme, accent color, font, and shortcut settings will be restored to defaults.',
+        'All radio stations, broadcast schedules, listening statistics, themes, accent colors, fonts, and keyboard shortcuts will be reset to factory defaults.',
     prefResetConfirmYes: 'Yes, Reset Defaults',
 
     prefClearStationsTitle: 'Delete All Radio Stations',

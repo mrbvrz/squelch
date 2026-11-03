@@ -248,11 +248,11 @@ export const idLocale: TranslationDictionary = {
     prefDataDirLabel: 'Direktori data',
     prefDangerSection: 'Pengelolaan Data & Reset',
     prefResetDesc:
-        'Kembalikan seluruh preferensi tampilan, jaringan, dan pintasan keyboard ke pengaturan awal.',
+        'Kembalikan seluruh data dan pengaturan aplikasi ke setelan bawaan pabrik, termasuk stasiun radio, jadwal siaran, dan statistik mendengarkan.',
     prefResetBtn: 'Kembalikan Bawaan',
-    prefResetConfirmTitle: 'Kembalikan Pengaturan Awal?',
+    prefResetConfirmTitle: 'Kembalikan ke Setelan Bawaan?',
     prefResetConfirmDesc:
-        'Semua kustomisasi tema, warna aksen, font, dan pintasan keyboard akan dikembalikan ke nilai bawaan.',
+        'Semua stasiun radio, riwayat statistik mendengarkan, jadwal siaran, serta kustomisasi tema, warna aksen, font, dan pintasan keyboard akan direset ke kondisi awal.',
     prefResetConfirmYes: 'Ya, Kembalikan Bawaan',
 
     prefClearStationsTitle: 'Hapus Semua Stasiun Radio',

@@ -108,7 +108,7 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
                         type="button"
                         onClick={() =>
                             onRequestReset
-                                ? onRequestReset('settings')
+                                ? onRequestReset('all')
                                 : setIsResetConfirmOpen(true)
                         }
                         className="bg-[#FF453A] hover:bg-[#D70015] text-white px-3.5 h-[30px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition shrink-0"

@@ -1026,20 +1026,7 @@ export function initTauriBridge() {
             },
 
             resetSettings: async () => {
-                const res: any = await invoke('reset_settings');
-                if (res?.settings) {
-                    applyAppearanceVariables(res.settings);
-                    void emit('squelch:audio:eq', res.settings.equalizer);
-                    void emit('squelch:audio:buffer', {
-                        bufferLengthSeconds: res.settings.bufferLengthSeconds
-                    });
-                    void emit('squelch:shortcuts:sync', res.settings.shortcuts);
-                    void emit('squelch:audio:sink', {
-                        deviceId: 'default'
-                    });
-                }
-                await emit('ui:state-changed', { type: 'settings', ...res });
-                return res?.settings;
+                return await (window as any).squelchApi.resetAllData();
             },
 
             getAudioOutputDevices: async () => {
@@ -1099,6 +1086,16 @@ export function initTauriBridge() {
             },
 
             resetAllData: async () => {
+                if (playerStatus.state !== 'idle') {
+                    playerStatus.state = 'idle';
+                    playerStatus.currentStation = null;
+                    playerStatus.streamTitle = null;
+                    playerStatus.reconnectAttempt = null;
+                    void invoke('set_tray_state', { stateName: 'idle' });
+                    syncPlayerStatusToRust();
+                    void emit('squelch:audio:command', { type: 'stop' });
+                    void emit('ui:state-changed', { ...playerStatus });
+                }
                 statsData = {
                     schemaVersion: 1,
                     dailySeconds: {},
@@ -1118,6 +1115,9 @@ export function initTauriBridge() {
                         bufferLengthSeconds: res.settings.bufferLengthSeconds
                     });
                     void emit('squelch:shortcuts:sync', res.settings.shortcuts);
+                    void emit('squelch:audio:sink', {
+                        deviceId: 'default'
+                    });
                 }
                 await emit('ui:state-changed', { type: 'all', ...res });
                 return res?.settings;

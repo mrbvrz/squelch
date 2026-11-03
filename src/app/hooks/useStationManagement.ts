@@ -31,6 +31,22 @@ export function useStationManagement({
         null
     );
     const [isCheckingHealth, setIsCheckingHealth] = useState<boolean>(false);
+    const [healthProgress, setHealthProgress] = useState<{
+        active: boolean;
+        total: number;
+        completed: number;
+        currentStation?: string;
+        onlineCount: number;
+        offlineCount: number;
+        status: 'idle' | 'checking' | 'completed';
+    }>({
+        active: false,
+        total: 0,
+        completed: 0,
+        onlineCount: 0,
+        offlineCount: 0,
+        status: 'idle'
+    });
 
     const favCount = useMemo(
         () => stations.filter((s) => s.isFavorite).length,
@@ -88,13 +104,62 @@ export function useStationManagement({
 
     const handleRunHealthCheck = useCallback(async () => {
         setIsCheckingHealth(true);
+        setHealthProgress({
+            active: true,
+            total: stations.length,
+            completed: 0,
+            onlineCount: 0,
+            offlineCount: 0,
+            status: 'checking'
+        });
         try {
-            await api.runHealthCheck();
+            await api.runHealthCheck((prog) => {
+                setHealthProgress({
+                    active: true,
+                    total: prog.total,
+                    completed: prog.completed,
+                    currentStation: prog.currentStation,
+                    onlineCount: prog.onlineCount,
+                    offlineCount: prog.offlineCount,
+                    status:
+                        prog.completed >= prog.total && prog.total > 0
+                            ? 'completed'
+                            : 'checking'
+                });
+            });
             await refreshAll();
+            setHealthProgress((prev) => ({
+                ...prev,
+                active: true,
+                status: 'completed'
+            }));
+            setTimeout(() => {
+                setHealthProgress((prev) => {
+                    if (prev.status === 'completed') {
+                        return { ...prev, active: false, status: 'idle' };
+                    }
+                    return prev;
+                });
+            }, 3500);
+        } catch (err) {
+            console.error('Health check failed:', err);
+            setHealthProgress((prev) => ({
+                ...prev,
+                active: false,
+                status: 'idle'
+            }));
         } finally {
             setIsCheckingHealth(false);
         }
-    }, [api, refreshAll]);
+    }, [api, stations.length, refreshAll]);
+
+    const dismissHealthToast = useCallback(() => {
+        setHealthProgress((prev) => ({
+            ...prev,
+            active: false,
+            status: 'idle'
+        }));
+    }, []);
 
     const isPlayingStation = useCallback(
         (stationId?: string) => {
@@ -126,6 +191,8 @@ export function useStationManagement({
         draggedStationId,
         setDraggedStationId,
         isCheckingHealth,
+        healthProgress,
+        dismissHealthToast,
         favCount,
         filteredStations,
         handleAddGroup,

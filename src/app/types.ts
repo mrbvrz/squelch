@@ -85,8 +85,21 @@ export interface SquelchWindowApi {
         moveToGroup?: string
     ) => Promise<StationsDataSchema>;
     testStreamUrl: (url: string) => Promise<StreamTestResult>;
-    runHealthCheck: () => Promise<{
-        results: Array<{ stationId: string; ok: boolean }>;
+    runHealthCheck: (onProgress?: (progress: {
+        total: number;
+        completed: number;
+        currentStation?: string;
+        onlineCount: number;
+        offlineCount: number;
+    }) => void) => Promise<{
+        results: Array<{
+            stationId: string;
+            name: string;
+            online: boolean;
+            latencyMs: number;
+            bitrate?: string;
+            error?: string;
+        }>;
         stations: Station[];
     }>;
     removeOfflineStations: () => Promise<number>;

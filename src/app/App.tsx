@@ -17,6 +17,7 @@ import { SleepCountdownBanner } from './components/SleepCountdownBanner';
 import { StandaloneAboutView } from './components/StandaloneAboutView';
 import { TabContentHost } from './components/TabContentHost';
 import { AppModalsHost } from './components/AppModalsHost';
+import { StreamHealthToast } from './components/StreamHealthToast';
 
 // Custom Modular Hooks
 import { useTabNavigation } from './hooks/useTabNavigation';
@@ -506,6 +507,20 @@ export const App: React.FC = () => {
                     isOpen: isOnboardingOpen,
                     onClose: () => setIsOnboardingOpen(false)
                 }}
+            />
+
+            {/* FLOATING TOAST: Stream Health Verification with Loading Progress */}
+            <StreamHealthToast
+                active={stationManagement.healthProgress.active}
+                status={stationManagement.healthProgress.status}
+                total={stationManagement.healthProgress.total}
+                completed={stationManagement.healthProgress.completed}
+                currentStation={stationManagement.healthProgress.currentStation}
+                onlineCount={stationManagement.healthProgress.onlineCount}
+                offlineCount={stationManagement.healthProgress.offlineCount}
+                onDismiss={stationManagement.dismissHealthToast}
+                lang={lang}
+                t={t}
             />
         </div>
     );

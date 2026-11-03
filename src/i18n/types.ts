@@ -68,6 +68,8 @@ export interface TranslationDictionary {
     showOffline: string;
     healthCheck: string;
     checkingHealth: string;
+    healthCheckComplete: string;
+    healthCheckingStation: string;
     removeOffline: string;
     importExport: string;
     addStation: string;

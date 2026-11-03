@@ -61,6 +61,8 @@ export const idLocale: TranslationDictionary = {
     showOffline: 'Tampilkan Offline',
     healthCheck: 'Periksa Stream',
     checkingHealth: 'Memeriksa…',
+    healthCheckComplete: 'Pemeriksaan Selesai',
+    healthCheckingStation: 'Memeriksa stasiun',
     removeOffline: 'Hapus Offline',
     importExport: 'Impor / Ekspor',
     addStation: 'Tambah Stasiun',

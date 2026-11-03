@@ -930,9 +930,32 @@ export function initTauriBridge() {
                 return await invoke('test_stream_url', { url });
             },
 
-            runHealthCheck: async () => {
+            runHealthCheck: async (onProgress?: (progress: {
+                total: number;
+                completed: number;
+                currentStation?: string;
+                onlineCount: number;
+                offlineCount: number;
+            }) => void) => {
                 const data: any = await invoke('get_stations_data');
                 const stations: any[] = data?.stations || [];
+                const total = stations.length;
+                let completed = 0;
+                let onlineCount = 0;
+                let offlineCount = 0;
+
+                onProgress?.({
+                    total,
+                    completed: 0,
+                    currentStation: stations[0]?.name,
+                    onlineCount: 0,
+                    offlineCount: 0
+                });
+
+                if (total === 0) {
+                    return { results: [], stations: [] };
+                }
+
                 const results: any[] = await Promise.all(
                     stations.map(async (st) => {
                         const testRes: any = await invoke('test_stream_url', {
@@ -940,6 +963,19 @@ export function initTauriBridge() {
                         });
                         const isOnline = Boolean(testRes?.ok);
                         st.status = isOnline ? 'online' : 'offline';
+                        completed++;
+                        if (isOnline) {
+                            onlineCount++;
+                        } else {
+                            offlineCount++;
+                        }
+                        onProgress?.({
+                            total,
+                            completed,
+                            currentStation: st.name,
+                            onlineCount,
+                            offlineCount
+                        });
                         return {
                             stationId: st.id,
                             name: st.name,

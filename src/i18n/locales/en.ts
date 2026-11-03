@@ -61,6 +61,8 @@ export const enLocale: TranslationDictionary = {
     showOffline: 'Show Offline',
     healthCheck: 'Verify Streams',
     checkingHealth: 'Verifying…',
+    healthCheckComplete: 'Verification Complete',
+    healthCheckingStation: 'Checking station',
     removeOffline: 'Remove Offline',
     importExport: 'Import / Export',
     addStation: 'Add Station',

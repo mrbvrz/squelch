@@ -5,9 +5,12 @@ import type { ActiveTab, SquelchWindowApi } from '../types';
 import { StationsTab } from '../tabs/StationsTab';
 import { SchedulesTab } from '../tabs/SchedulesTab';
 import { DiscoverTab } from '../tabs/DiscoverTab';
-import { StatsTab } from '../tabs/StatsTab';
 import { PreferencesTab } from '../tabs/PreferencesTab';
 import { AboutTab } from '../tabs/AboutTab';
+
+const LazyStatsTab = React.lazy(() =>
+    import('../tabs/StatsTab').then((m) => ({ default: m.StatsTab }))
+);
 
 import type { useAppCoreData } from '../hooks/useAppCoreData';
 import type { useStationManagement } from '../hooks/useStationManagement';
@@ -194,19 +197,34 @@ export const TabContentHost: React.FC<TabContentHostProps> = ({
         case 'stats':
             if (!appCoreData.statsSummary) return null;
             return (
-                <StatsTab
-                    statsSummary={appCoreData.statsSummary}
-                    statsViewMode={appCoreData.statsViewMode}
-                    setStatsViewMode={appCoreData.setStatsViewMode}
-                    activeChartPoints={appCoreData.activeChartPoints}
-                    maxChartSeconds={appCoreData.maxChartSeconds}
-                    stations={appCoreData.stations}
-                    isPlayingStation={stationManagement.isPlayingStation}
-                    api={api}
-                    lang={lang}
-                    t={t}
-                    setActiveTab={setActiveTab}
-                />
+                <React.Suspense
+                    fallback={
+                        <div className="flex-1 flex items-center justify-center p-8 text-neutral-400">
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="w-8 h-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                                <span className="text-xs font-medium">
+                                    {lang === 'en'
+                                        ? 'Loading statistics...'
+                                        : 'Memuat statistik...'}
+                                </span>
+                            </div>
+                        </div>
+                    }
+                >
+                    <LazyStatsTab
+                        statsSummary={appCoreData.statsSummary}
+                        statsViewMode={appCoreData.statsViewMode}
+                        setStatsViewMode={appCoreData.setStatsViewMode}
+                        activeChartPoints={appCoreData.activeChartPoints}
+                        maxChartSeconds={appCoreData.maxChartSeconds}
+                        stations={appCoreData.stations}
+                        isPlayingStation={stationManagement.isPlayingStation}
+                        api={api}
+                        lang={lang}
+                        t={t}
+                        setActiveTab={setActiveTab}
+                    />
+                </React.Suspense>
             );
 
         case 'preferences':

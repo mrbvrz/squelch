@@ -37,7 +37,8 @@ export function useAppCoreData({
     const [settings, setSettings] = useState<AppSettings | null>(null);
     const [dataDir, setDataDir] = useState<string>('');
     const [systemFonts, setSystemFonts] = useState<string[]>([]);
-    const [isLoadingFonts, setIsLoadingFonts] = useState<boolean>(true);
+    const [isLoadingFonts, setIsLoadingFonts] = useState<boolean>(false);
+    const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
     const [appIconDataUrl, setAppIconDataUrl] = useState<string | null>(null);
     const [statsSummary, setStatsSummary] =
         useState<ListeningStatsSummary | null>(null);
@@ -57,27 +58,31 @@ export function useAppCoreData({
     const [diagnosticsText, setDiagnosticsText] = useState<string>('');
 
     const refreshAll = useCallback(async () => {
-        const [stData, player, cfg, stats, schedList] = await Promise.all([
-            api.getStationsData(),
-            api.getPlayerStatus(),
-            api.getSettings(),
-            api.getListeningStats(),
-            api.getSchedules()
-        ]);
-        setStations(stData.stations);
-        setGroups(stData.groups);
-        setPlayerState(player.state);
-        setReconnectAttempt(player.reconnectAttempt ?? null);
-        setCurrentStation(player.currentStation);
-        setStreamTitle(player.streamTitle);
-        setSleepRemainingSec(player.sleepTimerRemainingSec);
-        setSettings(cfg.settings);
-        setDataDir(cfg.dataDir);
-        setStatsSummary(stats);
-        if (Array.isArray(schedList) && onSchedulesLoaded) {
-            onSchedulesLoaded(schedList);
+        try {
+            const [stData, player, cfg, stats, schedList] = await Promise.all([
+                api.getStationsData(),
+                api.getPlayerStatus(),
+                api.getSettings(),
+                api.getListeningStats(),
+                api.getSchedules()
+            ]);
+            setStations(stData.stations);
+            setGroups(stData.groups);
+            setPlayerState(player.state);
+            setReconnectAttempt(player.reconnectAttempt ?? null);
+            setCurrentStation(player.currentStation);
+            setStreamTitle(player.streamTitle);
+            setSleepRemainingSec(player.sleepTimerRemainingSec);
+            setSettings(cfg.settings);
+            setDataDir(cfg.dataDir);
+            setStatsSummary(stats);
+            if (Array.isArray(schedList) && onSchedulesLoaded) {
+                onSchedulesLoaded(schedList);
+            }
+            applyAppearanceVariables(cfg.settings);
+        } finally {
+            setIsInitialLoading(false);
         }
-        applyAppearanceVariables(cfg.settings);
     }, [api, onSchedulesLoaded]);
 
     const loadAvailableSystemFonts = useCallback(async () => {
@@ -113,7 +118,10 @@ export function useAppCoreData({
     useEffect(() => {
         const unbindScrollbars = bindActiveScrollbars();
         void refreshAll();
-        void loadAvailableSystemFonts();
+        // Defer font enumeration so it never blocks or slows down initial window rendering
+        const fontTimer = setTimeout(() => {
+            void loadAvailableSystemFonts();
+        }, 1500);
         void api.getAppIconDataUrl().then(setAppIconDataUrl);
 
         const unsub = api.onStateChanged((evt: unknown) => {
@@ -204,6 +212,7 @@ export function useAppCoreData({
         handleHashChange();
 
         return () => {
+            clearTimeout(fontTimer);
             unbindScrollbars();
             unsub();
             if (unlistenAbout) unlistenAbout();
@@ -277,6 +286,7 @@ export function useAppCoreData({
     }, [activeChartPoints]);
 
     return {
+        isInitialLoading,
         stations,
         setStations,
         groups,

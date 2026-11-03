@@ -394,8 +394,7 @@ pub fn run() {
                         };
                         if let Some(tray) = anim_handle.tray_by_id("main-tray") {
                             if let Ok(img) = Image::from_bytes(bytes) {
-                                let _ = tray.set_icon(Some(img));
-                                let _ = tray.set_icon_as_template(true);
+                                let _ = tray.set_icon_with_as_template(Some(img), true);
                             }
                         }
                         last_state = current_state;
@@ -407,8 +406,7 @@ pub fn run() {
                         };
                         if let Some(tray) = anim_handle.tray_by_id("main-tray") {
                             if let Ok(img) = Image::from_bytes(bytes) {
-                                let _ = tray.set_icon(Some(img));
-                                let _ = tray.set_icon_as_template(true);
+                                let _ = tray.set_icon_with_as_template(Some(img), true);
                             }
                         }
                         frame_idx = 0;

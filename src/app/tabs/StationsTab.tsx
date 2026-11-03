@@ -18,6 +18,7 @@ import {
 } from '../../components/Icons';
 
 export interface StationsTabProps {
+    isLoading?: boolean;
     stations: Station[];
     filteredStations: Station[];
     groups: string[];
@@ -51,6 +52,7 @@ export interface StationsTabProps {
 }
 
 export const StationsTab: React.FC<StationsTabProps> = ({
+    isLoading,
     stations,
     filteredStations,
     groups,
@@ -85,12 +87,31 @@ export const StationsTab: React.FC<StationsTabProps> = ({
         <div
             key="tab-stations"
             className={`max-w-3xl animate-tab-enter text-xs ${
-                stations.length === 0
+                !isLoading && stations.length === 0
                     ? 'flex-1 flex flex-col items-center justify-center min-h-[460px] my-auto'
                     : 'space-y-6'
             }`}
         >
-            {stations.length === 0 ? (
+            {isLoading ? (
+                <div className="space-y-4">
+                    <div className="mac-settings-card px-4 py-3 flex items-center justify-between">
+                        <div className="h-4 w-32 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
+                        <div className="h-6 w-20 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
+                    </div>
+                    <div className="mac-settings-card mac-inset-list overflow-hidden p-3 space-y-3">
+                        {[1, 2, 3, 4, 5].map((idx) => (
+                            <div key={idx} className="flex items-center gap-3.5 px-3 py-2 animate-pulse">
+                                <div className="w-8 h-8 rounded-lg bg-black/10 dark:bg-white/10" />
+                                <div className="flex-1 space-y-1.5">
+                                    <div className="h-3.5 w-1/3 rounded bg-black/10 dark:bg-white/10" />
+                                    <div className="h-2.5 w-1/5 rounded bg-black/5 dark:bg-white/5" />
+                                </div>
+                                <div className="w-6 h-6 rounded bg-black/5 dark:bg-white/5" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : stations.length === 0 ? (
                 /* Empty state without card wrapper; positioned dead-center in the window */
                 <div className="text-center flex flex-col items-center justify-center gap-3 my-auto py-12">
                     <div className="w-14 h-14 rounded-2xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-secondary">

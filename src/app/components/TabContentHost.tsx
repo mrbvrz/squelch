@@ -96,6 +96,7 @@ export const TabContentHost: React.FC<TabContentHostProps> = ({
         case 'stations':
             return (
                 <StationsTab
+                    isLoading={appCoreData.isInitialLoading}
                     stations={appCoreData.stations}
                     filteredStations={stationManagement.filteredStations}
                     groups={appCoreData.groups}

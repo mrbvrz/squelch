@@ -18,6 +18,9 @@ pub fn update_player_status(
         let mut st = store.player_state.lock().unwrap();
         *st = status.clone();
     }
+    if let Some(state_str) = status.get("state").and_then(|v| v.as_str()) {
+        *store.tray_state.lock().unwrap() = state_str.to_string();
+    }
 
     // Dynamically update tray tooltip with live station and track information
     if let Some(tray) = app.tray_by_id("main-tray") {

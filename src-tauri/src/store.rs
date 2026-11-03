@@ -49,8 +49,10 @@ impl AppStore {
 
     pub fn write_json(&self, filename: &str, val: &Value) -> Result<(), String> {
         let file_path = self.data_dir.join(filename);
+        let tmp_path = self.data_dir.join(format!("{}.tmp", filename));
         let content = serde_json::to_string_pretty(val).map_err(|e| e.to_string())?;
-        fs::write(&file_path, content).map_err(|e| e.to_string())?;
+        fs::write(&tmp_path, content).map_err(|e| e.to_string())?;
+        fs::rename(&tmp_path, &file_path).map_err(|e| e.to_string())?;
         Ok(())
     }
 }

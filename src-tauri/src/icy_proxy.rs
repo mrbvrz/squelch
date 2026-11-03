@@ -94,6 +94,7 @@ async fn handle_proxy(
             let mut reading_length = false;
             let mut meta_remaining = 0usize;
             let mut meta_buf = BytesMut::new();
+            let mut last_title = String::new();
 
             while let Some(chunk_result) = stream.next().await {
                 let chunk = match chunk_result {
@@ -125,7 +126,10 @@ async fn handle_proxy(
 
                         if meta_remaining == 0 {
                             if let Some(title) = parse_stream_title(&meta_buf) {
-                                let _ = app_handle.emit("squelch:metadata", &title);
+                                if title != last_title {
+                                    let _ = app_handle.emit("squelch:metadata", &title);
+                                    last_title = title;
+                                }
                             }
                             audio_remaining = metaint_val;
                         }

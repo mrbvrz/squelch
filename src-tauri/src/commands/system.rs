@@ -65,34 +65,70 @@ pub fn set_dock_visibility(app: AppHandle, visible: bool) -> Result<(), String> 
     Ok(())
 }
 
+#[cfg(target_os = "macos")]
+mod macos_fonts {
+    use std::ffi::c_void;
+
+    #[link(name = "CoreText", kind = "framework")]
+    #[link(name = "CoreFoundation", kind = "framework")]
+    unsafe extern "C" {
+        fn CTFontManagerCopyAvailableFontFamilyNames() -> *const c_void;
+        fn CFArrayGetCount(the_array: *const c_void) -> isize;
+        fn CFArrayGetValueAtIndex(the_array: *const c_void, idx: isize) -> *const c_void;
+        fn CFStringGetLength(the_string: *const c_void) -> isize;
+        fn CFStringGetCString(
+            the_string: *const c_void,
+            buffer: *mut u8,
+            buffer_size: isize,
+            encoding: u32,
+        ) -> bool;
+        fn CFRelease(cf: *const c_void);
+    }
+
+    pub fn get_available_font_families() -> Vec<String> {
+        let mut results = Vec::new();
+        unsafe {
+            let array_ref = CTFontManagerCopyAvailableFontFamilyNames();
+            if !array_ref.is_null() {
+                let count = CFArrayGetCount(array_ref);
+                for i in 0..count {
+                    let str_ref = CFArrayGetValueAtIndex(array_ref, i);
+                    if !str_ref.is_null() {
+                        let len = CFStringGetLength(str_ref);
+                        let mut buf = vec![0u8; (len * 4 + 1) as usize];
+                        if CFStringGetCString(
+                            str_ref,
+                            buf.as_mut_ptr(),
+                            buf.len() as isize,
+                            0x08000100, // kCFStringEncodingUTF8
+                        ) {
+                            if let Ok(c_str) = std::ffi::CStr::from_bytes_until_nul(&buf) {
+                                let name = c_str.to_string_lossy().trim().to_string();
+                                if !name.is_empty() && !name.starts_with('.') {
+                                    results.push(name);
+                                }
+                            }
+                        }
+                    }
+                }
+                CFRelease(array_ref);
+            }
+        }
+        results.sort();
+        results.dedup();
+        results
+    }
+}
+
 #[tauri::command]
 pub fn get_system_fonts() -> Vec<String> {
     CACHED_FONTS
         .get_or_init(|| {
             #[cfg(target_os = "macos")]
             {
-                if let Ok(output) = std::process::Command::new("osascript")
-                    .args([
-                        "-l",
-                        "JavaScript",
-                        "-e",
-                        "ObjC.import('AppKit'); $.NSFontManager.sharedFontManager.availableFontFamilies.js.map(x => x.js).join('\\n')",
-                    ])
-                    .output()
-                {
-                    if output.status.success() {
-                        let text = String::from_utf8_lossy(&output.stdout);
-                        let mut list: Vec<String> = text
-                            .lines()
-                            .map(|s| s.trim().to_string())
-                            .filter(|s| !s.is_empty() && !s.starts_with('.'))
-                            .collect();
-                        list.sort();
-                        list.dedup();
-                        if !list.is_empty() {
-                            return list;
-                        }
-                    }
+                let list = macos_fonts::get_available_font_families();
+                if !list.is_empty() {
+                    return list;
                 }
             }
 

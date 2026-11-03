@@ -98,6 +98,20 @@ pub(crate) fn show_tray_popover(app: &tauri::AppHandle) -> Option<tauri::Webview
     }
 }
 
+pub fn update_tray_icon(app: &tauri::AppHandle, state: &str) {
+    let bytes = match state {
+        "playing" => PLAYING_ICONS[0],
+        "buffering" | "reconnecting" | "connecting" => BUFFERING_ICONS[0],
+        "error" => ERROR_ICON,
+        _ => IDLE_ICON,
+    };
+    if let Some(tray) = app.tray_by_id("main-tray") {
+        if let Ok(img) = Image::from_bytes(bytes) {
+            let _ = tray.set_icon_with_as_template(Some(img), true);
+        }
+    }
+}
+
 fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
     match id {
         "play_pause" => {
@@ -117,6 +131,8 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
         }
         "stations_squelch" => {
             if let Some(win) = show_main_window(app) {
+                let _ = app.emit("ui:state-changed", serde_json::json!({ "type": "navigate", "tab": "stations" }));
+                let _ = win.emit("squelch:navigate", "stations");
                 let _ = win.eval(
                     "window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'stations' }));",
                 );
@@ -124,6 +140,8 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
         }
         "pref_squelch" => {
             if let Some(win) = show_main_window(app) {
+                let _ = app.emit("ui:state-changed", serde_json::json!({ "type": "navigate", "tab": "preferences" }));
+                let _ = win.emit("squelch:navigate", "preferences");
                 let _ = win.eval(
                     "window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'preferences' }));",
                 );
@@ -132,22 +150,24 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
         "update_squelch" => {
             if let Some(win) = show_main_window(app) {
                 let _ = win.eval(
-                    "window.dispatchEvent(new CustomEvent('squelch:check-updates')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:check-updates')); }, 50);",
+                    "window.dispatchEvent(new CustomEvent('squelch:check-updates'));",
                 );
             }
             let _ = app.emit("ui:open-update-modal", ());
         }
         "tray_about_squelch" => {
             if let Some(tray_win) = show_tray_popover(app) {
+                let _ = tray_win.emit("squelch:open-about", ());
                 let _ = tray_win.eval(
-                    "window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);",
+                    "window.dispatchEvent(new CustomEvent('squelch:open-about'));",
                 );
             }
         }
         "tray_quit_squelch" => {
             if let Some(tray_win) = show_tray_popover(app) {
+                let _ = tray_win.emit("squelch:confirm-quit", ());
                 let _ = tray_win.eval(
-                    "window.dispatchEvent(new CustomEvent('squelch:confirm-quit')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:confirm-quit')); }, 50);",
+                    "window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));",
                 );
             }
         }
@@ -158,13 +178,15 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
                 .unwrap_or(false);
             if main_visible {
                 if let Some(win) = show_main_window(app) {
+                    let _ = win.emit("squelch:open-about", ());
                     let _ = win.eval(
-                        "window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);",
+                        "window.dispatchEvent(new CustomEvent('squelch:open-about'));",
                     );
                 }
             } else if let Some(tray_win) = show_tray_popover(app) {
+                let _ = tray_win.emit("squelch:open-about", ());
                 let _ = tray_win.eval(
-                    "window.dispatchEvent(new CustomEvent('squelch:open-about')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:open-about')); }, 50);",
+                    "window.dispatchEvent(new CustomEvent('squelch:open-about'));",
                 );
             }
         }
@@ -175,13 +197,15 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
                 .unwrap_or(false);
             if main_visible {
                 if let Some(win) = show_main_window(app) {
+                    let _ = win.emit("squelch:confirm-quit", ());
                     let _ = win.eval(
                         "window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));",
                     );
                 }
             } else if let Some(tray_win) = show_tray_popover(app) {
+                let _ = tray_win.emit("squelch:confirm-quit", ());
                 let _ = tray_win.eval(
-                    "window.dispatchEvent(new CustomEvent('squelch:confirm-quit')); setTimeout(function(){ window.dispatchEvent(new CustomEvent('squelch:confirm-quit')); }, 50);",
+                    "window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));",
                 );
             }
         }
@@ -368,35 +392,6 @@ pub fn run() {
                 .build(app)?;
 
             let _ = tray.set_icon_as_template(true);
-
-            // 7. Background Task: Tray Icon State Synchronization (event-driven, zero CPU when stable)
-            let anim_handle = app.handle().clone();
-            let anim_store = store.clone();
-            tauri::async_runtime::spawn(async move {
-                let mut last_state = String::from("idle");
-                loop {
-                    tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
-                    let current_state = {
-                        let guard = anim_store.tray_state.lock().unwrap();
-                        guard.clone()
-                    };
-
-                    if last_state != current_state {
-                        let bytes = match current_state.as_str() {
-                            "playing" => PLAYING_ICONS[0],
-                            "buffering" | "reconnecting" | "connecting" => BUFFERING_ICONS[0],
-                            "error" => ERROR_ICON,
-                            _ => IDLE_ICON,
-                        };
-                        if let Some(tray) = anim_handle.tray_by_id("main-tray") {
-                            if let Ok(img) = Image::from_bytes(bytes) {
-                                let _ = tray.set_icon_with_as_template(Some(img), true);
-                            }
-                        }
-                        last_state = current_state;
-                    }
-                }
-            });
 
             Ok(())
         })

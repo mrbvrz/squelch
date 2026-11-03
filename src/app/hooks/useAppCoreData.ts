@@ -208,6 +208,7 @@ export function useAppCoreData({
         let unlistenAbout: (() => void) | null = null;
         let unlistenQuit: (() => void) | null = null;
         let unlistenUpdate: (() => void) | null = null;
+        let unlistenNavigate: (() => void) | null = null;
         if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
             import('@tauri-apps/api/event')
                 .then(({ listen }) => {
@@ -220,6 +221,13 @@ export function useAppCoreData({
                         setIsQuitConfirmOpen(true);
                     }).then((u) => {
                         unlistenQuit = u;
+                    });
+                    listen('squelch:navigate', (evt) => {
+                        if (evt?.payload) {
+                            setActiveTab(evt.payload as ActiveTab);
+                        }
+                    }).then((u) => {
+                        unlistenNavigate = u;
                     });
                     listen('ui:open-update-modal', () => {
                         void handleCheckForUpdates(true);
@@ -253,6 +261,7 @@ export function useAppCoreData({
             unsub();
             if (unlistenAbout) unlistenAbout();
             if (unlistenQuit) unlistenQuit();
+            if (unlistenNavigate) unlistenNavigate();
             if (unlistenUpdate) unlistenUpdate();
             window.removeEventListener('hashchange', handleHashChange);
             window.removeEventListener(

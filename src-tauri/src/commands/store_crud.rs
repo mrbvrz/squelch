@@ -14,12 +14,23 @@ pub fn update_player_status(
     store: State<Arc<AppStore>>,
     status: Value,
 ) -> Result<(), String> {
-    {
+    let (prev_state, current_state) = {
         let mut st = store.player_state.lock().unwrap();
         *st = status.clone();
-    }
-    if let Some(state_str) = status.get("state").and_then(|v| v.as_str()) {
-        *store.tray_state.lock().unwrap() = state_str.to_string();
+
+        let mut tray_guard = store.tray_state.lock().unwrap();
+        let prev = tray_guard.clone();
+        let cur = status
+            .get("state")
+            .and_then(|v| v.as_str())
+            .unwrap_or("idle")
+            .to_string();
+        *tray_guard = cur.clone();
+        (prev, cur)
+    };
+
+    if prev_state != current_state {
+        crate::update_tray_icon(&app, &current_state);
     }
 
     // Dynamically update tray tooltip with live station and track information

@@ -7,16 +7,9 @@ import React, {
 } from 'react';
 import { getTranslations } from '../i18n';
 import type {
-    AppSettings,
-    ListeningStatsSummary,
-    PlayerState,
-    Station
+    ShowSchedule
 } from '../types';
-import {
-    applyAppearanceVariables,
-    bindActiveScrollbars
-} from '../utils/appearance';
-import type { ActiveTab, SquelchWindowApi, StatsPeriodMode } from './types';
+import type { SquelchWindowApi } from './types';
 
 // Shell & Navigation Components
 import { Sidebar } from './components/Sidebar';
@@ -37,6 +30,7 @@ import { useStationModal } from './hooks/useStationModal';
 import { useImportExportModal } from './hooks/useImportExportModal';
 import { useDiscoverStations } from './hooks/useDiscoverStations';
 import { useStationManagement } from './hooks/useStationManagement';
+import { useAppCoreData } from './hooks/useAppCoreData';
 import { useAppShortcuts } from './hooks/useAppShortcuts';
 
 declare global {
@@ -59,29 +53,75 @@ export const App: React.FC = () => {
         goForward
     } = useTabNavigation();
 
-    // Core data states
-    const [stations, setStations] = useState<Station[]>([]);
-    const [groups, setGroups] = useState<string[]>([]);
-    const [settings, setSettings] = useState<AppSettings | null>(null);
-    const [dataDir, setDataDir] = useState<string>('');
-    const [systemFonts, setSystemFonts] = useState<string[]>([]);
-    const [isLoadingFonts, setIsLoadingFonts] = useState<boolean>(true);
-    const [appIconDataUrl, setAppIconDataUrl] = useState<string | null>(null);
-    const [statsSummary, setStatsSummary] =
-        useState<ListeningStatsSummary | null>(null);
-    const [statsViewMode, setStatsViewMode] =
-        useState<StatsPeriodMode>('weekly');
+    // Modal & Dialog UI States
+    const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
+    const [isQuitConfirmOpen, setIsQuitConfirmOpen] = useState<boolean>(false);
+    const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
+    const [isResetConfirmOpen, setIsResetConfirmOpen] = useState<boolean>(false);
+    const [resetTarget, setResetTarget] = useState<
+        'settings' | 'stations' | 'schedules' | 'stats' | 'all'
+    >('settings');
+    const [recordingShortcutKey, setRecordingShortcutKey] = useState<
+        string | null
+    >(null);
+    const [backupStatusMsg, setBackupStatusMsg] = useState<string | null>(null);
+    const [showDiagReport, setShowDiagReport] = useState<boolean>(false);
+    const [copiedDiag, setCopiedDiag] = useState<boolean>(false);
+    const [notifTestSuccess, setNotifTestSuccess] = useState<boolean>(false);
 
-    // Player states
-    const [playerState, setPlayerState] = useState<PlayerState>('idle');
-    const [reconnectAttempt, setReconnectAttempt] = useState<number | null>(
-        null
-    );
-    const [currentStation, setCurrentStation] = useState<Station | null>(null);
-    const [streamTitle, setStreamTitle] = useState<string | null>(null);
-    const [sleepRemainingSec, setSleepRemainingSec] = useState<number | null>(
-        null
-    );
+    // Modularized App Updates Hook
+    const {
+        updateInfo,
+        setUpdateInfo,
+        isCheckingUpdate,
+        updateCheckError,
+        isUpdateModalOpen,
+        setIsUpdateModalOpen,
+        updateDownloadProgress,
+        handleStartDownloadUpdate,
+        handleCancelDownloadUpdate,
+        handleInstallUpdate,
+        handleRevealUpdateInFinder,
+        handleCheckForUpdates
+    } = useAppUpdates({
+        api,
+        autoCheckUpdates: true
+    });
+
+    // Schedule list bridge ref
+    const setSchedulesRef = useRef<(scheds: ShowSchedule[]) => void>(() => {});
+
+    // Core Data & State Synchronization Hook
+    const {
+        stations,
+        groups,
+        settings,
+        dataDir,
+        systemFonts,
+        isLoadingFonts,
+        appIconDataUrl,
+        statsSummary,
+        statsViewMode,
+        setStatsViewMode,
+        activeChartPoints,
+        maxChartSeconds,
+        playerState,
+        reconnectAttempt,
+        currentStation,
+        streamTitle,
+        sleepRemainingSec,
+        diagnosticsText,
+        setDiagnosticsText,
+        refreshAll
+    } = useAppCoreData({
+        api,
+        activeTab,
+        setActiveTab,
+        setIsAboutModalOpen,
+        setIsQuitConfirmOpen,
+        handleCheckForUpdates,
+        onSchedulesLoaded: (scheds) => setSchedulesRef.current(scheds)
+    });
 
     const isPlaying = playerState === 'playing';
     const isBusy =
@@ -143,44 +183,7 @@ export const App: React.FC = () => {
         activeTab
     });
 
-    // Preferences & Diagnostics
-    const [recordingShortcutKey, setRecordingShortcutKey] = useState<
-        keyof AppSettings['shortcuts'] | null
-    >(null);
-    const [backupStatusMsg, setBackupStatusMsg] = useState<string | null>(null);
-    const [showDiagReport, setShowDiagReport] = useState<boolean>(false);
-    const [diagnosticsText, setDiagnosticsText] = useState<string>('');
-    const [copiedDiag, setCopiedDiag] = useState<boolean>(false);
-    const [isResetConfirmOpen, setIsResetConfirmOpen] =
-        useState<boolean>(false);
-    const [resetTarget, setResetTarget] = useState<
-        'settings' | 'stations' | 'schedules' | 'stats' | 'all'
-    >('settings');
-    const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
-    const [isQuitConfirmOpen, setIsQuitConfirmOpen] = useState<boolean>(false);
-    const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
-    const [notifTestSuccess, setNotifTestSuccess] = useState<boolean>(false);
-
-    // Modularized App Updates Hook
-    const {
-        updateInfo,
-        setUpdateInfo,
-        isCheckingUpdate,
-        updateCheckError,
-        isUpdateModalOpen,
-        setIsUpdateModalOpen,
-        updateDownloadProgress,
-        handleStartDownloadUpdate,
-        handleCancelDownloadUpdate,
-        handleInstallUpdate,
-        handleRevealUpdateInFinder,
-        handleCheckForUpdates
-    } = useAppUpdates({
-        api,
-        autoCheckUpdates: settings?.autoCheckUpdates !== false
-    });
-
-    // Modularized Station Form Modal Hook
+    // Station Form Modal Hook
     const {
         isFormOpen,
         setIsFormOpen,
@@ -214,7 +217,7 @@ export const App: React.FC = () => {
         refreshAll: () => refreshAll()
     });
 
-    // Modularized Import / Export Modal Hook
+    // Import / Export Modal Hook
     const {
         isImportExportOpen,
         setIsImportExportOpen,
@@ -233,7 +236,7 @@ export const App: React.FC = () => {
         refreshAll: () => refreshAll()
     });
 
-    // Show Schedules
+    // Schedule Management Hook
     const {
         schedules,
         setSchedules,
@@ -270,6 +273,11 @@ export const App: React.FC = () => {
         refreshAll: () => refreshAll()
     });
 
+    // Connect bridge ref for schedule reload
+    useEffect(() => {
+        setSchedulesRef.current = setSchedules;
+    }, [setSchedules]);
+
     // Search input ref & shortcut label (⌘F / Ctrl+F)
     const searchInputRef = useRef<HTMLInputElement>(null);
     const isMac =
@@ -279,77 +287,8 @@ export const App: React.FC = () => {
     const lang: 'id' | 'en' = settings?.language ?? 'id';
     const t = getTranslations(lang);
 
-    const refreshAll = async () => {
-        const [stData, player, cfg, stats, schedList] = await Promise.all([
-            api.getStationsData(),
-            api.getPlayerStatus(),
-            api.getSettings(),
-            api.getListeningStats(),
-            api.getSchedules()
-        ]);
-        setStations(stData.stations);
-        setGroups(stData.groups);
-        setPlayerState(player.state);
-        setReconnectAttempt(player.reconnectAttempt ?? null);
-        setCurrentStation(player.currentStation);
-        setStreamTitle(player.streamTitle);
-        setSleepRemainingSec(player.sleepTimerRemainingSec);
-        setSettings(cfg.settings);
-        setDataDir(cfg.dataDir);
-        setStatsSummary(stats);
-        if (Array.isArray(schedList)) {
-            setSchedules(schedList);
-        }
-        applyAppearanceVariables(cfg.settings);
-    };
-
-    const loadAvailableSystemFonts = async () => {
-        setIsLoadingFonts(true);
-        try {
-            const mainFonts = await api.getSystemFonts();
-            if (typeof window.queryLocalFonts === 'function') {
-                try {
-                    const local = await window.queryLocalFonts();
-                    const merged = new Set<string>(mainFonts);
-                    for (const item of local) {
-                        if (item.family && !item.family.startsWith('.')) {
-                            merged.add(item.family);
-                        }
-                    }
-                    setSystemFonts(
-                        Array.from(merged).sort((a, b) => a.localeCompare(b))
-                    );
-                    return;
-                } catch {
-                    // Fallback to main process font list
-                }
-            }
-            setSystemFonts(mainFonts);
-        } catch {
-            setSystemFonts([]);
-        } finally {
-            setIsLoadingFonts(false);
-        }
-    };
-
+    // Global Keydown for ⌘F Search
     useEffect(() => {
-        const unbindScrollbars = bindActiveScrollbars();
-        void refreshAll();
-        void loadAvailableSystemFonts();
-        void api.getAppIconDataUrl().then(setAppIconDataUrl);
-
-        const unsub = api.onStateChanged((evt: unknown) => {
-            const data = evt as { type?: string; tab?: string };
-            if (data?.type === 'navigate' && data.tab) {
-                const targetTab: ActiveTab =
-                    data.tab === 'diagnostics'
-                        ? 'preferences'
-                        : (data.tab as ActiveTab);
-                setActiveTab(targetTab);
-            }
-            void refreshAll();
-        });
-
         const handleGlobalKeyDown = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
                 e.preventDefault();
@@ -358,127 +297,8 @@ export const App: React.FC = () => {
             }
         };
         window.addEventListener('keydown', handleGlobalKeyDown);
-
-        const handleHashChange = () => {
-            const hash = window.location.hash;
-            if (hash === '#about' || hash === '#about-window') {
-                setIsAboutModalOpen(true);
-            } else if (hash === '#preferences') {
-                setActiveTab('preferences');
-            } else if (hash === '#stations') {
-                setActiveTab('stations');
-            } else if (hash === '#discover') {
-                setActiveTab('discover');
-            } else if (hash === '#schedule' || hash === '#schedules') {
-                setActiveTab('schedules');
-            } else if (hash === '#stats') {
-                setActiveTab('stats');
-            }
-        };
-
-        const handleCustomOpenAbout = () => {
-            setIsAboutModalOpen(true);
-        };
-
-        const handleCustomConfirmQuit = () => {
-            setIsQuitConfirmOpen(true);
-        };
-
-        const handleCustomNavigate = (e: Event) => {
-            const customEvent = e as CustomEvent<string>;
-            if (customEvent.detail) {
-                const targetTab = customEvent.detail as ActiveTab;
-                setActiveTab(targetTab);
-            }
-        };
-
-        let unlistenAbout: (() => void) | null = null;
-        let unlistenQuit: (() => void) | null = null;
-        let unlistenUpdate: (() => void) | null = null;
-        if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-            import('@tauri-apps/api/event')
-                .then(({ listen }) => {
-                    listen('squelch:open-about', () => {
-                        setIsAboutModalOpen(true);
-                    }).then((u) => {
-                        unlistenAbout = u;
-                    });
-                    listen('squelch:confirm-quit', () => {
-                        setIsQuitConfirmOpen(true);
-                    }).then((u) => {
-                        unlistenQuit = u;
-                    });
-                    listen('ui:open-update-modal', () => {
-                        void handleCheckForUpdates(true);
-                    }).then((u) => {
-                        unlistenUpdate = u;
-                    });
-                })
-                .catch(() => {});
-        }
-
-        const handleCustomCheckUpdates = () => {
-            void handleCheckForUpdates(true);
-        };
-
-        window.addEventListener('hashchange', handleHashChange);
-        window.addEventListener('squelch:open-about', handleCustomOpenAbout);
-        window.addEventListener(
-            'squelch:confirm-quit',
-            handleCustomConfirmQuit
-        );
-        window.addEventListener('squelch:navigate', handleCustomNavigate);
-        window.addEventListener(
-            'squelch:check-updates',
-            handleCustomCheckUpdates
-        );
-        handleHashChange();
-
-        return () => {
-            unbindScrollbars();
-            unsub();
-            if (unlistenAbout) unlistenAbout();
-            if (unlistenQuit) unlistenQuit();
-            if (unlistenUpdate) unlistenUpdate();
-            window.removeEventListener('keydown', handleGlobalKeyDown);
-            window.removeEventListener('hashchange', handleHashChange);
-            window.removeEventListener(
-                'squelch:open-about',
-                handleCustomOpenAbout
-            );
-            window.removeEventListener(
-                'squelch:confirm-quit',
-                handleCustomConfirmQuit
-            );
-            window.removeEventListener(
-                'squelch:navigate',
-                handleCustomNavigate
-            );
-            window.removeEventListener(
-                'squelch:check-updates',
-                handleCustomCheckUpdates
-            );
-        };
-    }, [handleCheckForUpdates]);
-
-    useEffect(() => {
-        if (activeTab === 'stats') {
-            void api.getListeningStats().then(setStatsSummary);
-            const interval = setInterval(() => {
-                void api.getListeningStats().then(setStatsSummary);
-            }, 3000);
-            return () => clearInterval(interval);
-        }
-        if (activeTab === 'preferences') {
-            void api.getDiagnostics().then((res) => {
-                const text =
-                    typeof res === 'string'
-                        ? res
-                        : JSON.stringify(res, null, 2);
-                setDiagnosticsText(text);
-            });
-        }
-    }, [activeTab]);
+        return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    }, []);
 
     // Automatically trigger onboarding wizard on first launch
     useEffect(() => {
@@ -501,13 +321,14 @@ export const App: React.FC = () => {
     }, [
         setIsFormOpen,
         setIsImportExportOpen,
+        setIsAddingGroup,
         setUpdateInfo,
         setIsScheduleModalOpen,
         setIsUpdateModalOpen
     ]);
 
     useAppShortcuts({
-        recordingShortcutKey,
+        recordingShortcutKey: recordingShortcutKey as any,
         currentStation,
         searchInputRef,
         navigateToTab,
@@ -559,7 +380,7 @@ export const App: React.FC = () => {
                     color: '#8E8E93'
                 };
         }
-    }, [playerState, t]);
+    }, [playerState, reconnectAttempt, t]);
 
     const currentHeadingTitle = useMemo(() => {
         if (activeTab === 'schedules') return t.tabSchedules;
@@ -571,25 +392,6 @@ export const App: React.FC = () => {
         if (selectedGroup !== 'ALL') return selectedGroup;
         return t.allStationsTitle;
     }, [activeTab, favoritesOnly, selectedGroup, t]);
-
-    const activeChartPoints = useMemo(() => {
-        if (!statsSummary) return [];
-        if (statsViewMode === 'daily') {
-            return statsSummary.dailySeries;
-        }
-        if (statsViewMode === 'weekly') {
-            return statsSummary.weeklySeries;
-        }
-        if (statsViewMode === 'monthly') {
-            return statsSummary.monthlySeries;
-        }
-        return statsSummary.yearlySeries;
-    }, [statsSummary, statsViewMode]);
-
-    const maxChartSeconds = useMemo(() => {
-        const maxVal = Math.max(0, ...activeChartPoints.map((p) => p.seconds));
-        return maxVal > 0 ? maxVal : 60;
-    }, [activeChartPoints]);
 
     const handleRequestReset = (
         target: 'settings' | 'stations' | 'schedules' | 'stats' | 'all'
@@ -818,8 +620,8 @@ export const App: React.FC = () => {
                             systemFonts,
                             isLoadingFonts,
                             lang,
-                            recordingShortcutKey,
-                            setRecordingShortcutKey,
+                            recordingShortcutKey: recordingShortcutKey as any,
+                            setRecordingShortcutKey: setRecordingShortcutKey as any,
                             backupStatusMsg,
                             handleRestoreData,
                             handleBackupData,

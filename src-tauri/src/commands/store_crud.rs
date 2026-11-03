@@ -63,10 +63,11 @@ pub fn get_proxy_port(store: State<Arc<AppStore>>) -> u16 {
     *store.proxy_port.lock().unwrap()
 }
 
+static SEED_STATIONS_JSON: &str = include_str!("../../../resources/stations.seed.json");
+
 #[tauri::command]
 pub fn get_stations_data(store: State<Arc<AppStore>>) -> Value {
-    let mut data = store.read_json(
-        "stations.json",
+    let fallback_seed: Value = serde_json::from_str(SEED_STATIONS_JSON).unwrap_or_else(|_| {
         json!({
             "schemaVersion": 1,
             "stations": [],
@@ -75,8 +76,22 @@ pub fn get_stations_data(store: State<Arc<AppStore>>) -> Value {
                 "Nasional & Berita",
                 "Lainnya & Nostalgia"
             ]
-        }),
-    );
+        })
+    });
+
+    let mut data = store.read_json("stations.json", fallback_seed.clone());
+
+    // If stations array is missing or empty, seed from bundled default stations
+    let is_empty = data
+        .get("stations")
+        .and_then(|v| v.as_array())
+        .map(|a| a.is_empty())
+        .unwrap_or(true);
+
+    if is_empty {
+        data = fallback_seed;
+        let _ = store.write_json("stations.json", &data);
+    }
 
     // Ensure every station has a unique non-empty ID
     let mut needs_save = false;

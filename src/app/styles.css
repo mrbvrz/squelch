@@ -130,6 +130,20 @@ body {
     font-family: var(--app-font-family);
 }
 
+/* Prevent macOS native window dragging from swallowing clicks on interactive controls */
+button,
+input,
+select,
+textarea,
+a,
+[role='button'],
+.mac-row,
+.mac-glass-pill,
+.mac-input,
+.mac-slider {
+    -webkit-app-region: no-drag !important;
+}
+
 ::selection {
     background: rgba(10, 132, 255, 0.3);
     color: var(--ink-primary);

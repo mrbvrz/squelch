@@ -242,11 +242,13 @@ pub fn run() {
                 }
             }
 
-            // Open devtools in debug mode
+            // Open devtools in debug mode only when SQUELCH_DEVTOOLS=1
             #[cfg(debug_assertions)]
             {
-                if let Some(main_win) = app.get_webview_window("main") {
-                    main_win.open_devtools();
+                if std::env::var("SQUELCH_DEVTOOLS").map(|v| v == "1").unwrap_or(false) {
+                    if let Some(main_win) = app.get_webview_window("main") {
+                        main_win.open_devtools();
+                    }
                 }
             }
 

@@ -10,7 +10,6 @@ export interface HeaderBarProps {
     currentHeadingTitle: string;
     updateInfo: UpdateCheckResult | null;
     setIsUpdateModalOpen: (open: boolean) => void;
-    handleWindowDragMouseDown: (e: React.MouseEvent) => void;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -20,13 +19,11 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     goForward,
     currentHeadingTitle,
     updateInfo,
-    setIsUpdateModalOpen,
-    handleWindowDragMouseDown
+    setIsUpdateModalOpen
 }) => {
     return (
         <header
             data-tauri-drag-region
-            onMouseDown={handleWindowDragMouseDown}
             style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
             className="h-11 pt-1.5 px-6 flex items-center justify-between shrink-0 cursor-default"
         >

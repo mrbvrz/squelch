@@ -21,7 +21,6 @@ export interface SidebarProps {
     setSearchQuery: (query: string) => void;
     searchInputRef: React.RefObject<HTMLInputElement>;
     isMac: boolean;
-    handleWindowDragMouseDown: (e: React.MouseEvent) => void;
     currentStation: Station | null;
     playerState: PlayerState;
     stateHeadline: {
@@ -46,7 +45,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setSearchQuery,
     searchInputRef,
     isMac,
-    handleWindowDragMouseDown,
     currentStation,
     playerState,
     stateHeadline,
@@ -62,15 +60,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return (
         <aside
             aria-label="Primary Navigation"
-            className="mac-settings-sidebar w-60 shrink-0 flex flex-col justify-between px-3 pt-11 pb-3 overflow-y-auto"
+            className="mac-settings-sidebar w-60 shrink-0 flex flex-col justify-between px-3 pt-3 pb-3 overflow-y-auto"
         >
             <div>
                 {/* Drag Region for macOS Traffic Lights */}
                 <div
                     data-tauri-drag-region
-                    onMouseDown={handleWindowDragMouseDown}
                     style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
-                    className="fixed top-0 left-0 w-60 h-10 z-10"
+                    className="h-7 w-full shrink-0 mb-1"
                 />
 
                 {/* 1. Search Bar */}

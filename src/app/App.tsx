@@ -8,16 +8,13 @@ import React, {
 import { getTranslations } from '../i18n';
 import type {
     AppSettings,
-    DiscoverStationItem,
     ListeningStatsSummary,
     PlayerState,
-    RadioBrowserCountry,
     Station
 } from '../types';
 import {
     applyAppearanceVariables,
-    bindActiveScrollbars,
-    FALLBACK_COUNTRIES
+    bindActiveScrollbars
 } from '../utils/appearance';
 import { OnboardingModal } from '../components/OnboardingModal';
 import { UpdateModal } from '../components/UpdateModal';
@@ -56,6 +53,7 @@ import {
 import { useAppUpdates } from './hooks/useAppUpdates';
 import { useStationModal } from './hooks/useStationModal';
 import { useImportExportModal } from './hooks/useImportExportModal';
+import { useDiscoverStations } from './hooks/useDiscoverStations';
 import { useAppShortcuts } from './hooks/useAppShortcuts';
 
 declare global {
@@ -114,15 +112,26 @@ export const App: React.FC = () => {
     );
     const [isCheckingHealth, setIsCheckingHealth] = useState<boolean>(false);
 
-    // Discover Tab
-    const [discCountries, setDiscCountries] =
-        useState<RadioBrowserCountry[]>(FALLBACK_COUNTRIES);
-    const [discCountry, setDiscCountry] = useState<string>('ID');
-    const [discName, setDiscName] = useState<string>('');
-    const [discTag, setDiscTag] = useState<string>('');
-    const [discResults, setDiscResults] = useState<DiscoverStationItem[]>([]);
-    const [isSearchingOnline, setIsSearchingOnline] = useState<boolean>(false);
-    const [discError, setDiscError] = useState<string | null>(null);
+    // Discover Tab Hook
+    const {
+        discCountries,
+        discCountry,
+        setDiscCountry,
+        discName,
+        setDiscName,
+        discTag,
+        setDiscTag,
+        discResults,
+        isSearchingOnline,
+        discError,
+        handleDiscoverSearch,
+        handleCountryChange,
+        handleAddFromDiscover
+    } = useDiscoverStations({
+        api,
+        refreshAll: () => refreshAll(),
+        activeTab
+    });
 
     // Preferences & Diagnostics
     const [recordingShortcutKey, setRecordingShortcutKey] = useState<
@@ -318,16 +327,6 @@ export const App: React.FC = () => {
         void refreshAll();
         void loadAvailableSystemFonts();
         void api.getAppIconDataUrl().then(setAppIconDataUrl);
-        void api
-            .getOnlineCountries()
-            .then((list) => {
-                if (Array.isArray(list) && list.length > 0) {
-                    setDiscCountries(list);
-                }
-            })
-            .catch(() => {
-                // Keep FALLBACK_COUNTRIES
-            });
 
         const unsub = api.onStateChanged((evt: unknown) => {
             const data = evt as { type?: string; tab?: string };
@@ -453,9 +452,6 @@ export const App: React.FC = () => {
     }, [handleCheckForUpdates]);
 
     useEffect(() => {
-        if (activeTab === 'discover' && discResults.length === 0) {
-            void handleDiscoverSearch();
-        }
         if (activeTab === 'stats') {
             void api.getListeningStats().then(setStatsSummary);
             const interval = setInterval(() => {
@@ -688,70 +684,6 @@ export const App: React.FC = () => {
             await refreshAll();
         } finally {
             setIsCheckingHealth(false);
-        }
-    };
-
-    const handleDiscoverSearch = async (
-        e?: React.FormEvent,
-        overrideCountry?: string
-    ) => {
-        if (e) e.preventDefault();
-        setIsSearchingOnline(true);
-        setDiscError(null);
-        const countryToUse =
-            overrideCountry !== undefined ? overrideCountry : discCountry;
-        try {
-            const results = await api.searchOnlineStations({
-                countrycode: countryToUse,
-                name: discName,
-                tag: discTag,
-                limit: 60
-            });
-            const seen = new Set<string>();
-            const deduplicated = results.filter((st) => {
-                const url = (st.streamUrl || '').trim().toLowerCase();
-                const key = url || st.id;
-                if (!key || seen.has(key)) return false;
-                seen.add(key);
-                return true;
-            });
-            setDiscResults(deduplicated);
-        } catch (err) {
-            setDiscError(
-                err instanceof Error
-                    ? err.message
-                    : 'Failed to load station directory'
-            );
-        } finally {
-            setIsSearchingOnline(false);
-        }
-    };
-
-    const handleCountryChange = (countryCode: string) => {
-        setDiscCountry(countryCode);
-        void handleDiscoverSearch(undefined, countryCode);
-    };
-
-    const handleAddFromDiscover = async (
-        item: DiscoverStationItem,
-        playImmediately = false
-    ) => {
-        const saved = await api.saveStation({
-            name: item.name,
-            streamUrl: item.streamUrl,
-            streamType: item.streamType,
-            logoUrl: item.logoUrl,
-            genre: item.genre,
-            city: item.city,
-            country: item.country,
-            tags: item.tags,
-            group: 'Pop & Anak Muda',
-            isFavorite: false,
-            status: 'online'
-        });
-        await refreshAll();
-        if (playImmediately) {
-            await api.playStation(saved.id);
         }
     };
 

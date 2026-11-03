@@ -140,8 +140,8 @@ pub mod core_audio {
                 if AudioObjectGetPropertyDataSize(id, &stm_addr, 0, ptr::null(), &mut stm_size) == 0
                     && stm_size > 0
                 {
-                    let name = get_cf_str(id, *b"lnam")
-                        .unwrap_or_else(|| format!("Audio Device {}", id));
+                    let name =
+                        get_cf_str(id, *b"lnam").unwrap_or_else(|| format!("Audio Device {}", id));
                     let uid = get_cf_str(id, *b"uid ").unwrap_or_else(|| id.to_string());
                     let mut tran = 0u32;
                     let mut tran_size = 4u32;

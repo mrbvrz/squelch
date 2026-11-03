@@ -1,7 +1,10 @@
 import React from 'react';
 import type { AppSettings } from '../../../types';
 import type { TranslationDictionary } from '../../../i18n';
-import { ACCENT_SWATCHES, applyAppearanceVariables } from '../../../utils/appearance';
+import {
+    ACCENT_SWATCHES,
+    applyAppearanceVariables
+} from '../../../utils/appearance';
 import { ThemePreviewCard } from '../../../components/ThemePreviewCard';
 import { SearchableFontPicker } from '../../../components/SearchableFontPicker';
 import { IconSwatch } from '../../../components/Icons';
@@ -39,13 +42,17 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({
                             mode="system"
                             active={(settings.theme ?? 'system') === 'system'}
                             label={t.prefThemeSystem}
-                            onSelect={() => onUpdateSettings({ theme: 'system' })}
+                            onSelect={() =>
+                                onUpdateSettings({ theme: 'system' })
+                            }
                         />
                         <ThemePreviewCard
                             mode="light"
                             active={settings.theme === 'light'}
                             label={t.prefThemeLight}
-                            onSelect={() => onUpdateSettings({ theme: 'light' })}
+                            onSelect={() =>
+                                onUpdateSettings({ theme: 'light' })
+                            }
                         />
                         <ThemePreviewCard
                             mode="dark"

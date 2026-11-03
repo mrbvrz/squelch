@@ -122,7 +122,9 @@ export function useAppCoreData({
                     }
                     if (merged.size > 0) {
                         setSystemFonts(
-                            Array.from(merged).sort((a, b) => a.localeCompare(b))
+                            Array.from(merged).sort((a, b) =>
+                                a.localeCompare(b)
+                            )
                         );
                         return;
                     }
@@ -144,10 +146,19 @@ export function useAppCoreData({
     }, [loadAvailableSystemFonts]);
 
     useEffect(() => {
-        if (activeTab === 'preferences' && systemFonts.length === 0 && !isLoadingFonts) {
+        if (
+            activeTab === 'preferences' &&
+            systemFonts.length === 0 &&
+            !isLoadingFonts
+        ) {
             void loadAvailableSystemFonts();
         }
-    }, [activeTab, systemFonts.length, isLoadingFonts, loadAvailableSystemFonts]);
+    }, [
+        activeTab,
+        systemFonts.length,
+        isLoadingFonts,
+        loadAvailableSystemFonts
+    ]);
 
     // Initial setup and IPC listeners
     useEffect(() => {

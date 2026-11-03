@@ -134,8 +134,6 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
         }
     };
 
-
-
     if (!isOpen) return null;
 
     return (

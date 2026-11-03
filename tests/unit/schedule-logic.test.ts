@@ -50,8 +50,14 @@ describe('Schedule Management Logic', () => {
         const currentMinutes = now.getMinutes();
 
         // Construct a start time 10 minutes ago, and end time 20 minutes from now
-        const startTotalMin = Math.max(0, currentHours * 60 + currentMinutes - 10);
-        const endTotalMin = Math.min(23 * 60 + 59, currentHours * 60 + currentMinutes + 20);
+        const startTotalMin = Math.max(
+            0,
+            currentHours * 60 + currentMinutes - 10
+        );
+        const endTotalMin = Math.min(
+            23 * 60 + 59,
+            currentHours * 60 + currentMinutes + 20
+        );
 
         const sH = String(Math.floor(startTotalMin / 60)).padStart(2, '0');
         const sM = String(startTotalMin % 60).padStart(2, '0');

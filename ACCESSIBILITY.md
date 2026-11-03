@@ -10,14 +10,14 @@ Squelch is committed to ensuring digital accessibility for all users, including 
 
 Every core interaction within Squelch is fully accessible via keyboard without requiring a mouse or trackpad:
 
-| Key Combination | Action |
-| :--- | :--- |
-| `Space` | Toggle Play / Pause playback |
-| `M` | Toggle Mute / Unmute audio |
-| `⌘ + F` or `/` | Focus the station search input directly |
-| `Escape` | Dismiss open popovers, dropdown menus, and modal dialogs |
-| `Tab` / `Shift + Tab` | Navigate forward and backward through interactive controls |
-| `Enter` / `Space` | Activate selected buttons, play stations, and toggle checkboxes |
+| Key Combination       | Action                                                          |
+| :-------------------- | :-------------------------------------------------------------- |
+| `Space`               | Toggle Play / Pause playback                                    |
+| `M`                   | Toggle Mute / Unmute audio                                      |
+| `⌘ + F` or `/`        | Focus the station search input directly                         |
+| `Escape`              | Dismiss open popovers, dropdown menus, and modal dialogs        |
+| `Tab` / `Shift + Tab` | Navigate forward and backward through interactive controls      |
+| `Enter` / `Space`     | Activate selected buttons, play stations, and toggle checkboxes |
 
 ### 2. Screen Reader Compatibility (macOS VoiceOver)
 
@@ -34,6 +34,7 @@ Every core interaction within Squelch is fully accessible via keyboard without r
 ### 4. Reduced Motion
 
 Squelch respects macOS system preferences for reduced motion (`prefers-reduced-motion`). When enabled:
+
 - Modal backdrop transitions and slide-in animations are softened or disabled to prevent vestibular discomfort.
 - Heavy audio spectrum animations freeze into static indicator bars.
 

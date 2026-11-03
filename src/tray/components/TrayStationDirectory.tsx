@@ -1,7 +1,12 @@
 import React from 'react';
 import type { Station } from '../../types';
 import type { TranslationDictionary } from '../../i18n';
-import { IconPlay, IconRadioTower, IconSearch, IconStar } from '../../components/Icons';
+import {
+    IconPlay,
+    IconRadioTower,
+    IconSearch,
+    IconStar
+} from '../../components/Icons';
 
 export interface TrayStationDirectoryProps {
     stations: Station[];
@@ -115,7 +120,9 @@ export const TrayStationDirectory: React.FC<TrayStationDirectoryProps> = ({
                 ) : filteredStations.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-3 gap-1 min-h-[90px]">
                         <IconSearch size={16} className="opacity-40" />
-                        <span className="text-[11px] text-muted">{t.emptyStationsText}</span>
+                        <span className="text-[11px] text-muted">
+                            {t.emptyStationsText}
+                        </span>
                     </div>
                 ) : (
                     filteredStations.map((st) => {

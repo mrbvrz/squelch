@@ -65,8 +65,7 @@ export const DangerZoneSection: React.FC<DangerZoneSectionProps> = ({
                                 {
                                     value: 'all',
                                     label:
-                                        t.prefClearAllDataOption ||
-                                        'Semua Data'
+                                        t.prefClearAllDataOption || 'Semua Data'
                                 },
                                 {
                                     value: 'stations',

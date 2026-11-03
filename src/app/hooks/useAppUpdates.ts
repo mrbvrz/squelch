@@ -10,10 +10,17 @@ export interface UseAppUpdatesOptions {
     autoCheckUpdates?: boolean;
 }
 
-export function useAppUpdates({ api, autoCheckUpdates = true }: UseAppUpdatesOptions) {
-    const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(null);
+export function useAppUpdates({
+    api,
+    autoCheckUpdates = true
+}: UseAppUpdatesOptions) {
+    const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(
+        null
+    );
     const [isCheckingUpdate, setIsCheckingUpdate] = useState<boolean>(false);
-    const [updateCheckError, setUpdateCheckError] = useState<string | null>(null);
+    const [updateCheckError, setUpdateCheckError] = useState<string | null>(
+        null
+    );
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
     const [updateDownloadProgress, setUpdateDownloadProgress] =
         useState<UpdateDownloadProgress | null>(null);
@@ -45,7 +52,9 @@ export function useAppUpdates({ api, autoCheckUpdates = true }: UseAppUpdatesOpt
                     const message =
                         err instanceof Error
                             ? err.message
-                            : typeof err === 'object' && err !== null && 'message' in err
+                            : typeof err === 'object' &&
+                                err !== null &&
+                                'message' in err
                               ? String((err as { message: unknown }).message)
                               : String(err);
                     setUpdateDownloadProgress({
@@ -105,7 +114,9 @@ export function useAppUpdates({ api, autoCheckUpdates = true }: UseAppUpdatesOpt
                     const message =
                         err instanceof Error
                             ? err.message
-                            : typeof err === 'object' && err !== null && 'message' in err
+                            : typeof err === 'object' &&
+                                err !== null &&
+                                'message' in err
                               ? String((err as { message: unknown }).message)
                               : String(err);
                     setUpdateCheckError(message);

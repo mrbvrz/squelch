@@ -182,7 +182,10 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
                                 value={bitrateFilter}
                                 onChange={setBitrateFilter}
                                 options={[
-                                    { value: 'all', label: t.discoverAllBitrates },
+                                    {
+                                        value: 'all',
+                                        label: t.discoverAllBitrates
+                                    },
                                     { value: '64', label: '≥ 64 kbps' },
                                     { value: '128', label: '≥ 128 kbps' },
                                     { value: '192', label: '≥ 192 kbps' },
@@ -195,8 +198,14 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
                                 value={sortMode}
                                 onChange={setSortMode}
                                 options={[
-                                    { value: 'default', label: t.discoverSortDefault },
-                                    { value: 'bitrate', label: t.discoverSortBitrate },
+                                    {
+                                        value: 'default',
+                                        label: t.discoverSortDefault
+                                    },
+                                    {
+                                        value: 'bitrate',
+                                        label: t.discoverSortBitrate
+                                    },
                                     { value: 'name', label: t.discoverSortName }
                                 ]}
                                 className="w-[145px]"
@@ -263,7 +272,9 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
                                                 {item.name}
                                             </div>
                                             <div className="text-secondary text-[12px] truncate tabular-nums mt-0.5">
-                                                {countryCodeToFlag(item.country)}{' '}
+                                                {countryCodeToFlag(
+                                                    item.country
+                                                )}{' '}
                                                 {item.city}, {item.country}
                                                 {item.bitrate
                                                     ? ` · ${item.bitrate} kbps`
@@ -297,8 +308,10 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
                                                             item.id ||
                                                             `preview-${Date.now()}`,
                                                         name: item.name,
-                                                        streamUrl: item.streamUrl,
-                                                        streamType: item.streamType,
+                                                        streamUrl:
+                                                            item.streamUrl,
+                                                        streamType:
+                                                            item.streamType,
                                                         logoUrl: item.logoUrl,
                                                         genre: item.genre,
                                                         city: item.city,

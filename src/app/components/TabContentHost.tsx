@@ -126,9 +126,7 @@ export const TabContentHost: React.FC<TabContentHostProps> = ({
                     setActiveTab={setActiveTab}
                     isPlayingStation={stationManagement.isPlayingStation}
                     draggedStationId={stationManagement.draggedStationId}
-                    setDraggedStationId={
-                        stationManagement.setDraggedStationId
-                    }
+                    setDraggedStationId={stationManagement.setDraggedStationId}
                     handleDropStation={stationManagement.handleDropStation}
                     api={api}
                     refreshAll={appCoreData.refreshAll}
@@ -184,9 +182,7 @@ export const TabContentHost: React.FC<TabContentHostProps> = ({
                     currentStation={appCoreData.currentStation}
                     isPlaying={isPlaying}
                     isBusy={isBusy}
-                    handleDiscoverSearch={
-                        discoverStations.handleDiscoverSearch
-                    }
+                    handleDiscoverSearch={discoverStations.handleDiscoverSearch}
                     handleAddFromDiscover={
                         discoverStations.handleAddFromDiscover
                     }

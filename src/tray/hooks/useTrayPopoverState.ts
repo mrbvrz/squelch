@@ -1,9 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import type {
-    AppSettings,
-    PlayerState,
-    Station
-} from '../../types';
+import type { AppSettings, PlayerState, Station } from '../../types';
 import type { SquelchTrayPopoverApi } from '../types';
 import { getTranslations } from '../../i18n';
 import {

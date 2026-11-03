@@ -33,7 +33,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             <div className="flex items-center gap-3.5">
                 <div
                     data-tauri-drag-region="false"
-                    style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+                    style={
+                        { WebkitAppRegion: 'no-drag' } as React.CSSProperties
+                    }
                     className="inline-flex items-center rounded-[7px] mac-glass-pill divide-x mac-divider overflow-hidden"
                 >
                     <button

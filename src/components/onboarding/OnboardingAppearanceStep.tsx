@@ -10,11 +10,9 @@ export interface OnboardingAppearanceStepProps {
     t: Translations;
 }
 
-export const OnboardingAppearanceStep: React.FC<OnboardingAppearanceStepProps> = ({
-    settings,
-    onUpdateSettings,
-    t
-}) => {
+export const OnboardingAppearanceStep: React.FC<
+    OnboardingAppearanceStepProps
+> = ({ settings, onUpdateSettings, t }) => {
     return (
         <div className="space-y-4">
             <div className="text-center mb-1">

@@ -1,5 +1,5 @@
 use futures_util::StreamExt;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::io::AsyncWriteExt;
@@ -50,8 +50,8 @@ pub async fn check_for_updates() -> Result<Value, String> {
         .await
         .map_err(|e| format!("Failed to read release response: {}", e))?;
 
-    let release: Value = serde_json::from_str(&text)
-        .map_err(|e| format!("Failed to parse release JSON: {}", e))?;
+    let release: Value =
+        serde_json::from_str(&text).map_err(|e| format!("Failed to parse release JSON: {}", e))?;
 
     let remote_tag = release
         .get("tag_name")
@@ -118,9 +118,7 @@ pub async fn check_for_updates() -> Result<Value, String> {
         }
     }
 
-    let primary_download_url = dmg_url
-        .or(zip_url)
-        .unwrap_or_else(|| html_url.clone());
+    let primary_download_url = dmg_url.or(zip_url).unwrap_or_else(|| html_url.clone());
     let primary_filename = dmg_name.or(zip_name);
 
     Ok(json!({

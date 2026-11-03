@@ -20,7 +20,9 @@ export function useTabNavigation() {
         : 'stations';
 
     const [activeTab, setActiveTab] = useState<ActiveTab>(validInitialTab);
-    const [tabHistory, setTabHistory] = useState<ActiveTab[]>([validInitialTab]);
+    const [tabHistory, setTabHistory] = useState<ActiveTab[]>([
+        validInitialTab
+    ]);
     const [historyIndex, setHistoryIndex] = useState<number>(0);
 
     const navigateToTab = (nextTab: ActiveTab) => {

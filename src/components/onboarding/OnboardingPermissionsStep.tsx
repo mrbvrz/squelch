@@ -1,13 +1,7 @@
 import React from 'react';
 import type { AppSettings } from '../../types';
 import type { Translations } from '../../i18n/types';
-import {
-    IconBell,
-    IconCheck,
-    IconFolder,
-    IconPower,
-    IconPlay
-} from '../Icons';
+import { IconBell, IconCheck, IconFolder, IconPower, IconPlay } from '../Icons';
 
 export interface OnboardingPermissionsStepProps {
     settings: AppSettings;
@@ -17,7 +11,9 @@ export interface OnboardingPermissionsStepProps {
     t: Translations;
 }
 
-export const OnboardingPermissionsStep: React.FC<OnboardingPermissionsStepProps> = ({
+export const OnboardingPermissionsStep: React.FC<
+    OnboardingPermissionsStepProps
+> = ({
     settings,
     onUpdateSettings,
     notificationPerm,

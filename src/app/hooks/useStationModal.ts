@@ -38,11 +38,7 @@ export function useStationModal({
         setFormGenre('Pop');
         setFormCity('Jakarta');
         setFormCountry('ID');
-        setFormGroup(
-            selectedGroup !== 'ALL'
-                ? selectedGroup
-                : groups[0] || ''
-        );
+        setFormGroup(selectedGroup !== 'ALL' ? selectedGroup : groups[0] || '');
         setFormType('mp3');
         setFormTags('');
         setTestResult(null);
@@ -104,7 +100,7 @@ export function useStationModal({
             genre: formGenre.trim() || 'Radio',
             city: formCity.trim() || 'Indonesia',
             country: formCountry.trim() || 'ID',
-            group: formGroup.trim() || (groups[0] || ''),
+            group: formGroup.trim() || groups[0] || '',
             tags: formTags
                 .split(',')
                 .map((tag) => tag.trim())

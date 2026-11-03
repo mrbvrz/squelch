@@ -54,7 +54,8 @@ export const App: React.FC = () => {
     const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
     const [isQuitConfirmOpen, setIsQuitConfirmOpen] = useState<boolean>(false);
     const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
-    const [isResetConfirmOpen, setIsResetConfirmOpen] = useState<boolean>(false);
+    const [isResetConfirmOpen, setIsResetConfirmOpen] =
+        useState<boolean>(false);
     const [isResetting, setIsResetting] = useState<boolean>(false);
     const [resetTarget, setResetTarget] = useState<
         'settings' | 'stations' | 'schedules' | 'stats' | 'all'
@@ -165,7 +166,10 @@ export const App: React.FC = () => {
 
     // Automatically trigger onboarding wizard on first launch
     useEffect(() => {
-        if (appCoreData.settings && appCoreData.settings.hasCompletedOnboarding === false) {
+        if (
+            appCoreData.settings &&
+            appCoreData.settings.hasCompletedOnboarding === false
+        ) {
             setIsOnboardingOpen(true);
         }
     }, [appCoreData.settings?.hasCompletedOnboarding]);
@@ -251,9 +255,15 @@ export const App: React.FC = () => {
         if (activeTab === 'preferences') return t.tabPreferences;
         if (activeTab === 'about') return t.tabAbout;
         if (stationManagement.favoritesOnly) return t.favoritesTitle;
-        if (stationManagement.selectedGroup !== 'ALL') return stationManagement.selectedGroup;
+        if (stationManagement.selectedGroup !== 'ALL')
+            return stationManagement.selectedGroup;
         return t.allStationsTitle;
-    }, [activeTab, stationManagement.favoritesOnly, stationManagement.selectedGroup, t]);
+    }, [
+        activeTab,
+        stationManagement.favoritesOnly,
+        stationManagement.selectedGroup,
+        t
+    ]);
 
     const handleRequestReset = (
         target: 'settings' | 'stations' | 'schedules' | 'stats' | 'all'

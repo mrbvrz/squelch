@@ -565,7 +565,9 @@ html.is-scrolling ::-webkit-scrollbar-thumb,
     border: 0.5px solid rgba(0, 0, 0, 0.15);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
     cursor: pointer;
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    transition:
+        transform 0.1s ease,
+        box-shadow 0.1s ease;
 }
 
 .mac-slider:hover::-webkit-slider-thumb {
@@ -587,4 +589,3 @@ html.is-scrolling ::-webkit-scrollbar-thumb,
     border: 0.5px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 1px 3.5px rgba(0, 0, 0, 0.55);
 }
-

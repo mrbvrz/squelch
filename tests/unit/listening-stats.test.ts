@@ -30,7 +30,11 @@ describe('listening-stats utility', () => {
         recordListeningSeconds(
             stats,
             120,
-            { id: 'st-prambors', name: 'Prambors FM', logoUrl: 'https://example.com/logo.png' },
+            {
+                id: 'st-prambors',
+                name: 'Prambors FM',
+                logoUrl: 'https://example.com/logo.png'
+            },
             date
         );
 
@@ -40,7 +44,9 @@ describe('listening-stats utility', () => {
         expect(stats.monthlySeconds['2026-11']).toBe(120);
         expect(stats.stationSeconds['st-prambors']).toBe(120);
         expect(stats.stationNames?.['st-prambors']).toBe('Prambors FM');
-        expect(stats.stationLogos?.['st-prambors']).toBe('https://example.com/logo.png');
+        expect(stats.stationLogos?.['st-prambors']).toBe(
+            'https://example.com/logo.png'
+        );
 
         // Accumulates correctly on subsequent ticks
         recordListeningSeconds(

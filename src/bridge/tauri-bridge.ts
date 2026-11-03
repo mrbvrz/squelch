@@ -786,18 +786,14 @@ export function initTauriBridge() {
                     syncPlayerStatusToRust,
                     () => (window as any).squelchApi.stopPlayback(),
                     (title, body) =>
-                        (window as any).squelchApi.sendNotification(
-                            title,
-                            body
-                        )
+                        (window as any).squelchApi.sendNotification(title, body)
                 );
             },
 
             startDragging: async () => {
                 try {
-                    const { getCurrentWindow } = await import(
-                        '@tauri-apps/api/window'
-                    );
+                    const { getCurrentWindow } =
+                        await import('@tauri-apps/api/window');
                     await getCurrentWindow().startDragging();
                 } catch {
                     await invoke('start_window_drag');
@@ -914,10 +910,7 @@ export function initTauriBridge() {
                 return res;
             },
 
-            deleteGroup: async (
-                groupName: string,
-                moveToGroup = ''
-            ) => {
+            deleteGroup: async (groupName: string, moveToGroup = '') => {
                 const res = await invoke('delete_group', {
                     groupName,
                     moveToGroup
@@ -930,13 +923,15 @@ export function initTauriBridge() {
                 return await invoke('test_stream_url', { url });
             },
 
-            runHealthCheck: async (onProgress?: (progress: {
-                total: number;
-                completed: number;
-                currentStation?: string;
-                onlineCount: number;
-                offlineCount: number;
-            }) => void) => {
+            runHealthCheck: async (
+                onProgress?: (progress: {
+                    total: number;
+                    completed: number;
+                    currentStation?: string;
+                    onlineCount: number;
+                    offlineCount: number;
+                }) => void
+            ) => {
                 const data: any = await invoke('get_stations_data');
                 const stations: any[] = data?.stations || [];
                 const total = stations.length;
@@ -1070,7 +1065,9 @@ export function initTauriBridge() {
 
             getAudioOutputDevices: async () => {
                 try {
-                    const devices: any = await invoke('get_audio_output_devices');
+                    const devices: any = await invoke(
+                        'get_audio_output_devices'
+                    );
                     if (Array.isArray(devices) && devices.length > 0) {
                         return devices;
                     }

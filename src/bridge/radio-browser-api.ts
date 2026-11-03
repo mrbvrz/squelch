@@ -1,8 +1,9 @@
-import {
-    countryCodeToFlag,
-    getFriendlyCountryName
-} from '../utils/appearance';
-import type { DiscoverStationItem, RadioBrowserCountry, RadioBrowserQuery } from '../types';
+import { countryCodeToFlag, getFriendlyCountryName } from '../utils/appearance';
+import type {
+    DiscoverStationItem,
+    RadioBrowserCountry,
+    RadioBrowserQuery
+} from '../types';
 
 export async function fetchOnlineCountries(): Promise<RadioBrowserCountry[]> {
     try {
@@ -36,10 +37,7 @@ export async function searchOnlineStations(
             params.set('name', query.name.trim());
         }
         if (query.countrycode && query.countrycode.trim()) {
-            params.set(
-                'countrycode',
-                query.countrycode.trim().toUpperCase()
-            );
+            params.set('countrycode', query.countrycode.trim().toUpperCase());
         }
         if (query.tag && query.tag.trim()) {
             params.set('tag', query.tag.trim());
@@ -64,9 +62,7 @@ export async function searchOnlineStations(
         const seen = new Set<string>();
         const deduplicated = [];
         for (const s of list) {
-            const url = (s.url_resolved || s.url || '')
-                .trim()
-                .toLowerCase();
+            const url = (s.url_resolved || s.url || '').trim().toLowerCase();
             const id = s.stationuuid;
             const key = url || id;
             if (!key || seen.has(key)) continue;
@@ -105,9 +101,7 @@ export async function searchOnlineStations(
                     ? ('hls' as const)
                     : ('mp3' as const),
                 logoUrl:
-                    s.favicon && s.favicon.trim()
-                        ? s.favicon.trim()
-                        : null,
+                    s.favicon && s.favicon.trim() ? s.favicon.trim() : null,
                 genre: tags[0] || 'General',
                 city: (s.state || '').trim(),
                 country: (s.countrycode || '').trim().toUpperCase(),

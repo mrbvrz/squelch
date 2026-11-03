@@ -406,20 +406,21 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
                                     {t.updatesDismiss}
                                 </button>
 
-                                {downloadProgress.filePath && onInstallUpdate && (
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            onInstallUpdate(
-                                                downloadProgress.filePath!
-                                            )
-                                        }
-                                        className="bg-accent hover:opacity-90 text-white px-5 h-[30px] rounded-[7px] text-[12px] font-semibold flex items-center gap-1.5 cursor-pointer shadow-md shadow-accent/20 transition hover:scale-[1.02]"
-                                    >
-                                        <IconArrowDownTray size={14} />
-                                        <span>{t.updatesInstallBtn}</span>
-                                    </button>
-                                )}
+                                {downloadProgress.filePath &&
+                                    onInstallUpdate && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                onInstallUpdate(
+                                                    downloadProgress.filePath!
+                                                )
+                                            }
+                                            className="bg-accent hover:opacity-90 text-white px-5 h-[30px] rounded-[7px] text-[12px] font-semibold flex items-center gap-1.5 cursor-pointer shadow-md shadow-accent/20 transition hover:scale-[1.02]"
+                                        >
+                                            <IconArrowDownTray size={14} />
+                                            <span>{t.updatesInstallBtn}</span>
+                                        </button>
+                                    )}
                             </div>
                         </>
                     ) : dlStatus === 'error' && updateInfo ? (

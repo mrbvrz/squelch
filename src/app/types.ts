@@ -11,7 +11,10 @@ import type {
     ShowSchedule,
     NewShowScheduleInput
 } from '../types';
-import type { UpdateCheckResult, UpdateDownloadProgress } from '../components/UpdateModal';
+import type {
+    UpdateCheckResult,
+    UpdateDownloadProgress
+} from '../components/UpdateModal';
 
 export type ActiveTab =
     'stations' | 'schedules' | 'discover' | 'stats' | 'preferences' | 'about';
@@ -85,13 +88,15 @@ export interface SquelchWindowApi {
         moveToGroup?: string
     ) => Promise<StationsDataSchema>;
     testStreamUrl: (url: string) => Promise<StreamTestResult>;
-    runHealthCheck: (onProgress?: (progress: {
-        total: number;
-        completed: number;
-        currentStation?: string;
-        onlineCount: number;
-        offlineCount: number;
-    }) => void) => Promise<{
+    runHealthCheck: (
+        onProgress?: (progress: {
+            total: number;
+            completed: number;
+            currentStation?: string;
+            onlineCount: number;
+            offlineCount: number;
+        }) => void
+    ) => Promise<{
         results: Array<{
             stationId: string;
             name: string;
@@ -121,7 +126,10 @@ export interface SquelchWindowApi {
     updateSettings: (partial: Partial<AppSettings>) => Promise<AppSettings>;
     resetSettings: () => Promise<AppSettings>;
     getAudioOutputDevices: () => Promise<AudioOutputDevice[]>;
-    setAudioOutputDevice: (deviceId: string, deviceName?: string) => Promise<boolean>;
+    setAudioOutputDevice: (
+        deviceId: string,
+        deviceName?: string
+    ) => Promise<boolean>;
     getSystemFonts: () => Promise<string[]>;
     backupAppData: () => Promise<{
         ok: boolean;
@@ -143,7 +151,9 @@ export interface SquelchWindowApi {
     cancelDownloadUpdate?: () => Promise<void>;
     openUpdateInstaller?: (filePath: string) => Promise<void>;
     revealUpdateInFinder?: (filePath: string) => Promise<void>;
-    onUpdateDownloadProgress?: (cb: (progress: UpdateDownloadProgress) => void) => () => void;
+    onUpdateDownloadProgress?: (
+        cb: (progress: UpdateDownloadProgress) => void
+    ) => () => void;
     openUpdateModal?: () => Promise<void>;
     clearStationsData: () => Promise<void>;
     clearSchedulesData: () => Promise<void>;

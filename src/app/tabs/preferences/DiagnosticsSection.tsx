@@ -86,8 +86,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({
                             <button
                                 type="button"
                                 onClick={onCopyDiagnostics}
-                                title={copiedDiag ? t.copiedDiagBtn : t.copyDiagBtn}
-                                aria-label={copiedDiag ? t.copiedDiagBtn : t.copyDiagBtn}
+                                title={
+                                    copiedDiag ? t.copiedDiagBtn : t.copyDiagBtn
+                                }
+                                aria-label={
+                                    copiedDiag ? t.copiedDiagBtn : t.copyDiagBtn
+                                }
                                 className={`absolute top-2.5 right-2.5 p-1.5 rounded-[6px] transition-all cursor-pointer shadow-xs active:scale-90 ${
                                     copiedDiag
                                         ? 'bg-emerald-500/20 text-emerald-400 scale-105 ring-1 ring-emerald-500/30'
@@ -95,9 +99,15 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({
                                 }`}
                             >
                                 {copiedDiag ? (
-                                    <IconCheck size={13} className="text-emerald-400 animate-scale-enter" />
+                                    <IconCheck
+                                        size={13}
+                                        className="text-emerald-400 animate-scale-enter"
+                                    />
                                 ) : (
-                                    <IconCopy size={13} className="transition-transform active:rotate-12" />
+                                    <IconCopy
+                                        size={13}
+                                        className="transition-transform active:rotate-12"
+                                    />
                                 )}
                             </button>
                         </div>

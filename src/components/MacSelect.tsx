@@ -30,7 +30,8 @@ export const MacSelect = <T extends string = string>({
     const [focusedIndex, setFocusedIndex] = useState(-1);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const selectedOption = options.find((opt) => opt.value === value) || options[0];
+    const selectedOption =
+        options.find((opt) => opt.value === value) || options[0];
 
     // Close on click outside
     useEffect(() => {
@@ -58,10 +59,16 @@ export const MacSelect = <T extends string = string>({
             }
 
             if (!isOpen) {
-                if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                if (
+                    e.key === 'Enter' ||
+                    e.key === ' ' ||
+                    e.key === 'ArrowDown'
+                ) {
                     e.preventDefault();
                     setIsOpen(true);
-                    setFocusedIndex(options.findIndex((o) => o.value === value));
+                    setFocusedIndex(
+                        options.findIndex((o) => o.value === value)
+                    );
                 }
                 return;
             }
@@ -71,7 +78,9 @@ export const MacSelect = <T extends string = string>({
                 setFocusedIndex((prev) => (prev + 1) % options.length);
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                setFocusedIndex((prev) => (prev - 1 + options.length) % options.length);
+                setFocusedIndex(
+                    (prev) => (prev - 1 + options.length) % options.length
+                );
             } else if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 if (focusedIndex >= 0 && focusedIndex < options.length) {
@@ -98,7 +107,9 @@ export const MacSelect = <T extends string = string>({
                 aria-label={ariaLabel}
                 onClick={() => {
                     setIsOpen((prev) => !prev);
-                    setFocusedIndex(options.findIndex((o) => o.value === value));
+                    setFocusedIndex(
+                        options.findIndex((o) => o.value === value)
+                    );
                 }}
                 className={`mac-glass-pill ${widthClass} h-[30px] px-3 rounded-[7px] text-[12px] font-medium flex items-center justify-between cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition shadow-sm select-none shrink-0 ${className}`}
             >
@@ -146,10 +157,15 @@ export const MacSelect = <T extends string = string>({
                             >
                                 <span className="flex items-center gap-1.5 truncate">
                                     {opt.icon}
-                                    <span className="truncate">{opt.label}</span>
+                                    <span className="truncate">
+                                        {opt.label}
+                                    </span>
                                 </span>
                                 {isSelected && (
-                                    <IconCheck size={12} className="shrink-0 text-white" />
+                                    <IconCheck
+                                        size={12}
+                                        className="shrink-0 text-white"
+                                    />
                                 )}
                             </div>
                         );

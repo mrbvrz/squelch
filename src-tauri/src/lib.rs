@@ -5,10 +5,10 @@ mod store;
 use std::sync::Arc;
 use store::AppStore;
 use tauri::{
+    Emitter, Manager,
     image::Image,
     menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Emitter, Manager,
 };
 
 use tauri_plugin_positioner::{Position, WindowExt};
@@ -69,13 +69,8 @@ pub(crate) fn show_main_window(app: &tauri::AppHandle) -> Option<tauri::WebviewW
         {
             #[cfg(target_os = "macos")]
             {
-                use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
-                let _ = apply_vibrancy(
-                    &win,
-                    NSVisualEffectMaterial::Sidebar,
-                    None,
-                    Some(18.0),
-                );
+                use window_vibrancy::{NSVisualEffectMaterial, apply_vibrancy};
+                let _ = apply_vibrancy(&win, NSVisualEffectMaterial::Sidebar, None, Some(18.0));
             }
             let _ = win.show();
             let _ = win.unminimize();
@@ -121,17 +116,17 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
             );
         }
         "stop" => {
-            let _ = app.emit(
-                "squelch:action",
-                serde_json::json!({ "action": "stop" }),
-            );
+            let _ = app.emit("squelch:action", serde_json::json!({ "action": "stop" }));
         }
         "open_squelch" => {
             let _ = show_main_window(app);
         }
         "stations_squelch" => {
             if let Some(win) = show_main_window(app) {
-                let _ = app.emit("ui:state-changed", serde_json::json!({ "type": "navigate", "tab": "stations" }));
+                let _ = app.emit(
+                    "ui:state-changed",
+                    serde_json::json!({ "type": "navigate", "tab": "stations" }),
+                );
                 let _ = win.emit("squelch:navigate", "stations");
                 let _ = win.eval(
                     "window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'stations' }));",
@@ -140,7 +135,10 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
         }
         "pref_squelch" => {
             if let Some(win) = show_main_window(app) {
-                let _ = app.emit("ui:state-changed", serde_json::json!({ "type": "navigate", "tab": "preferences" }));
+                let _ = app.emit(
+                    "ui:state-changed",
+                    serde_json::json!({ "type": "navigate", "tab": "preferences" }),
+                );
                 let _ = win.emit("squelch:navigate", "preferences");
                 let _ = win.eval(
                     "window.dispatchEvent(new CustomEvent('squelch:navigate', { detail: 'preferences' }));",
@@ -149,26 +147,22 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
         }
         "update_squelch" => {
             if let Some(win) = show_main_window(app) {
-                let _ = win.eval(
-                    "window.dispatchEvent(new CustomEvent('squelch:check-updates'));",
-                );
+                let _ = win.eval("window.dispatchEvent(new CustomEvent('squelch:check-updates'));");
             }
             let _ = app.emit("ui:open-update-modal", ());
         }
         "tray_about_squelch" => {
             if let Some(tray_win) = show_tray_popover(app) {
                 let _ = tray_win.emit("squelch:open-about", ());
-                let _ = tray_win.eval(
-                    "window.dispatchEvent(new CustomEvent('squelch:open-about'));",
-                );
+                let _ =
+                    tray_win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about'));");
             }
         }
         "tray_quit_squelch" => {
             if let Some(tray_win) = show_tray_popover(app) {
                 let _ = tray_win.emit("squelch:confirm-quit", ());
-                let _ = tray_win.eval(
-                    "window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));",
-                );
+                let _ =
+                    tray_win.eval("window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));");
             }
         }
         "about_squelch" => {
@@ -179,15 +173,13 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
             if main_visible {
                 if let Some(win) = show_main_window(app) {
                     let _ = win.emit("squelch:open-about", ());
-                    let _ = win.eval(
-                        "window.dispatchEvent(new CustomEvent('squelch:open-about'));",
-                    );
+                    let _ =
+                        win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about'));");
                 }
             } else if let Some(tray_win) = show_tray_popover(app) {
                 let _ = tray_win.emit("squelch:open-about", ());
-                let _ = tray_win.eval(
-                    "window.dispatchEvent(new CustomEvent('squelch:open-about'));",
-                );
+                let _ =
+                    tray_win.eval("window.dispatchEvent(new CustomEvent('squelch:open-about'));");
             }
         }
         "quit_squelch" => {
@@ -198,15 +190,13 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
             if main_visible {
                 if let Some(win) = show_main_window(app) {
                     let _ = win.emit("squelch:confirm-quit", ());
-                    let _ = win.eval(
-                        "window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));",
-                    );
+                    let _ =
+                        win.eval("window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));");
                 }
             } else if let Some(tray_win) = show_tray_popover(app) {
                 let _ = tray_win.emit("squelch:confirm-quit", ());
-                let _ = tray_win.eval(
-                    "window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));",
-                );
+                let _ =
+                    tray_win.eval("window.dispatchEvent(new CustomEvent('squelch:confirm-quit'));");
             }
         }
         _ => {}
@@ -255,7 +245,7 @@ pub fn run() {
             // 3. Configure macOS Vibrancy effects
             #[cfg(target_os = "macos")]
             {
-                use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
+                use window_vibrancy::{NSVisualEffectMaterial, apply_vibrancy};
                 if let Some(main_win) = app.get_webview_window("main") {
                     let _ = apply_vibrancy(
                         &main_win,
@@ -269,7 +259,10 @@ pub fn run() {
             // Open devtools in debug mode only when SQUELCH_DEVTOOLS=1
             #[cfg(debug_assertions)]
             {
-                if std::env::var("SQUELCH_DEVTOOLS").map(|v| v == "1").unwrap_or(false) {
+                if std::env::var("SQUELCH_DEVTOOLS")
+                    .map(|v| v == "1")
+                    .unwrap_or(false)
+                {
                     if let Some(main_win) = app.get_webview_window("main") {
                         main_win.open_devtools();
                     }
@@ -287,15 +280,22 @@ pub fn run() {
             }
 
             // 5. Build Rich Tray Context Menu
-            let menu_status = MenuItemBuilder::with_id("status", "Squelch Radio").enabled(false).build(app)?;
-            let menu_play_pause = MenuItemBuilder::with_id("play_pause", "Putar / Jeda").build(app)?;
+            let menu_status = MenuItemBuilder::with_id("status", "Squelch Radio")
+                .enabled(false)
+                .build(app)?;
+            let menu_play_pause =
+                MenuItemBuilder::with_id("play_pause", "Putar / Jeda").build(app)?;
             let menu_stop = MenuItemBuilder::with_id("stop", "Hentikan").build(app)?;
 
-            let menu_open = MenuItemBuilder::with_id("open_squelch", "Buka Jendela Utama").build(app)?;
-            let menu_stations = MenuItemBuilder::with_id("stations_squelch", "Stasiun Radio").build(app)?;
+            let menu_open =
+                MenuItemBuilder::with_id("open_squelch", "Buka Jendela Utama").build(app)?;
+            let menu_stations =
+                MenuItemBuilder::with_id("stations_squelch", "Stasiun Radio").build(app)?;
             let menu_pref = MenuItemBuilder::with_id("pref_squelch", "Pengaturan").build(app)?;
-            let menu_about = MenuItemBuilder::with_id("tray_about_squelch", "Tentang Squelch").build(app)?;
-            let menu_quit = MenuItemBuilder::with_id("tray_quit_squelch", "Keluar Squelch").build(app)?;
+            let menu_about =
+                MenuItemBuilder::with_id("tray_about_squelch", "Tentang Squelch").build(app)?;
+            let menu_quit =
+                MenuItemBuilder::with_id("tray_quit_squelch", "Keluar Squelch").build(app)?;
 
             let tray_menu = MenuBuilder::new(app)
                 .item(&menu_status)
@@ -312,10 +312,16 @@ pub fn run() {
                 .build()?;
 
             // Build macOS Native Application Menu Bar
-            let app_menu_about = MenuItemBuilder::with_id("about_squelch", "Tentang Squelch").build(app)?;
-            let app_menu_update = MenuItemBuilder::with_id("update_squelch", "Periksa Pembaruan...").build(app)?;
-            let app_menu_pref = MenuItemBuilder::with_id("pref_squelch", "Pengaturan...").accelerator("CmdOrCtrl+,").build(app)?;
-            let app_menu_quit = MenuItemBuilder::with_id("quit_squelch", "Keluar Squelch").accelerator("CmdOrCtrl+Q").build(app)?;
+            let app_menu_about =
+                MenuItemBuilder::with_id("about_squelch", "Tentang Squelch").build(app)?;
+            let app_menu_update =
+                MenuItemBuilder::with_id("update_squelch", "Periksa Pembaruan...").build(app)?;
+            let app_menu_pref = MenuItemBuilder::with_id("pref_squelch", "Pengaturan...")
+                .accelerator("CmdOrCtrl+,")
+                .build(app)?;
+            let app_menu_quit = MenuItemBuilder::with_id("quit_squelch", "Keluar Squelch")
+                .accelerator("CmdOrCtrl+Q")
+                .build(app)?;
 
             let app_submenu = SubmenuBuilder::new(app, "Squelch")
                 .item(&app_menu_about)
@@ -324,7 +330,10 @@ pub fn run() {
                 .item(&app_menu_pref)
                 .separator()
                 .item(&PredefinedMenuItem::hide(app, Some("Sembunyikan Squelch"))?)
-                .item(&PredefinedMenuItem::hide_others(app, Some("Sembunyikan Lainnya"))?)
+                .item(&PredefinedMenuItem::hide_others(
+                    app,
+                    Some("Sembunyikan Lainnya"),
+                )?)
                 .item(&PredefinedMenuItem::show_all(app, Some("Tampilkan Semua"))?)
                 .separator()
                 .item(&app_menu_quit)

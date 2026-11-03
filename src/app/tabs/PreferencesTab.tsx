@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import type { AppSettings, AudioOutputDevice } from '../../types';
 import type { TranslationDictionary } from '../../i18n';
 import type { SquelchWindowApi } from '../types';
-import type { UpdateCheckResult, UpdateDownloadProgress } from '../../components/UpdateModal';
+import type {
+    UpdateCheckResult,
+    UpdateDownloadProgress
+} from '../../components/UpdateModal';
 import type { ShortcutActionKey } from '../../utils/shortcuts';
 import {
     AppearanceSection,
@@ -48,7 +51,9 @@ export interface PreferencesTabProps {
     onRequestReset?: (
         target: 'settings' | 'stations' | 'schedules' | 'stats' | 'all'
     ) => void;
-    onUpdateSettings?: (patch: Partial<AppSettings>) => Promise<AppSettings | undefined> | void;
+    onUpdateSettings?: (
+        patch: Partial<AppSettings>
+    ) => Promise<AppSettings | undefined> | void;
     api: SquelchWindowApi;
     t: TranslationDictionary;
 }

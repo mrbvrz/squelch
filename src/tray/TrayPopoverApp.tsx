@@ -70,7 +70,9 @@ export const TrayPopoverApp: React.FC = () => {
                 isMuted={isMuted}
                 hasEqualizer={Boolean(settings?.equalizer?.enabled)}
                 isInteractingVolumeRef={isInteractingVolume}
-                onResolveStationLogo={(url) => api.resolveStationLogo(url).then((res) => res ?? '')}
+                onResolveStationLogo={(url) =>
+                    api.resolveStationLogo(url).then((res) => res ?? '')
+                }
                 onStopPlayback={() => void api.stopPlayback()}
                 onTogglePlayPause={() => void api.togglePlayPause()}
                 onSetSleepTimer={(minutes) => void api.setSleepTimer(minutes)}
@@ -120,7 +122,9 @@ export const TrayPopoverApp: React.FC = () => {
                 groupCount={groups.length}
                 onOpenStationsTab={() => void api.openWindowTab('stations')}
                 onOpenDiscoverTab={() => void api.openWindowTab('discover')}
-                onOpenPreferencesTab={() => void api.openWindowTab('preferences')}
+                onOpenPreferencesTab={() =>
+                    void api.openWindowTab('preferences')
+                }
                 onOpenAbout={() => setIsAboutOpen(true)}
                 onTriggerQuit={() => {
                     if (settings?.confirmBeforeQuit ?? true) {

@@ -127,8 +127,7 @@ export const enLocale: TranslationDictionary = {
     discoverSortBitrate: 'Highest Bitrate',
     discoverSortName: 'Name (A-Z)',
     discoverLoadingHeader: 'Searching Radio Stations...',
-    discoverLoadingSub:
-        'Querying public Radio-Browser online directory...',
+    discoverLoadingSub: 'Querying public Radio-Browser online directory...',
     discoverNoResultsTitle: 'No radio stations found',
     discoverNoResultsHint:
         'Try changing the country filter, search query, or adjusting the bitrate filter.',

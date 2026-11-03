@@ -49,7 +49,7 @@ export function renderTrayTemplatePng(
         const rowStart = y * (size * 4 + 1);
         const idx = rowStart + 1 + x * 4;
         const clampedAlpha = Math.max(0, Math.min(255, Math.round(alpha)));
-        raw[idx] = 0;     // Pure Black R (Template Image requirement)
+        raw[idx] = 0; // Pure Black R (Template Image requirement)
         raw[idx + 1] = 0; // Pure Black G
         raw[idx + 2] = 0; // Pure Black B
         raw[idx + 3] = Math.max(raw[idx + 3], clampedAlpha);
@@ -164,4 +164,6 @@ for (let i = 0; i < TRAY_ANIMATION_FRAME_COUNT; i++) {
     );
 }
 
-console.log('✅ Generated 26 pure black template tray animation frames into src-tauri/icons/tray/');
+console.log(
+    '✅ Generated 26 pure black template tray animation frames into src-tauri/icons/tray/'
+);

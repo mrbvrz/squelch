@@ -217,9 +217,7 @@ export const AudioSection: React.FC<AudioSectionProps> = ({
             {/* Audio Equalizer & Sound Quality */}
             <AudioEqualizerCard
                 equalizer={settings.equalizer}
-                onUpdateEqualizer={(eq) =>
-                    onUpdateSettings({ equalizer: eq })
-                }
+                onUpdateEqualizer={(eq) => onUpdateSettings({ equalizer: eq })}
                 lang={lang}
                 t={t}
             />

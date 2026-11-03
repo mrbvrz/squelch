@@ -205,7 +205,9 @@ export const AppModalsHost: React.FC<AppModalsHostProps> = ({
                 onClose={() => appUpdates.setIsUpdateModalOpen(false)}
                 updateInfo={appUpdates.updateInfo}
                 appIconDataUrl={appCoreData.appIconDataUrl}
-                onOpenExternalUrl={(url: string) => void api.openExternalUrl(url)}
+                onOpenExternalUrl={(url: string) =>
+                    void api.openExternalUrl(url)
+                }
                 t={t}
                 isChecking={appUpdates.isCheckingUpdate}
                 error={appUpdates.updateCheckError}

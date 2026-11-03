@@ -22,9 +22,7 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({
 }) => {
     return (
         <div className="relative z-20">
-            <h2 className="text-[13px] font-bold mb-2 px-1">
-                {t.prefGeneral}
-            </h2>
+            <h2 className="text-[13px] font-bold mb-2 px-1">{t.prefGeneral}</h2>
             <div className="mac-settings-card mac-inset-list">
                 <div className="px-4 py-3 flex items-center justify-between">
                     <span className="text-[13px] font-medium">

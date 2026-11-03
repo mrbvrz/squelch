@@ -1,5 +1,5 @@
 use crate::store::AppStore;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, State};
 
@@ -100,7 +100,11 @@ pub fn get_stations_data(store: State<Arc<AppStore>>) -> Value {
             .unwrap_or_default()
             .as_millis();
         for (idx, s) in stations.iter_mut().enumerate() {
-            let has_valid_id = s.get("id").and_then(|v| v.as_str()).map(|id| !id.trim().is_empty()).unwrap_or(false);
+            let has_valid_id = s
+                .get("id")
+                .and_then(|v| v.as_str())
+                .map(|id| !id.trim().is_empty())
+                .unwrap_or(false);
             if !has_valid_id {
                 if let Some(obj) = s.as_object_mut() {
                     obj.insert("id".to_string(), json!(format!("station-{}-{}", now, idx)));
@@ -435,7 +439,9 @@ pub async fn test_stream_url(url: String) -> serde_json::Value {
 
             if is_stream_valid {
                 // Verify initial data chunk transmits within 2500ms
-                match tokio::time::timeout(std::time::Duration::from_millis(2500), res.chunk()).await {
+                match tokio::time::timeout(std::time::Duration::from_millis(2500), res.chunk())
+                    .await
+                {
                     Ok(Ok(Some(chunk))) if !chunk.is_empty() => {
                         if is_hls {
                             let sample = String::from_utf8_lossy(&chunk);

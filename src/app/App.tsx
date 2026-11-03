@@ -73,6 +73,9 @@ export const App: React.FC = () => {
 
     // Schedule list bridge ref
     const setSchedulesRef = useRef<(scheds: ShowSchedule[]) => void>(() => {});
+    const handleSchedulesLoaded = useCallback((scheds: ShowSchedule[]) => {
+        setSchedulesRef.current(scheds);
+    }, []);
 
     // Core Data & State Synchronization Hook
     const appCoreData = useAppCoreData({
@@ -82,7 +85,7 @@ export const App: React.FC = () => {
         setIsAboutModalOpen,
         setIsQuitConfirmOpen,
         handleCheckForUpdates: appUpdates.handleCheckForUpdates,
-        onSchedulesLoaded: (scheds) => setSchedulesRef.current(scheds)
+        onSchedulesLoaded: handleSchedulesLoaded
     });
 
     const isPlaying = appCoreData.playerState === 'playing';

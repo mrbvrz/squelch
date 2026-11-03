@@ -89,24 +89,30 @@ export function useAppCoreData({
         setIsLoadingFonts(true);
         try {
             const mainFonts = await api.getSystemFonts();
+            if (Array.isArray(mainFonts) && mainFonts.length > 0) {
+                setSystemFonts(mainFonts);
+                return;
+            }
             if (typeof window.queryLocalFonts === 'function') {
                 try {
                     const local = await window.queryLocalFonts();
-                    const merged = new Set<string>(mainFonts);
+                    const merged = new Set<string>(mainFonts || []);
                     for (const item of local) {
                         if (item.family && !item.family.startsWith('.')) {
                             merged.add(item.family);
                         }
                     }
-                    setSystemFonts(
-                        Array.from(merged).sort((a, b) => a.localeCompare(b))
-                    );
-                    return;
+                    if (merged.size > 0) {
+                        setSystemFonts(
+                            Array.from(merged).sort((a, b) => a.localeCompare(b))
+                        );
+                        return;
+                    }
                 } catch {
                     // Fallback to main process font list
                 }
             }
-            setSystemFonts(mainFonts);
+            setSystemFonts(mainFonts || []);
         } catch {
             setSystemFonts([]);
         } finally {
@@ -114,14 +120,21 @@ export function useAppCoreData({
         }
     }, [api]);
 
+    // System fonts loading lifecycle
+    useEffect(() => {
+        void loadAvailableSystemFonts();
+    }, [loadAvailableSystemFonts]);
+
+    useEffect(() => {
+        if (activeTab === 'preferences' && systemFonts.length === 0 && !isLoadingFonts) {
+            void loadAvailableSystemFonts();
+        }
+    }, [activeTab, systemFonts.length, isLoadingFonts, loadAvailableSystemFonts]);
+
     // Initial setup and IPC listeners
     useEffect(() => {
         const unbindScrollbars = bindActiveScrollbars();
         void refreshAll();
-        // Defer font enumeration so it never blocks or slows down initial window rendering
-        const fontTimer = setTimeout(() => {
-            void loadAvailableSystemFonts();
-        }, 1500);
         void api.getAppIconDataUrl().then(setAppIconDataUrl);
 
         const unsub = api.onStateChanged((evt: unknown) => {
@@ -256,7 +269,6 @@ export function useAppCoreData({
         handleHashChange();
 
         return () => {
-            clearTimeout(fontTimer);
             unbindScrollbars();
             unsub();
             if (unlistenAbout) unlistenAbout();
@@ -284,7 +296,6 @@ export function useAppCoreData({
     }, [
         api,
         handleCheckForUpdates,
-        loadAvailableSystemFonts,
         refreshAll,
         setActiveTab,
         setIsAboutModalOpen,

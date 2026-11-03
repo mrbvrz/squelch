@@ -269,3 +269,15 @@ pub fn open_external(url: String) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_fonts() {
+        let f = get_system_fonts();
+        println!("Fonts found: {}", f.len());
+        assert!(!f.is_empty(), "Font list should not be empty!");
+    }
+}

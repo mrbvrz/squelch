@@ -36,6 +36,7 @@ export interface AppModalsHostProps {
         title: string;
         description: string;
         confirmBtnText: string;
+        isPending?: boolean;
     };
     quitModal: {
         isOpen: boolean;
@@ -131,6 +132,7 @@ export const AppModalsHost: React.FC<AppModalsHostProps> = ({
                 description={resetModal.description}
                 cancelBtnText={t.cancelBtn}
                 confirmBtnText={resetModal.confirmBtnText}
+                isPending={resetModal.isPending}
             />
 
             <QuitConfirmModal

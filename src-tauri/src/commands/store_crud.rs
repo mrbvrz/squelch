@@ -81,19 +81,13 @@ pub fn get_stations_data(store: State<Arc<AppStore>>) -> Value {
         })
     });
 
-    let mut data = store.read_json("stations.json", fallback_seed.clone());
-
-    // If stations array is missing or empty, seed from bundled default stations
-    let is_empty = data
-        .get("stations")
-        .and_then(|v| v.as_array())
-        .map(|a| a.is_empty())
-        .unwrap_or(true);
-
-    if is_empty {
-        data = fallback_seed;
-        let _ = store.write_json("stations.json", &data);
+    let stations_file = store.data_dir.join("stations.json");
+    if !stations_file.exists() {
+        let _ = store.write_json("stations.json", &fallback_seed);
+        return fallback_seed;
     }
+
+    let mut data = store.read_json("stations.json", fallback_seed.clone());
 
     // Ensure every station has a unique non-empty ID
     let mut needs_save = false;
@@ -229,6 +223,12 @@ pub fn update_settings(store: State<Arc<AppStore>>, partial: Value) -> Result<Va
 
 #[tauri::command]
 pub fn reset_settings(store: State<Arc<AppStore>>) -> Result<Value, String> {
+    let existing = store.read_json("settings.json", json!({}));
+    let has_completed_onboarding = existing
+        .get("hasCompletedOnboarding")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
+
     let default_val = json!({
         "schemaVersion": 1,
         "launchAtLogin": false,
@@ -257,7 +257,7 @@ pub fn reset_settings(store: State<Arc<AppStore>>) -> Result<Value, String> {
             "nextStation": "CommandOrControl+Shift+Right",
             "prevStation": "CommandOrControl+Shift+Left"
         },
-        "hasCompletedOnboarding": false,
+        "hasCompletedOnboarding": has_completed_onboarding,
         "autoCheckUpdates": true,
         "hideFromDock": false
     });

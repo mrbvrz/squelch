@@ -53,6 +53,7 @@ export const App: React.FC = () => {
     const [isQuitConfirmOpen, setIsQuitConfirmOpen] = useState<boolean>(false);
     const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
     const [isResetConfirmOpen, setIsResetConfirmOpen] = useState<boolean>(false);
+    const [isResetting, setIsResetting] = useState<boolean>(false);
     const [resetTarget, setResetTarget] = useState<
         'settings' | 'stations' | 'schedules' | 'stats' | 'all'
     >('settings');
@@ -293,21 +294,45 @@ export const App: React.FC = () => {
     }, [resetTarget, t]);
 
     const handleConfirmReset = async () => {
-        setIsResetConfirmOpen(false);
-        if (resetTarget === 'stations') {
-            await api.clearStationsData();
-        } else if (resetTarget === 'schedules') {
-            await api.clearSchedulesData();
-        } else if (resetTarget === 'stats') {
-            await api.clearListeningStats();
-        } else if (resetTarget === 'all') {
-            await api.clearStationsData();
-            await api.clearSchedulesData();
-            await api.clearListeningStats();
-        } else {
-            await api.resetSettings();
+        setIsResetting(true);
+        try {
+            if (resetTarget === 'stations') {
+                await api.clearStationsData();
+                appCoreData.setStations([]);
+                appCoreData.setGroups([
+                    'Pop & Anak Muda',
+                    'Nasional & Berita',
+                    'Lainnya & Nostalgia'
+                ]);
+            } else if (resetTarget === 'schedules') {
+                await api.clearSchedulesData();
+                setSchedulesRef.current([]);
+            } else if (resetTarget === 'stats') {
+                await api.clearListeningStats();
+                appCoreData.setStatsSummary(null);
+            } else if (resetTarget === 'all') {
+                await api.clearStationsData();
+                await api.clearSchedulesData();
+                await api.clearListeningStats();
+                appCoreData.setStations([]);
+                appCoreData.setGroups([
+                    'Pop & Anak Muda',
+                    'Nasional & Berita',
+                    'Lainnya & Nostalgia'
+                ]);
+                setSchedulesRef.current([]);
+                appCoreData.setStatsSummary(null);
+            } else {
+                const res = await api.resetSettings();
+                if (res) {
+                    appCoreData.setSettings(res);
+                    applyAppearanceVariables(res);
+                }
+            }
+        } finally {
+            setIsResetting(false);
+            setIsResetConfirmOpen(false);
         }
-        await appCoreData.refreshAll();
     };
 
     const handleBackupData = async () => {
@@ -446,11 +471,14 @@ export const App: React.FC = () => {
                 appUpdates={appUpdates}
                 resetModal={{
                     isOpen: isResetConfirmOpen,
-                    onClose: () => setIsResetConfirmOpen(false),
+                    onClose: () => {
+                        if (!isResetting) setIsResetConfirmOpen(false);
+                    },
                     onConfirm: handleConfirmReset,
                     title: resetModalMeta.title,
                     description: resetModalMeta.description,
-                    confirmBtnText: resetModalMeta.confirmBtn
+                    confirmBtnText: resetModalMeta.confirmBtn,
+                    isPending: isResetting
                 }}
                 quitModal={{
                     isOpen: isQuitConfirmOpen,

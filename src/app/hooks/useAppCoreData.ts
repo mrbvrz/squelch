@@ -162,6 +162,13 @@ export function useAppCoreData({
                 return;
             }
 
+            if (data?.type === 'settings' && (data as any)?.settings) {
+                const s = (data as any).settings;
+                setSettings(s);
+                applyAppearanceVariables(s);
+                return;
+            }
+
             void refreshAll();
         });
 

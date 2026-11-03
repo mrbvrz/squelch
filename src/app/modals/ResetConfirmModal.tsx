@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconWarning } from '../../components/Icons';
+import { IconWarning, IconSpinner } from '../../components/Icons';
 
 export interface ResetConfirmModalProps {
     isOpen: boolean;
@@ -9,6 +9,7 @@ export interface ResetConfirmModalProps {
     description: string;
     cancelBtnText: string;
     confirmBtnText: string;
+    isPending?: boolean;
 }
 
 export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
@@ -18,7 +19,8 @@ export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
     title,
     description,
     cancelBtnText,
-    confirmBtnText
+    confirmBtnText,
+    isPending = false
 }) => {
     if (!isOpen) return null;
 
@@ -27,8 +29,8 @@ export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
             role="dialog"
             aria-modal="true"
             aria-labelledby="reset-modal-title"
-            onClick={onClose}
-            className="fixed inset-0 mac-modal-backdrop flex items-center justify-center p-4 z-50"
+            onClick={isPending ? undefined : onClose}
+            className="fixed inset-0 mac-modal-backdrop flex items-center justify-center p-4 z-50 animate-fade-in"
         >
             <div
                 onClick={(e) => e.stopPropagation()}
@@ -54,16 +56,21 @@ export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
                 <div className="flex justify-end gap-2.5 pt-2">
                     <button
                         type="button"
+                        disabled={isPending}
                         onClick={onClose}
-                        className="mac-glass-pill px-4 h-[30px] rounded-[7px] text-[12px] font-medium cursor-pointer flex items-center justify-center"
+                        className="mac-glass-pill disabled:opacity-50 disabled:cursor-not-allowed px-4 h-[30px] rounded-[7px] text-[12px] font-medium cursor-pointer flex items-center justify-center transition"
                     >
                         {cancelBtnText}
                     </button>
                     <button
                         type="button"
+                        disabled={isPending}
                         onClick={onConfirm}
-                        className="bg-[#FF453A] hover:bg-[#D70015] text-white px-4 h-[30px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition flex items-center justify-center"
+                        className="bg-[#FF453A] hover:bg-[#D70015] disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 h-[30px] rounded-[7px] text-[12px] font-semibold shadow-sm cursor-pointer transition flex items-center justify-center gap-1.5"
                     >
+                        {isPending && (
+                            <IconSpinner size={13} className="animate-spin" />
+                        )}
                         {confirmBtnText}
                     </button>
                 </div>

@@ -239,6 +239,7 @@ export function initTauriBridge() {
         window.location.pathname.includes('audio.html');
 
     if (isAudioWorker) {
+        let currentShortcutsJson = '';
         const syncGlobalShortcuts = async (shortcuts?: any) => {
             if (
                 typeof window === 'undefined' ||
@@ -246,11 +247,15 @@ export function initTauriBridge() {
             ) {
                 return;
             }
+            if (!shortcuts || typeof shortcuts !== 'object') return;
+            const newJson = JSON.stringify(shortcuts);
+            if (newJson === currentShortcutsJson) return; // Prevent redundant main-thread locking
+            currentShortcutsJson = newJson;
+
             try {
                 const { register, unregisterAll } =
                     await import('@tauri-apps/plugin-global-shortcut');
                 await unregisterAll();
-                if (!shortcuts || typeof shortcuts !== 'object') return;
 
                 const registerItem = async (
                     accel: string | undefined,

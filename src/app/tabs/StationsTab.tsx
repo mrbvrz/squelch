@@ -14,6 +14,7 @@ import {
     IconPulse,
     IconRadioTower,
     IconSearch,
+    IconSpinner,
     IconStar,
     IconStop,
     IconTrash,
@@ -88,9 +89,19 @@ export const StationsTab: React.FC<StationsTabProps> = ({
 }) => {
     const popoverRef = React.useRef<HTMLDivElement>(null);
     const addGroupInputRef = React.useRef<HTMLInputElement>(null);
+    const [popoverAlignRight, setPopoverAlignRight] = React.useState(false);
 
     React.useEffect(() => {
         if (!isAddingGroup) return;
+        const updateAlign = () => {
+            if (popoverRef.current) {
+                const rect = popoverRef.current.getBoundingClientRect();
+                setPopoverAlignRight(window.innerWidth - rect.left < 275);
+            }
+        };
+        updateAlign();
+        window.addEventListener('resize', updateAlign);
+
         requestAnimationFrame(() => {
             addGroupInputRef.current?.focus();
         });
@@ -110,6 +121,7 @@ export const StationsTab: React.FC<StationsTabProps> = ({
         document.addEventListener('mousedown', handleClickOutside);
         document.addEventListener('keydown', handleKeyDown);
         return () => {
+            window.removeEventListener('resize', updateAlign);
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleKeyDown);
         };
@@ -243,25 +255,48 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                 })}
 
                 {/* Popover / Tooltip Input for Adding Category */}
-                <div className="relative inline-block" ref={popoverRef}>
+                <div className="relative inline-block z-40" ref={popoverRef}>
                     <button
                         type="button"
                         onClick={() => setIsAddingGroup((v) => !v)}
-                        className={`mac-glass-pill px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1 cursor-pointer transition shadow-xs ${
+                        className={`mac-glass-pill w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition shadow-xs ${
                             isAddingGroup
                                 ? 'bg-black/10 dark:bg-white/15 text-foreground'
                                 : 'hover:bg-black/10 dark:hover:bg-white/15 text-secondary hover:text-foreground'
                         }`}
+                        title={t.addGroupTitle}
+                        aria-label={t.addGroupTitle}
                         aria-expanded={isAddingGroup}
                     >
-                        <IconPlus size={11} />
-                        <span>{t.addGroupBtn}</span>
+                        <IconPlus size={13} />
                     </button>
 
                     {isAddingGroup && (
-                        <div className="absolute left-0 top-full mt-2 z-50 w-64 mac-modal-surface rounded-xl shadow-2xl p-2.5 backdrop-blur-xl animate-scale-enter border border-black/10 dark:border-white/10">
-                            {/* Caret pointing up to the button */}
-                            <div className="absolute -top-1.5 left-4 w-3 h-3 rotate-45 mac-modal-surface border-t border-l border-black/10 dark:border-white/10" />
+                        <div
+                            className={`absolute ${
+                                popoverAlignRight ? 'right-0' : 'left-0'
+                            } top-full mt-2 z-50 w-64 mac-modal-surface rounded-xl shadow-2xl p-2.5 backdrop-blur-2xl animate-scale-enter border border-black/10 dark:border-white/10`}
+                        >
+                            {/* SVG Caret pointing up to the button */}
+                            <svg
+                                className={`absolute -top-2 ${
+                                    popoverAlignRight ? 'right-2.5' : 'left-2.5'
+                                } pointer-events-none drop-shadow-xs`}
+                                width="14"
+                                height="8"
+                                viewBox="0 0 14 8"
+                            >
+                                <path
+                                    d="M7 0L14 8H0L7 0Z"
+                                    fill="var(--surface-modal, #1e1e1e)"
+                                />
+                                <path
+                                    d="M7 0.5L13.5 8M7 0.5L0.5 8"
+                                    stroke="var(--card-border, rgba(255,255,255,0.15))"
+                                    strokeWidth="1"
+                                    fill="none"
+                                />
+                            </svg>
                             <form onSubmit={handleAddGroup} className="flex flex-col gap-2 relative z-10">
                                 <div className="flex items-center justify-between px-0.5 text-[11px] font-semibold text-foreground">
                                     <span>{t.addGroupTitle}</span>
@@ -348,7 +383,11 @@ export const StationsTab: React.FC<StationsTabProps> = ({
                             title={isCheckingHealth ? t.checkingHealth : t.healthCheck}
                             aria-label={t.healthCheck}
                         >
-                            <IconPulse size={13} className={isCheckingHealth ? 'animate-pulse text-accent' : ''} />
+                            {isCheckingHealth ? (
+                                <IconSpinner size={13} className="animate-spin text-accent" />
+                            ) : (
+                                <IconPulse size={13} />
+                            )}
                         </button>
 
                         {/* Hapus Offline jika ada stasiun offline (Badge icon button) */}

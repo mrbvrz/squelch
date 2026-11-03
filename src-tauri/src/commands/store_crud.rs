@@ -372,7 +372,7 @@ pub fn save_listening_stats(store: State<Arc<AppStore>>, stats: Value) -> Result
 pub async fn test_stream_url(url: String) -> serde_json::Value {
     let start = std::time::Instant::now();
     let client = match reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(8))
+        .timeout(std::time::Duration::from_secs(5))
         .user_agent(format!(
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Squelch/{}",
             env!("CARGO_PKG_VERSION")
@@ -393,7 +393,7 @@ pub async fn test_stream_url(url: String) -> serde_json::Value {
     };
 
     match client.get(&url).header("Icy-MetaData", "1").send().await {
-        Ok(res) => {
+        Ok(mut res) => {
             let status = res.status();
             let latency = start.elapsed().as_millis() as u64;
             let final_url = res.url().to_string();
@@ -403,6 +403,7 @@ pub async fn test_stream_url(url: String) -> serde_json::Value {
                 .and_then(|v| v.to_str().ok())
                 .unwrap_or("")
                 .to_string();
+            let ct_lower = content_type.to_lowercase();
             let icy_name = headers
                 .get("icy-name")
                 .and_then(|v| v.to_str().ok())
@@ -413,19 +414,54 @@ pub async fn test_stream_url(url: String) -> serde_json::Value {
                 .map(|s| s.to_string());
 
             let is_hls = final_url.contains(".m3u8")
-                || content_type.contains("application/vnd.apple.mpegurl")
-                || content_type.contains("application/x-mpegurl");
+                || ct_lower.contains("application/vnd.apple.mpegurl")
+                || ct_lower.contains("application/x-mpegurl");
             let stream_type = if is_hls { "hls" } else { "mp3" };
 
+            // Comprehensive audio stream validation
+            let has_audio_indicators = ct_lower.contains("audio")
+                || ct_lower.contains("ogg")
+                || ct_lower.contains("mpeg")
+                || ct_lower.contains("octet-stream")
+                || ct_lower.contains("video")
+                || is_hls
+                || icy_name.is_some()
+                || bitrate.is_some();
+
+            let mut is_stream_valid = status.is_success();
+            if is_stream_valid && ct_lower.contains("text/html") && !has_audio_indicators {
+                is_stream_valid = false;
+            }
+
+            if is_stream_valid {
+                // Verify initial data chunk transmits within 2500ms
+                match tokio::time::timeout(std::time::Duration::from_millis(2500), res.chunk()).await {
+                    Ok(Ok(Some(chunk))) if !chunk.is_empty() => {
+                        if is_hls {
+                            let sample = String::from_utf8_lossy(&chunk);
+                            if !sample.contains("#EXTM3U") && !sample.contains("#EXT-X-") {
+                                is_stream_valid = false;
+                            }
+                        }
+                    }
+                    Ok(Ok(None)) => {
+                        is_stream_valid = false;
+                    }
+                    _ => {
+                        is_stream_valid = false;
+                    }
+                }
+            }
+
             serde_json::json!({
-                "ok": status.is_success(),
+                "ok": is_stream_valid,
                 "resolvedUrl": final_url,
                 "streamType": stream_type,
                 "contentType": content_type,
                 "icyName": icy_name,
                 "bitrate": bitrate,
                 "latencyMs": latency,
-                "errorReason": if status.is_success() { None } else { Some(format!("HTTP {}", status)) }
+                "errorReason": if is_stream_valid { None } else { Some(format!("HTTP {}", status)) }
             })
         }
         Err(err) => serde_json::json!({

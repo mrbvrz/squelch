@@ -933,24 +933,27 @@ export function initTauriBridge() {
             runHealthCheck: async () => {
                 const data: any = await invoke('get_stations_data');
                 const stations: any[] = data?.stations || [];
-                const results: any[] = [];
+                const results: any[] = await Promise.all(
+                    stations.map(async (st) => {
+                        const testRes: any = await invoke('test_stream_url', {
+                            url: st.streamUrl
+                        });
+                        const isOnline = Boolean(testRes?.ok);
+                        st.status = isOnline ? 'online' : 'offline';
+                        return {
+                            stationId: st.id,
+                            name: st.name,
+                            online: isOnline,
+                            latencyMs: testRes?.latencyMs ?? 0,
+                            bitrate: testRes?.bitrate,
+                            error: testRes?.errorReason
+                        };
+                    })
+                );
                 for (const st of stations) {
-                    const testRes: any = await invoke('test_stream_url', {
-                        url: st.streamUrl
-                    });
-                    const isOnline = testRes?.ok ?? false;
-                    st.status = isOnline ? 'online' : 'offline';
-                    results.push({
-                        stationId: st.id,
-                        name: st.name,
-                        online: isOnline,
-                        latencyMs: testRes?.latencyMs ?? 0,
-                        bitrate: testRes?.bitrate,
-                        error: testRes?.errorReason
-                    });
                     await invoke('save_station', { station: st });
                 }
-                await emit('ui:state-changed', { ...playerStatus });
+                await emit('ui:state-changed', { type: 'stations' });
                 return { results, stations };
             },
 

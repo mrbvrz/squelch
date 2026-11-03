@@ -6,9 +6,7 @@ import React, {
     useState
 } from 'react';
 import { getTranslations } from '../i18n';
-import type {
-    ShowSchedule
-} from '../types';
+import type { ShowSchedule } from '../types';
 import type { SquelchWindowApi } from './types';
 
 // Shell & Navigation Components
@@ -21,10 +19,7 @@ import { AppModalsHost } from './components/AppModalsHost';
 
 // Custom Modular Hooks
 import { useTabNavigation } from './hooks/useTabNavigation';
-import {
-    useScheduleManagement,
-    isScheduleCurrentlyOnAir
-} from './hooks/useScheduleManagement';
+import { useScheduleManagement } from './hooks/useScheduleManagement';
 import { useAppUpdates } from './hooks/useAppUpdates';
 import { useStationModal } from './hooks/useStationModal';
 import { useImportExportModal } from './hooks/useImportExportModal';
@@ -70,20 +65,7 @@ export const App: React.FC = () => {
     const [notifTestSuccess, setNotifTestSuccess] = useState<boolean>(false);
 
     // Modularized App Updates Hook
-    const {
-        updateInfo,
-        setUpdateInfo,
-        isCheckingUpdate,
-        updateCheckError,
-        isUpdateModalOpen,
-        setIsUpdateModalOpen,
-        updateDownloadProgress,
-        handleStartDownloadUpdate,
-        handleCancelDownloadUpdate,
-        handleInstallUpdate,
-        handleRevealUpdateInFinder,
-        handleCheckForUpdates
-    } = useAppUpdates({
+    const appUpdates = useAppUpdates({
         api,
         autoCheckUpdates: true
     });
@@ -92,191 +74,66 @@ export const App: React.FC = () => {
     const setSchedulesRef = useRef<(scheds: ShowSchedule[]) => void>(() => {});
 
     // Core Data & State Synchronization Hook
-    const {
-        stations,
-        groups,
-        settings,
-        dataDir,
-        systemFonts,
-        isLoadingFonts,
-        appIconDataUrl,
-        statsSummary,
-        statsViewMode,
-        setStatsViewMode,
-        activeChartPoints,
-        maxChartSeconds,
-        playerState,
-        reconnectAttempt,
-        currentStation,
-        streamTitle,
-        sleepRemainingSec,
-        diagnosticsText,
-        setDiagnosticsText,
-        refreshAll
-    } = useAppCoreData({
+    const appCoreData = useAppCoreData({
         api,
         activeTab,
         setActiveTab,
         setIsAboutModalOpen,
         setIsQuitConfirmOpen,
-        handleCheckForUpdates,
+        handleCheckForUpdates: appUpdates.handleCheckForUpdates,
         onSchedulesLoaded: (scheds) => setSchedulesRef.current(scheds)
     });
 
-    const isPlaying = playerState === 'playing';
+    const isPlaying = appCoreData.playerState === 'playing';
     const isBusy =
-        playerState === 'connecting' ||
-        playerState === 'buffering' ||
-        playerState === 'reconnecting';
+        appCoreData.playerState === 'connecting' ||
+        appCoreData.playerState === 'buffering' ||
+        appCoreData.playerState === 'reconnecting';
 
     // Filters, Group Management & Reordering Hook
-    const {
-        selectedGroup,
-        setSelectedGroup,
-        searchQuery,
-        setSearchQuery,
-        favoritesOnly,
-        setFavoritesOnly,
-        hideOffline,
-        setHideOffline,
-        newGroupName,
-        setNewGroupName,
-        isAddingGroup,
-        setIsAddingGroup,
-        draggedStationId,
-        setDraggedStationId,
-        isCheckingHealth,
-        favCount,
-        filteredStations,
-        handleAddGroup,
-        handleDropStation,
-        handleRunHealthCheck,
-        isPlayingStation
-    } = useStationManagement({
-        stations,
-        groups,
-        currentStation,
+    const stationManagement = useStationManagement({
+        stations: appCoreData.stations,
+        groups: appCoreData.groups,
+        currentStation: appCoreData.currentStation,
         isPlaying,
         isBusy,
         api,
-        refreshAll: () => refreshAll()
+        refreshAll: () => appCoreData.refreshAll()
     });
 
     // Discover Tab Hook
-    const {
-        discCountries,
-        discCountry,
-        setDiscCountry,
-        discName,
-        setDiscName,
-        discTag,
-        setDiscTag,
-        discResults,
-        isSearchingOnline,
-        discError,
-        handleDiscoverSearch,
-        handleCountryChange,
-        handleAddFromDiscover
-    } = useDiscoverStations({
+    const discoverStations = useDiscoverStations({
         api,
-        refreshAll: () => refreshAll(),
+        refreshAll: () => appCoreData.refreshAll(),
         activeTab
     });
 
     // Station Form Modal Hook
-    const {
-        isFormOpen,
-        setIsFormOpen,
-        editingStation,
-        formName,
-        setFormName,
-        formUrl,
-        setFormUrl,
-        formLogo,
-        setFormLogo,
-        formGenre,
-        setFormGenre,
-        formCity,
-        setFormCity,
-        formGroup,
-        setFormGroup,
-        formType,
-        setFormType,
-        formTags,
-        setFormTags,
-        isTestingStream,
-        testResult,
-        openAddStationModal,
-        openEditStationModal,
-        handleTestStream,
-        handleSaveStation
-    } = useStationModal({
-        groups,
-        selectedGroup,
+    const stationModal = useStationModal({
+        groups: appCoreData.groups,
+        selectedGroup: stationManagement.selectedGroup,
         api,
-        refreshAll: () => refreshAll()
+        refreshAll: () => appCoreData.refreshAll()
     });
 
     // Import / Export Modal Hook
-    const {
-        isImportExportOpen,
-        setIsImportExportOpen,
-        ieFormat,
-        ieDuplicateStrategy,
-        setIeDuplicateStrategy,
-        ieTextContent,
-        setIeTextContent,
-        ieStatusMessage,
-        setIeStatusMessage,
-        handleExportLoad,
-        handleImportExecute
-    } = useImportExportModal({
-        stationsCount: stations.length,
+    const importExportModal = useImportExportModal({
+        stationsCount: appCoreData.stations.length,
         api,
-        refreshAll: () => refreshAll()
+        refreshAll: () => appCoreData.refreshAll()
     });
 
     // Schedule Management Hook
-    const {
-        schedules,
-        setSchedules,
-        isScheduleModalOpen,
-        setIsScheduleModalOpen,
-        editingSchedule,
-        schedStationId,
-        setSchedStationId,
-        schedShowName,
-        setSchedShowName,
-        schedHost,
-        setSchedHost,
-        schedDays,
-        setSchedDays,
-        schedStartTime,
-        setSchedStartTime,
-        schedEndTime,
-        setSchedEndTime,
-        schedAutoPlay,
-        setSchedAutoPlay,
-        schedReminderMinutes,
-        setSchedReminderMinutes,
-        schedNotes,
-        setSchedNotes,
-        openAddScheduleModal,
-        openEditScheduleModal,
-        handleSaveSchedule,
-        handleDeleteSchedule,
-        handleToggleSchedule,
-        handleToggleScheduleAutoPlay
-    } = useScheduleManagement({
-        stations,
+    const scheduleManagement = useScheduleManagement({
+        stations: appCoreData.stations,
         api,
-        refreshAll: () => refreshAll()
+        refreshAll: () => appCoreData.refreshAll()
     });
 
     // Connect bridge ref for schedule reload
     useEffect(() => {
-        setSchedulesRef.current = setSchedules;
-    }, [setSchedules]);
+        setSchedulesRef.current = scheduleManagement.setSchedules;
+    }, [scheduleManagement.setSchedules]);
 
     // Search input ref & shortcut label (⌘F / Ctrl+F)
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -284,7 +141,7 @@ export const App: React.FC = () => {
         typeof navigator !== 'undefined' &&
         /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
 
-    const lang: 'id' | 'en' = settings?.language ?? 'id';
+    const lang: 'id' | 'en' = appCoreData.settings?.language ?? 'id';
     const t = getTranslations(lang);
 
     // Global Keydown for ⌘F Search
@@ -302,34 +159,33 @@ export const App: React.FC = () => {
 
     // Automatically trigger onboarding wizard on first launch
     useEffect(() => {
-        if (settings && settings.hasCompletedOnboarding === false) {
+        if (appCoreData.settings && appCoreData.settings.hasCompletedOnboarding === false) {
             setIsOnboardingOpen(true);
         }
-    }, [settings?.hasCompletedOnboarding]);
+    }, [appCoreData.settings?.hasCompletedOnboarding]);
 
     const handleCloseAllModals = useCallback(() => {
-        setIsFormOpen(false);
-        setIsImportExportOpen(false);
-        setIsAddingGroup(false);
+        stationModal.setIsFormOpen(false);
+        importExportModal.setIsImportExportOpen(false);
+        stationManagement.setIsAddingGroup(false);
         setIsResetConfirmOpen(false);
         setIsAboutModalOpen(false);
         setIsQuitConfirmOpen(false);
-        setUpdateInfo(null);
-        setIsScheduleModalOpen(false);
-        setIsUpdateModalOpen(false);
+        appUpdates.setUpdateInfo(null);
+        scheduleManagement.setIsScheduleModalOpen(false);
+        appUpdates.setIsUpdateModalOpen(false);
         setIsOnboardingOpen(false);
     }, [
-        setIsFormOpen,
-        setIsImportExportOpen,
-        setIsAddingGroup,
-        setUpdateInfo,
-        setIsScheduleModalOpen,
-        setIsUpdateModalOpen
+        stationModal,
+        importExportModal,
+        stationManagement,
+        appUpdates,
+        scheduleManagement
     ]);
 
     useAppShortcuts({
         recordingShortcutKey: recordingShortcutKey as any,
-        currentStation,
+        currentStation: appCoreData.currentStation,
         searchInputRef,
         navigateToTab,
         onCloseAllModals: handleCloseAllModals,
@@ -337,7 +193,7 @@ export const App: React.FC = () => {
     });
 
     const stateHeadline = useMemo(() => {
-        switch (playerState) {
+        switch (appCoreData.playerState) {
             case 'playing':
                 return { main: 'LIVE', sub: t.statusLiveSub, color: '#30D158' };
             case 'connecting':
@@ -355,8 +211,8 @@ export const App: React.FC = () => {
             case 'reconnecting':
                 return {
                     main: 'RETRY',
-                    sub: reconnectAttempt
-                        ? `${t.statusReconnectingSub} (${reconnectAttempt})`
+                    sub: appCoreData.reconnectAttempt
+                        ? `${t.statusReconnectingSub} (${appCoreData.reconnectAttempt})`
                         : t.statusReconnectingSub,
                     color: '#FF9F0A'
                 };
@@ -380,7 +236,7 @@ export const App: React.FC = () => {
                     color: '#8E8E93'
                 };
         }
-    }, [playerState, reconnectAttempt, t]);
+    }, [appCoreData.playerState, appCoreData.reconnectAttempt, t]);
 
     const currentHeadingTitle = useMemo(() => {
         if (activeTab === 'schedules') return t.tabSchedules;
@@ -388,10 +244,10 @@ export const App: React.FC = () => {
         if (activeTab === 'stats') return t.tabStats;
         if (activeTab === 'preferences') return t.tabPreferences;
         if (activeTab === 'about') return t.tabAbout;
-        if (favoritesOnly) return t.favoritesTitle;
-        if (selectedGroup !== 'ALL') return selectedGroup;
+        if (stationManagement.favoritesOnly) return t.favoritesTitle;
+        if (stationManagement.selectedGroup !== 'ALL') return stationManagement.selectedGroup;
         return t.allStationsTitle;
-    }, [activeTab, favoritesOnly, selectedGroup, t]);
+    }, [activeTab, stationManagement.favoritesOnly, stationManagement.selectedGroup, t]);
 
     const handleRequestReset = (
         target: 'settings' | 'stations' | 'schedules' | 'stats' | 'all'
@@ -436,6 +292,24 @@ export const App: React.FC = () => {
         }
     }, [resetTarget, t]);
 
+    const handleConfirmReset = async () => {
+        setIsResetConfirmOpen(false);
+        if (resetTarget === 'stations') {
+            await api.clearStationsData();
+        } else if (resetTarget === 'schedules') {
+            await api.clearSchedulesData();
+        } else if (resetTarget === 'stats') {
+            await api.clearListeningStats();
+        } else if (resetTarget === 'all') {
+            await api.clearStationsData();
+            await api.clearSchedulesData();
+            await api.clearListeningStats();
+        } else {
+            await api.resetSettings();
+        }
+        await appCoreData.refreshAll();
+    };
+
     const handleBackupData = async () => {
         setBackupStatusMsg(null);
         const res = await api.backupAppData();
@@ -451,7 +325,7 @@ export const App: React.FC = () => {
         setBackupStatusMsg(null);
         const res = await api.restoreAppData();
         if (res.ok) {
-            await refreshAll();
+            await appCoreData.refreshAll();
             setBackupStatusMsg(t.prefRestoreSuccess);
             setTimeout(() => setBackupStatusMsg(null), 3500);
         } else if (res.error) {
@@ -477,7 +351,7 @@ export const App: React.FC = () => {
     if (isStandaloneAbout) {
         return (
             <StandaloneAboutView
-                appIconDataUrl={appIconDataUrl}
+                appIconDataUrl={appCoreData.appIconDataUrl}
                 api={api}
                 t={t}
                 onWindowDragMouseDown={handleWindowDragMouseDown}
@@ -491,18 +365,18 @@ export const App: React.FC = () => {
             <Sidebar
                 activeTab={activeTab}
                 navigateToTab={navigateToTab}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
+                searchQuery={stationManagement.searchQuery}
+                setSearchQuery={stationManagement.setSearchQuery}
                 searchInputRef={searchInputRef}
                 isMac={isMac}
                 handleWindowDragMouseDown={handleWindowDragMouseDown}
-                currentStation={currentStation}
-                playerState={playerState}
+                currentStation={appCoreData.currentStation}
+                playerState={appCoreData.playerState}
                 stateHeadline={stateHeadline}
-                streamTitle={streamTitle}
+                streamTitle={appCoreData.streamTitle}
                 isPlaying={isPlaying}
                 isBusy={isBusy}
-                settings={settings}
+                settings={appCoreData.settings}
                 setIsAboutModalOpen={setIsAboutModalOpen}
                 setIsQuitConfirmOpen={setIsQuitConfirmOpen}
                 api={api}
@@ -517,140 +391,47 @@ export const App: React.FC = () => {
                     goBack={goBack}
                     goForward={goForward}
                     currentHeadingTitle={currentHeadingTitle}
-                    updateInfo={updateInfo}
-                    setIsUpdateModalOpen={setIsUpdateModalOpen}
+                    updateInfo={appUpdates.updateInfo}
+                    setIsUpdateModalOpen={appUpdates.setIsUpdateModalOpen}
                     handleWindowDragMouseDown={handleWindowDragMouseDown}
                 />
 
                 <main className="flex-1 overflow-y-auto px-6 pt-1 pb-8 flex flex-col">
                     <SleepCountdownBanner
-                        sleepRemainingSec={sleepRemainingSec}
+                        sleepRemainingSec={appCoreData.sleepRemainingSec}
                         api={api}
                         t={t}
                     />
 
                     <TabContentHost
                         activeTab={activeTab}
-                        stationsProps={{
-                            stations,
-                            filteredStations,
-                            groups,
-                            selectedGroup,
-                            setSelectedGroup,
-                            favoritesOnly,
-                            setFavoritesOnly,
-                            favCount,
-                            hideOffline,
-                            setHideOffline,
-                            isCheckingHealth,
-                            handleRunHealthCheck,
-                            isAddingGroup,
-                            setIsAddingGroup,
-                            newGroupName,
-                            setNewGroupName,
-                            handleAddGroup,
-                            currentHeadingTitle,
-                            openAddStationModal,
-                            openEditStationModal,
-                            handleExportLoad,
-                            setIsImportExportOpen,
-                            setActiveTab,
-                            isPlayingStation,
-                            draggedStationId,
-                            setDraggedStationId,
-                            handleDropStation,
-                            api,
-                            refreshAll,
-                            t
-                        }}
-                        schedulesProps={{
-                            schedules,
-                            stations,
-                            currentStation,
-                            isPlaying,
-                            isBusy,
-                            lang,
-                            openAddScheduleModal,
-                            openEditScheduleModal,
-                            handleDeleteSchedule,
-                            handleToggleSchedule,
-                            handleToggleScheduleAutoPlay,
-                            isScheduleCurrentlyOnAir,
-                            api,
-                            t
-                        }}
-                        discoverProps={{
-                            discCountry,
-                            setDiscCountry,
-                            handleCountryChange,
-                            discCountries,
-                            discName,
-                            setDiscName,
-                            discTag,
-                            setDiscTag,
-                            isSearchingOnline,
-                            discError,
-                            discResults,
-                            stations,
-                            currentStation,
-                            isPlaying,
-                            isBusy,
-                            handleDiscoverSearch,
-                            handleAddFromDiscover,
-                            api,
-                            t
-                        }}
-                        statsSummary={statsSummary}
-                        statsProps={{
-                            statsSummary: statsSummary!,
-                            statsViewMode,
-                            setStatsViewMode,
-                            activeChartPoints,
-                            maxChartSeconds,
-                            stations,
-                            isPlayingStation,
-                            api,
-                            lang,
-                            t,
-                            setActiveTab
-                        }}
-                        settings={settings}
-                        preferencesProps={{
-                            settings: settings!,
-                            systemFonts,
-                            isLoadingFonts,
-                            lang,
-                            recordingShortcutKey: recordingShortcutKey as any,
-                            setRecordingShortcutKey: setRecordingShortcutKey as any,
-                            backupStatusMsg,
-                            handleRestoreData,
-                            handleBackupData,
-                            updateInfo,
-                            updateCheckError,
-                            isCheckingUpdate,
-                            updateDownloadProgress,
-                            handleCheckForUpdates,
-                            setIsUpdateModalOpen,
-                            setIsOnboardingOpen,
-                            notifTestSuccess,
-                            setNotifTestSuccess,
-                            dataDir,
-                            copiedDiag,
-                            setCopiedDiag,
-                            showDiagReport,
-                            setShowDiagReport,
-                            diagnosticsText,
-                            setDiagnosticsText,
-                            setIsResetConfirmOpen,
-                            onRequestReset: handleRequestReset,
-                            api,
-                            t
-                        }}
-                        aboutProps={{
-                            appIconDataUrl,
-                            api,
-                            t
-                        }}
+                        appCoreData={appCoreData}
+                        stationManagement={stationManagement}
+                        scheduleManagement={scheduleManagement}
+                        discoverStations={discoverStations}
+                        stationModal={stationModal}
+                        importExportModal={importExportModal}
+                        appUpdates={appUpdates}
+                        currentHeadingTitle={currentHeadingTitle}
+                        lang={lang}
+                        t={t}
+                        api={api}
+                        setActiveTab={setActiveTab}
+                        recordingShortcutKey={recordingShortcutKey}
+                        setRecordingShortcutKey={setRecordingShortcutKey}
+                        backupStatusMsg={backupStatusMsg}
+                        handleRestoreData={handleRestoreData}
+                        handleBackupData={handleBackupData}
+                        setIsUpdateModalOpen={appUpdates.setIsUpdateModalOpen}
+                        setIsOnboardingOpen={setIsOnboardingOpen}
+                        notifTestSuccess={notifTestSuccess}
+                        setNotifTestSuccess={setNotifTestSuccess}
+                        copiedDiag={copiedDiag}
+                        setCopiedDiag={setCopiedDiag}
+                        showDiagReport={showDiagReport}
+                        setShowDiagReport={setShowDiagReport}
+                        setIsResetConfirmOpen={setIsResetConfirmOpen}
+                        onRequestReset={handleRequestReset}
                     />
                 </main>
             </div>
@@ -660,82 +441,25 @@ export const App: React.FC = () => {
                 api={api}
                 t={t}
                 lang={lang}
-                appIconDataUrl={appIconDataUrl}
-                settings={settings}
-                stations={stations}
-                groups={groups}
-                refreshAll={refreshAll}
-                stationModalProps={{
-                    isOpen: isFormOpen,
-                    onClose: () => setIsFormOpen(false),
-                    onSave: handleSaveStation,
-                    editingStation,
-                    formName,
-                    setFormName,
-                    formUrl,
-                    setFormUrl,
-                    formGroup,
-                    setFormGroup,
-                    formGenre,
-                    setFormGenre,
-                    formCity,
-                    setFormCity,
-                    formType,
-                    setFormType,
-                    formLogo,
-                    setFormLogo,
-                    formTags,
-                    setFormTags,
-                    onTestStream: () => void handleTestStream(),
-                    isTestingStream,
-                    testResult
-                }}
-                importExportModalProps={{
-                    isOpen: isImportExportOpen,
-                    onClose: () => setIsImportExportOpen(false),
-                    onExportLoad: (format) => void handleExportLoad(format),
-                    ieFormat,
-                    ieDuplicateStrategy,
-                    setIeDuplicateStrategy,
-                    ieTextContent,
-                    setIeTextContent,
-                    ieStatusMessage,
-                    onCopyExport: () => {
-                        void navigator.clipboard.writeText(ieTextContent);
-                        setIeStatusMessage(t.copiedDiagBtn);
-                    },
-                    onImportExecute: () => void handleImportExecute()
-                }}
-                resetModalProps={{
+                appCoreData={appCoreData}
+                stationModal={stationModal}
+                importExportModal={importExportModal}
+                scheduleManagement={scheduleManagement}
+                appUpdates={appUpdates}
+                resetModal={{
                     isOpen: isResetConfirmOpen,
                     onClose: () => setIsResetConfirmOpen(false),
-                    onConfirm: async () => {
-                        setIsResetConfirmOpen(false);
-                        if (resetTarget === 'stations') {
-                            await api.clearStationsData();
-                        } else if (resetTarget === 'schedules') {
-                            await api.clearSchedulesData();
-                        } else if (resetTarget === 'stats') {
-                            await api.clearListeningStats();
-                        } else if (resetTarget === 'all') {
-                            await api.clearStationsData();
-                            await api.clearSchedulesData();
-                            await api.clearListeningStats();
-                        } else {
-                            await api.resetSettings();
-                        }
-                        await refreshAll();
-                    },
+                    onConfirm: handleConfirmReset,
                     title: resetModalMeta.title,
                     description: resetModalMeta.description,
                     confirmBtnText: resetModalMeta.confirmBtn
                 }}
-                quitModalProps={{
+                quitModal={{
                     isOpen: isQuitConfirmOpen,
                     onClose: () => setIsQuitConfirmOpen(false),
                     onConfirm: () => void api.quitApp()
                 }}
-                aboutModalProps={{
+                aboutModal={{
                     isOpen: isAboutModalOpen,
                     onClose: () => {
                         setIsAboutModalOpen(false);
@@ -747,47 +471,9 @@ export const App: React.FC = () => {
                         }
                     }
                 }}
-                scheduleModalProps={{
-                    isOpen: isScheduleModalOpen,
-                    onClose: () => setIsScheduleModalOpen(false),
-                    onSave: handleSaveSchedule,
-                    editingSchedule,
-                    schedStationId,
-                    setSchedStationId,
-                    schedShowName,
-                    setSchedShowName,
-                    schedHost,
-                    setSchedHost,
-                    schedDays,
-                    setSchedDays,
-                    schedStartTime,
-                    setSchedStartTime,
-                    schedEndTime,
-                    setSchedEndTime,
-                    schedAutoPlay,
-                    setSchedAutoPlay,
-                    schedReminderMinutes,
-                    setSchedReminderMinutes,
-                    schedNotes,
-                    setSchedNotes
-                }}
-                onboardingModalProps={{
+                onboardingModal={{
                     isOpen: isOnboardingOpen,
                     onClose: () => setIsOnboardingOpen(false)
-                }}
-                updateModalProps={{
-                    isOpen: isUpdateModalOpen,
-                    onOpen: () => setIsUpdateModalOpen(true),
-                    onClose: () => setIsUpdateModalOpen(false),
-                    updateInfo,
-                    isCheckingUpdate,
-                    updateCheckError,
-                    updateDownloadProgress,
-                    onCheckAgain: () => void handleCheckForUpdates(true),
-                    onStartDownload: handleStartDownloadUpdate,
-                    onCancelDownload: handleCancelDownloadUpdate,
-                    onInstallUpdate: handleInstallUpdate,
-                    onRevealInFinder: handleRevealUpdateInFinder
                 }}
             />
         </div>

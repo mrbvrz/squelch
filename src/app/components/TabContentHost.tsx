@@ -1,53 +1,259 @@
 import React from 'react';
-import type {
-    AppSettings,
-    ListeningStatsSummary
-} from '../../types';
-import type { ActiveTab } from '../types';
+import type { TranslationDictionary } from '../../i18n';
+import type { ActiveTab, SquelchWindowApi } from '../types';
 
-import { StationsTab, type StationsTabProps } from '../tabs/StationsTab';
-import { SchedulesTab, type SchedulesTabProps } from '../tabs/SchedulesTab';
-import { DiscoverTab, type DiscoverTabProps } from '../tabs/DiscoverTab';
-import { StatsTab, type StatsTabProps } from '../tabs/StatsTab';
-import { PreferencesTab, type PreferencesTabProps } from '../tabs/PreferencesTab';
-import { AboutTab, type AboutTabProps } from '../tabs/AboutTab';
+import { StationsTab } from '../tabs/StationsTab';
+import { SchedulesTab } from '../tabs/SchedulesTab';
+import { DiscoverTab } from '../tabs/DiscoverTab';
+import { StatsTab } from '../tabs/StatsTab';
+import { PreferencesTab } from '../tabs/PreferencesTab';
+import { AboutTab } from '../tabs/AboutTab';
+
+import type { useAppCoreData } from '../hooks/useAppCoreData';
+import type { useStationManagement } from '../hooks/useStationManagement';
+import type { useScheduleManagement } from '../hooks/useScheduleManagement';
+import type { useDiscoverStations } from '../hooks/useDiscoverStations';
+import type { useStationModal } from '../hooks/useStationModal';
+import type { useImportExportModal } from '../hooks/useImportExportModal';
+import type { useAppUpdates } from '../hooks/useAppUpdates';
+import { isScheduleCurrentlyOnAir } from '../hooks/useScheduleManagement';
 
 export interface TabContentHostProps {
     activeTab: ActiveTab;
-    stationsProps: StationsTabProps;
-    schedulesProps: SchedulesTabProps;
-    discoverProps: DiscoverTabProps;
-    statsSummary: ListeningStatsSummary | null;
-    statsProps: StatsTabProps;
-    settings: AppSettings | null;
-    preferencesProps: PreferencesTabProps;
-    aboutProps: AboutTabProps;
+    appCoreData: ReturnType<typeof useAppCoreData>;
+    stationManagement: ReturnType<typeof useStationManagement>;
+    scheduleManagement: ReturnType<typeof useScheduleManagement>;
+    discoverStations: ReturnType<typeof useDiscoverStations>;
+    stationModal: ReturnType<typeof useStationModal>;
+    importExportModal: ReturnType<typeof useImportExportModal>;
+    appUpdates: ReturnType<typeof useAppUpdates>;
+    currentHeadingTitle: string;
+    lang: 'id' | 'en';
+    t: TranslationDictionary;
+    api: SquelchWindowApi;
+    setActiveTab: (tab: ActiveTab) => void;
+
+    // Preferences Tab Specific Handlers
+    recordingShortcutKey: string | null;
+    setRecordingShortcutKey: (key: any) => void;
+    backupStatusMsg: string | null;
+    handleRestoreData: () => Promise<void>;
+    handleBackupData: () => Promise<void>;
+    setIsUpdateModalOpen: (open: boolean) => void;
+    setIsOnboardingOpen: (open: boolean) => void;
+    notifTestSuccess: boolean;
+    setNotifTestSuccess: React.Dispatch<React.SetStateAction<boolean>>;
+    copiedDiag: boolean;
+    setCopiedDiag: React.Dispatch<React.SetStateAction<boolean>>;
+    showDiagReport: boolean;
+    setShowDiagReport: React.Dispatch<React.SetStateAction<boolean>>;
+    setIsResetConfirmOpen: (open: boolean) => void;
+    onRequestReset: (
+        target: 'settings' | 'stations' | 'schedules' | 'stats' | 'all'
+    ) => void;
 }
 
 export const TabContentHost: React.FC<TabContentHostProps> = ({
     activeTab,
-    stationsProps,
-    schedulesProps,
-    discoverProps,
-    statsSummary,
-    statsProps,
-    settings,
-    preferencesProps,
-    aboutProps
+    appCoreData,
+    stationManagement,
+    scheduleManagement,
+    discoverStations,
+    stationModal,
+    importExportModal,
+    appUpdates,
+    currentHeadingTitle,
+    lang,
+    t,
+    api,
+    setActiveTab,
+    recordingShortcutKey,
+    setRecordingShortcutKey,
+    backupStatusMsg,
+    handleRestoreData,
+    handleBackupData,
+    setIsUpdateModalOpen,
+    setIsOnboardingOpen,
+    notifTestSuccess,
+    setNotifTestSuccess,
+    copiedDiag,
+    setCopiedDiag,
+    showDiagReport,
+    setShowDiagReport,
+    setIsResetConfirmOpen,
+    onRequestReset
 }) => {
+    const isPlaying = appCoreData.playerState === 'playing';
+    const isBusy =
+        appCoreData.playerState === 'connecting' ||
+        appCoreData.playerState === 'buffering' ||
+        appCoreData.playerState === 'reconnecting';
+
     switch (activeTab) {
         case 'stations':
-            return <StationsTab {...stationsProps} />;
+            return (
+                <StationsTab
+                    stations={appCoreData.stations}
+                    filteredStations={stationManagement.filteredStations}
+                    groups={appCoreData.groups}
+                    selectedGroup={stationManagement.selectedGroup}
+                    setSelectedGroup={stationManagement.setSelectedGroup}
+                    favoritesOnly={stationManagement.favoritesOnly}
+                    setFavoritesOnly={stationManagement.setFavoritesOnly}
+                    favCount={stationManagement.favCount}
+                    hideOffline={stationManagement.hideOffline}
+                    setHideOffline={stationManagement.setHideOffline}
+                    isCheckingHealth={stationManagement.isCheckingHealth}
+                    handleRunHealthCheck={
+                        stationManagement.handleRunHealthCheck
+                    }
+                    isAddingGroup={stationManagement.isAddingGroup}
+                    setIsAddingGroup={stationManagement.setIsAddingGroup}
+                    newGroupName={stationManagement.newGroupName}
+                    setNewGroupName={stationManagement.setNewGroupName}
+                    handleAddGroup={stationManagement.handleAddGroup}
+                    currentHeadingTitle={currentHeadingTitle}
+                    openAddStationModal={stationModal.openAddStationModal}
+                    openEditStationModal={stationModal.openEditStationModal}
+                    handleExportLoad={importExportModal.handleExportLoad}
+                    setIsImportExportOpen={
+                        importExportModal.setIsImportExportOpen
+                    }
+                    setActiveTab={setActiveTab}
+                    isPlayingStation={stationManagement.isPlayingStation}
+                    draggedStationId={stationManagement.draggedStationId}
+                    setDraggedStationId={
+                        stationManagement.setDraggedStationId
+                    }
+                    handleDropStation={stationManagement.handleDropStation}
+                    api={api}
+                    refreshAll={appCoreData.refreshAll}
+                    t={t}
+                />
+            );
+
         case 'schedules':
-            return <SchedulesTab {...schedulesProps} />;
+            return (
+                <SchedulesTab
+                    schedules={scheduleManagement.schedules}
+                    stations={appCoreData.stations}
+                    currentStation={appCoreData.currentStation}
+                    isPlaying={isPlaying}
+                    isBusy={isBusy}
+                    lang={lang}
+                    openAddScheduleModal={
+                        scheduleManagement.openAddScheduleModal
+                    }
+                    openEditScheduleModal={
+                        scheduleManagement.openEditScheduleModal
+                    }
+                    handleDeleteSchedule={
+                        scheduleManagement.handleDeleteSchedule
+                    }
+                    handleToggleSchedule={
+                        scheduleManagement.handleToggleSchedule
+                    }
+                    handleToggleScheduleAutoPlay={
+                        scheduleManagement.handleToggleScheduleAutoPlay
+                    }
+                    isScheduleCurrentlyOnAir={isScheduleCurrentlyOnAir}
+                    api={api}
+                    t={t}
+                />
+            );
+
         case 'discover':
-            return <DiscoverTab {...discoverProps} />;
+            return (
+                <DiscoverTab
+                    discCountry={discoverStations.discCountry}
+                    setDiscCountry={discoverStations.setDiscCountry}
+                    handleCountryChange={discoverStations.handleCountryChange}
+                    discCountries={discoverStations.discCountries}
+                    discName={discoverStations.discName}
+                    setDiscName={discoverStations.setDiscName}
+                    discTag={discoverStations.discTag}
+                    setDiscTag={discoverStations.setDiscTag}
+                    isSearchingOnline={discoverStations.isSearchingOnline}
+                    discError={discoverStations.discError}
+                    discResults={discoverStations.discResults}
+                    stations={appCoreData.stations}
+                    currentStation={appCoreData.currentStation}
+                    isPlaying={isPlaying}
+                    isBusy={isBusy}
+                    handleDiscoverSearch={
+                        discoverStations.handleDiscoverSearch
+                    }
+                    handleAddFromDiscover={
+                        discoverStations.handleAddFromDiscover
+                    }
+                    api={api}
+                    t={t}
+                />
+            );
+
         case 'stats':
-            return statsSummary ? <StatsTab {...statsProps} /> : null;
+            if (!appCoreData.statsSummary) return null;
+            return (
+                <StatsTab
+                    statsSummary={appCoreData.statsSummary}
+                    statsViewMode={appCoreData.statsViewMode}
+                    setStatsViewMode={appCoreData.setStatsViewMode}
+                    activeChartPoints={appCoreData.activeChartPoints}
+                    maxChartSeconds={appCoreData.maxChartSeconds}
+                    stations={appCoreData.stations}
+                    isPlayingStation={stationManagement.isPlayingStation}
+                    api={api}
+                    lang={lang}
+                    t={t}
+                    setActiveTab={setActiveTab}
+                />
+            );
+
         case 'preferences':
-            return settings ? <PreferencesTab {...preferencesProps} /> : null;
+            if (!appCoreData.settings) return null;
+            return (
+                <PreferencesTab
+                    settings={appCoreData.settings}
+                    systemFonts={appCoreData.systemFonts}
+                    isLoadingFonts={appCoreData.isLoadingFonts}
+                    lang={lang}
+                    recordingShortcutKey={recordingShortcutKey as any}
+                    setRecordingShortcutKey={setRecordingShortcutKey as any}
+                    backupStatusMsg={backupStatusMsg}
+                    handleRestoreData={handleRestoreData}
+                    handleBackupData={handleBackupData}
+                    updateInfo={appUpdates.updateInfo}
+                    updateCheckError={appUpdates.updateCheckError}
+                    isCheckingUpdate={appUpdates.isCheckingUpdate}
+                    updateDownloadProgress={appUpdates.updateDownloadProgress}
+                    handleCheckForUpdates={appUpdates.handleCheckForUpdates}
+                    setIsUpdateModalOpen={setIsUpdateModalOpen}
+                    setIsOnboardingOpen={setIsOnboardingOpen}
+                    notifTestSuccess={notifTestSuccess}
+                    setNotifTestSuccess={setNotifTestSuccess}
+                    dataDir={appCoreData.dataDir}
+                    copiedDiag={copiedDiag}
+                    setCopiedDiag={setCopiedDiag}
+                    showDiagReport={showDiagReport}
+                    setShowDiagReport={setShowDiagReport}
+                    diagnosticsText={appCoreData.diagnosticsText}
+                    setDiagnosticsText={appCoreData.setDiagnosticsText}
+                    setIsResetConfirmOpen={setIsResetConfirmOpen}
+                    onRequestReset={onRequestReset}
+                    api={api}
+                    t={t}
+                />
+            );
+
         case 'about':
-            return <AboutTab {...aboutProps} />;
+            return (
+                <AboutTab
+                    appIconDataUrl={appCoreData.appIconDataUrl}
+                    api={api}
+                    t={t}
+                />
+            );
+
         default:
             return null;
     }

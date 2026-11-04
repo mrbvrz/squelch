@@ -83,7 +83,7 @@ async fn handle_proxy(
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.parse::<usize>().ok());
 
-    let (tx, rx) = mpsc::channel::<Result<Bytes, std::io::Error>>(32);
+    let (tx, rx) = mpsc::channel::<Result<Bytes, std::io::Error>>(256);
     let app_handle = state.app_handle.clone();
 
     tokio::spawn(async move {
@@ -176,7 +176,11 @@ async fn handle_proxy(
     );
     headers.insert(
         header::CACHE_CONTROL,
-        HeaderValue::from_static("no-cache, no-store"),
+        HeaderValue::from_static("no-cache, no-store, must-revalidate"),
+    );
+    headers.insert(
+        header::ACCEPT_RANGES,
+        HeaderValue::from_static("none"),
     );
 
     let body = axum::body::Body::from_stream(ReceiverStream::new(rx));
@@ -186,6 +190,7 @@ async fn handle_proxy(
 pub async fn start_proxy_server(app_handle: AppHandle) -> u16 {
     let client = reqwest::Client::builder()
         .redirect(reqwest::redirect::Policy::limited(5))
+        .tcp_nodelay(true)
         .build()
         .unwrap_or_default();
 

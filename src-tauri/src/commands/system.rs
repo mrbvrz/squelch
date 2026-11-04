@@ -273,7 +273,12 @@ pub fn toggle_tray_popover(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn quit_app(app: AppHandle) {
+pub async fn quit_app(app: AppHandle) {
+    let _ = app.emit(
+        "squelch:audio:command",
+        serde_json::json!({ "type": "teardown" }),
+    );
+    tokio::time::sleep(std::time::Duration::from_millis(60)).await;
     app.exit(0);
 }
 

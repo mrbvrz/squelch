@@ -230,7 +230,15 @@ fn handle_menu_action(app: &tauri::AppHandle, id: &str) {
                 .and_then(|v| v.as_bool())
                 .unwrap_or(true);
             if !confirm_quit {
-                app.exit(0);
+                let app_handle = app.clone();
+                tauri::async_runtime::spawn(async move {
+                    let _ = app_handle.emit(
+                        "squelch:audio:command",
+                        serde_json::json!({ "type": "teardown" }),
+                    );
+                    tokio::time::sleep(std::time::Duration::from_millis(60)).await;
+                    app_handle.exit(0);
+                });
             } else {
                 let main_visible = app
                     .get_webview_window("main")

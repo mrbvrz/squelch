@@ -12,20 +12,20 @@ export interface EqualizerPayload {
     normalization?: boolean;
 }
 
+export interface AudioCommand {
+    type: 'play' | 'pause' | 'stop' | 'metadata' | 'teardown';
+    url?: string;
+    isHls?: boolean;
+    stationName?: string;
+    streamTitle?: string | null;
+    logoUrl?: string | null;
+    bufferLengthSeconds?: number;
+    equalizer?: EqualizerPayload;
+    isReconnect?: boolean;
+}
+
 interface SquelchAudioBridge {
-    onCommand: (
-        callback: (cmd: {
-            type: 'play' | 'pause' | 'stop' | 'metadata';
-            url?: string;
-            isHls?: boolean;
-            stationName?: string;
-            streamTitle?: string | null;
-            logoUrl?: string | null;
-            bufferLengthSeconds?: number;
-            equalizer?: EqualizerPayload;
-            isReconnect?: boolean;
-        }) => void
-    ) => void;
+    onCommand: (callback: (cmd: AudioCommand) => void) => void;
     notifyPlaying: () => void;
     notifyBuffering: () => void;
     notifyReconnecting: (attempt: number, maxAttempts: number) => void;
@@ -49,7 +49,10 @@ class AudioEqualizerEngine {
     private source: MediaElementAudioSourceNode | null = null;
     private filters: BiquadFilterNode[] = [];
     private compressor: DynamicsCompressorNode | null = null;
-    private isInitialized = false;
+    private dryGain: GainNode | null = null;
+    private wetGain: GainNode | null = null;
+    private masterGain: GainNode | null = null;
+    public isInitialized = false;
     private initialSinkId: string | null = null;
 
     setPendingSinkId(sinkId: string) {
@@ -57,6 +60,10 @@ class AudioEqualizerEngine {
         if (this.ctx && typeof (this.ctx as any).setSinkId === 'function') {
             void (this.ctx as any).setSinkId(sinkId).catch(() => {});
         }
+    }
+
+    isReady(): boolean {
+        return Boolean(this.isInitialized && this.ctx && this.masterGain);
     }
 
     init(audioEl: HTMLAudioElement) {
@@ -71,8 +78,20 @@ class AudioEqualizerEngine {
                 ).webkitAudioContext;
             if (!AudioContextClass) return;
 
-            this.ctx = new AudioContextClass();
+            this.ctx = new AudioContextClass({ latencyHint: 'interactive' });
             this.source = this.ctx.createMediaElementSource(audioEl);
+
+            // Master gain node for pop/click prevention and click-free fade
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+
+            // Dry path (bypasses all filters & compressor when EQ is disabled for pure bit-perfect sound)
+            this.dryGain = this.ctx.createGain();
+            this.dryGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+
+            // Wet path (runs through 8 EQ bands and normalizer when EQ is enabled)
+            this.wetGain = this.ctx.createGain();
+            this.wetGain.gain.setValueAtTime(0.0, this.ctx.currentTime);
 
             // 8 Bands: 32Hz, 64Hz, 125Hz, 250Hz, 500Hz, 1kHz, 4kHz, 16kHz
             const specs: Array<{
@@ -99,24 +118,34 @@ class AudioEqualizerEngine {
                 return node;
             });
 
-            // Dynamics compressor acting as soft limiter / volume normalizer
+            // Smooth transparent dynamics compressor / normalizer
+            // 20ms attack avoids destructive clipping of low frequencies (e.g. 50-100Hz bass waves)
             this.compressor = this.ctx.createDynamicsCompressor();
             this.compressor.threshold.setValueAtTime(
-                -1.5,
+                -4.0,
                 this.ctx.currentTime
             );
-            this.compressor.knee.setValueAtTime(12, this.ctx.currentTime);
-            this.compressor.ratio.setValueAtTime(4, this.ctx.currentTime);
-            this.compressor.attack.setValueAtTime(0.003, this.ctx.currentTime);
+            this.compressor.knee.setValueAtTime(20.0, this.ctx.currentTime);
+            this.compressor.ratio.setValueAtTime(3.0, this.ctx.currentTime);
+            this.compressor.attack.setValueAtTime(0.02, this.ctx.currentTime);
             this.compressor.release.setValueAtTime(0.25, this.ctx.currentTime);
 
+            // Connect Dry Path: source -> dryGain -> masterGain -> destination
+            this.source.connect(this.dryGain);
+            this.dryGain.connect(this.masterGain);
+
+            // Connect Wet Path: source -> filters[0..7] -> compressor -> wetGain -> masterGain -> destination
             let previousNode: AudioNode = this.source;
             for (const filter of this.filters) {
                 previousNode.connect(filter);
                 previousNode = filter;
             }
             previousNode.connect(this.compressor);
-            this.compressor.connect(this.ctx.destination);
+            this.compressor.connect(this.wetGain);
+            this.wetGain.connect(this.masterGain);
+
+            // Connect Master to destination
+            this.masterGain.connect(this.ctx.destination);
 
             if (
                 this.initialSinkId &&
@@ -125,6 +154,12 @@ class AudioEqualizerEngine {
                 void (this.ctx as any)
                     .setSinkId(this.initialSinkId)
                     .catch(() => {});
+            }
+
+            // Keep context suspended until playback is actively requested!
+            // An active running AudioContext on macOS background webview causes CoreAudio buffer underruns.
+            if (this.ctx.state === 'running') {
+                void this.ctx.suspend();
             }
 
             this.isInitialized = true;
@@ -142,22 +177,109 @@ class AudioEqualizerEngine {
         }
     }
 
-    apply(config?: EqualizerPayload | null) {
-        if (!config || !this.ctx || this.filters.length !== 8) return;
-        const now = this.ctx.currentTime;
-        const isEnabled = Boolean(config.enabled);
-
-        for (let i = 0; i < 8; i++) {
-            const rawVal = config.bands?.[i] ?? 0;
-            const clamped = Math.max(-12, Math.min(12, rawVal));
-            const targetGain = isEnabled ? clamped : 0;
-            this.filters[i].gain.setTargetAtTime(targetGain, now, 0.04);
+    async suspend() {
+        if (this.ctx && this.ctx.state === 'running') {
+            try {
+                await this.ctx.suspend();
+            } catch {
+                // Ignore suspend errors
+            }
         }
+    }
 
-        if (this.compressor) {
-            const useNormalization = config.normalization !== false;
-            const targetRatio = isEnabled && useNormalization ? 4 : 1;
-            this.compressor.ratio.setTargetAtTime(targetRatio, now, 0.04);
+    async close() {
+        if (this.ctx && this.ctx.state !== 'closed') {
+            try {
+                await this.ctx.close();
+            } catch {
+                // Ignore close errors
+            }
+            this.ctx = null;
+            this.isInitialized = false;
+        }
+    }
+
+    async fadeToZero(durationMs = 30): Promise<void> {
+        if (!this.ctx || !this.masterGain || this.ctx.state !== 'running')
+            return;
+        try {
+            const now = this.ctx.currentTime;
+            this.masterGain.gain.cancelScheduledValues(now);
+            this.masterGain.gain.setValueAtTime(
+                this.masterGain.gain.value,
+                now
+            );
+            this.masterGain.gain.linearRampToValueAtTime(
+                0,
+                now + durationMs / 1000
+            );
+            await new Promise((r) => setTimeout(r, durationMs + 5));
+        } catch {
+            // Ignore ramp errors
+        }
+    }
+
+    fadeIn(durationMs = 30): void {
+        if (!this.ctx || !this.masterGain) return;
+        try {
+            const now = this.ctx.currentTime;
+            this.masterGain.gain.cancelScheduledValues(now);
+            this.masterGain.gain.setValueAtTime(0, now);
+            this.masterGain.gain.linearRampToValueAtTime(
+                1.0,
+                now + durationMs / 1000
+            );
+        } catch {
+            // Ignore ramp errors
+        }
+    }
+
+    apply(config?: EqualizerPayload | null) {
+        if (
+            !this.ctx ||
+            !this.dryGain ||
+            !this.wetGain ||
+            this.filters.length !== 8
+        )
+            return;
+        const now = this.ctx.currentTime;
+        const isEnabled = Boolean(config?.enabled);
+
+        if (isEnabled) {
+            // Crossfade: dry -> 0, wet -> 1
+            this.dryGain.gain.setTargetAtTime(0, now, 0.02);
+            this.wetGain.gain.setTargetAtTime(1.0, now, 0.02);
+
+            for (let i = 0; i < 8; i++) {
+                const rawVal = config?.bands?.[i] ?? 0;
+                const clamped = Math.max(-12, Math.min(12, rawVal));
+                this.filters[i].gain.setTargetAtTime(clamped, now, 0.04);
+            }
+
+            if (this.compressor) {
+                const useNormalization = config?.normalization !== false;
+                const targetRatio = useNormalization ? 3.0 : 1.0;
+                const targetThreshold = useNormalization ? -4.0 : 0.0;
+                this.compressor.ratio.setTargetAtTime(targetRatio, now, 0.04);
+                this.compressor.threshold.setTargetAtTime(
+                    targetThreshold,
+                    now,
+                    0.04
+                );
+            }
+        } else {
+            // Bypass mode: pure direct dry audio
+            this.dryGain.gain.setTargetAtTime(1.0, now, 0.02);
+            this.wetGain.gain.setTargetAtTime(0, now, 0.02);
+
+            for (let i = 0; i < 8; i++) {
+                this.filters[i].gain.setTargetAtTime(0, now, 0.04);
+            }
+
+            if (this.compressor) {
+                this.compressor.ratio.setTargetAtTime(1.0, now, 0.04);
+                this.compressor.threshold.setTargetAtTime(0.0, now, 0.04);
+            }
         }
     }
 }
@@ -203,9 +325,14 @@ class AudioEqualizerEngine {
     // Real-time listener for EQ updates from UI
     listen<EqualizerPayload>('squelch:audio:eq', (event) => {
         currentEqualizerConfig = event.payload;
-        eqEngine.init(audioEl);
-        eqEngine.resume();
-        eqEngine.apply(currentEqualizerConfig);
+        if (!audioEl.paused && currentPlayCmd) {
+            eqEngine.init(audioEl);
+            eqEngine.resume();
+            eqEngine.apply(currentEqualizerConfig);
+        } else if (eqEngine.isInitialized) {
+            // Player is idle/paused: Apply parameters safely without waking up CoreAudio hardware thread
+            eqEngine.apply(currentEqualizerConfig);
+        }
     }).catch(() => {});
 
     // Real-time listener for Buffer length updates from UI
@@ -371,17 +498,7 @@ class AudioEqualizerEngine {
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let reconnectAttempts = 0;
     let isHandlingIssue = false;
-    let currentPlayCmd: {
-        type: 'play' | 'pause' | 'stop' | 'metadata';
-        url?: string;
-        isHls?: boolean;
-        stationName?: string;
-        streamTitle?: string | null;
-        logoUrl?: string | null;
-        bufferLengthSeconds?: number;
-        equalizer?: EqualizerPayload;
-        isReconnect?: boolean;
-    } | null = null;
+    let currentPlayCmd: AudioCommand | null = null;
 
     const clearStallTimer = () => {
         if (stallTimer) {
@@ -431,10 +548,12 @@ class AudioEqualizerEngine {
         reconnectAttempts = 0;
         currentPlayCmd = null;
 
+        await eqEngine.fadeToZero(30);
         destroyHls();
         audioEl.pause();
         audioEl.removeAttribute('src');
         audioEl.load();
+        await eqEngine.suspend();
         if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'none';
         }
@@ -540,6 +659,7 @@ class AudioEqualizerEngine {
         if (currentEqualizerConfig) {
             eqEngine.apply(currentEqualizerConfig);
         }
+        eqEngine.fadeIn(30);
 
         updateMediaSession({
             stationName: cmd.stationName,
@@ -684,10 +804,16 @@ class AudioEqualizerEngine {
                 isHandlingIssue = false;
                 reconnectAttempts = 0;
                 currentPlayCmd = null;
+
+                // Smoothly fade to 0dB in 30ms to avoid any sharp transient pop/crack
+                await eqEngine.fadeToZero(30);
                 destroyHls();
                 audioEl.pause();
                 audioEl.removeAttribute('src');
                 audioEl.load();
+                // Suspend context to immediately free macOS CoreAudio output unit and prevent buffer underrun crackles
+                await eqEngine.suspend();
+
                 if ('mediaSession' in navigator) {
                     navigator.mediaSession.playbackState = 'paused';
                 }
@@ -699,10 +825,35 @@ class AudioEqualizerEngine {
                 isHandlingIssue = false;
                 reconnectAttempts = 0;
                 currentPlayCmd = null;
+
+                // Smoothly fade to 0dB in 30ms to avoid any sharp transient pop/crack
+                await eqEngine.fadeToZero(30);
                 destroyHls();
                 audioEl.pause();
                 audioEl.removeAttribute('src');
                 audioEl.load();
+                // Suspend context to immediately free macOS CoreAudio output unit and prevent buffer underrun crackles
+                await eqEngine.suspend();
+
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.playbackState = 'none';
+                }
+                break;
+            }
+            case 'teardown': {
+                clearStallTimer();
+                clearReconnectTimer();
+                isHandlingIssue = false;
+                reconnectAttempts = 0;
+                currentPlayCmd = null;
+
+                // On app quit, perform gentle 40ms ramp-down then close AudioContext cleanly
+                await eqEngine.fadeToZero(40);
+                destroyHls();
+                audioEl.pause();
+                audioEl.removeAttribute('src');
+                await eqEngine.close();
+
                 if ('mediaSession' in navigator) {
                     navigator.mediaSession.playbackState = 'none';
                 }
@@ -716,6 +867,18 @@ class AudioEqualizerEngine {
                 });
                 break;
             }
+        }
+    });
+
+    window.addEventListener('beforeunload', () => {
+        try {
+            audioEl.pause();
+            audioEl.removeAttribute('src');
+            if (eqEngine.isInitialized) {
+                void eqEngine.close();
+            }
+        } catch {
+            // Ignore unload errors
         }
     });
 })();

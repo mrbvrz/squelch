@@ -809,8 +809,14 @@ export function initTauriBridge() {
             },
 
             quitApp: async () => {
+                try {
+                    await emit('squelch:audio:command', { type: 'teardown' });
+                } catch {
+                    // Ignore teardown emit error
+                }
                 recordListeningTick();
                 await flushStatsToDisk();
+                await new Promise((resolve) => setTimeout(resolve, 60));
                 await invoke('quit_app');
             },
 

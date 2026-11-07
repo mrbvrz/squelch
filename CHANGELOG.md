@@ -7,13 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.3] - Unreleased
+## [0.1.3] - 2026-11-07
 
-### Added
+### Cukup Theme Suite, macOS Glass Transparency, Persistent Tray Deck & Native Audio Polish
 
-- Seamless in-app background download for updates (`start_download_update`, `cancel_update_download`, `open_update_installer`, `reveal_update_in_finder`).
-- Live progress indicator with download percentage and bytes streamed directly inside the application.
-- Background progress pill when update modal is dismissed while radio playback continues seamlessly.
+#### 🎨 Appearance & Themes
+- **Cukup Theme Suite Integration**:
+    - Integrated four handcrafted color palettes created by Hasan Suryaman: **Cukup Senja**, **Cukup Malam**, **Cukup Kopi**, and **Cukup Terang**.
+    - Custom high-contrast accent swatches: Terakota (`#E89058`), Madu Amber (`#E6A854`), and Kesemek (`#E87D4B`).
+    - Dedicated **ThemePreviewCard** component rendering realistic simulated preview canvases with custom accent indicator bars.
+- **Adjustable macOS Glass Transparency**:
+    - Added backdrop blur glass slider (`--glass-alpha`, 40% – 100%) providing customizable macOS vibrancy.
+    - Full localization support for theme names, descriptions, and opacity labels in Indonesian (`id`) and English (`en`).
+    - Added unit test coverage for theme variable application and dynamic CSS variable injection.
+
+#### 🎛️ Tray Popover & Menu Bar
+- **Persistent Volume Slider & Mute Controls**:
+    - Embedded an interactive volume slider directly into the tray popover deck with drag scaling and mute toggle.
+    - Retained volume state across launches and synced levels seamlessly with the main player deck.
+- **Dynamic Menu Bar Tooltip & Subtitle**:
+    - Live tooltip and secondary menu subtitle displaying real-time ICY station metadata and current track information.
+    - Animated audio waveform icon in the menu bar during active playback.
+- **Standalone Dialogs**:
+    - Native floating modals for "About" and "Quit Confirmation" directly accessible from the tray menu without opening the main window.
+    - Improved popover toggle state machine to eliminate window positioning flicker.
+
+#### 🔊 Audio Engine & Device Routing
+- **CoreAudio Output Selector**:
+    - Added macOS audio output device enumeration and dynamic routing directly from Preferences.
+- **Buffer & Quality Enhancements**:
+    - Resolved CoreAudio buffer crackles, audio distortion, and abrupt pop noise upon quitting.
+    - Detached media and clamped HLS buffer sizes on stop to eliminate memory leaks and background interference.
+    - Dynamic on-demand loading of `hls.js` for m3u8 streams, accelerating initial load time.
+
+#### 📻 Station Management & Health Verification
+- **Stream Health Verification Toast**:
+    - Non-blocking asynchronous health checker verifying station URLs in the background with progress bar and failure summary.
+- **WhatsApp-Style Category Tabs**:
+    - Single-row horizontal scrollable category tabs with inline popover category creator.
+    - Aligned icon-only toolbar with clean import/export action buttons.
+
+#### 🔍 Public Directory & Discovery
+- Added bitrate filtering (All, 64k, 128k, 192k, 320k) and sorting options (Top Voted, Popular, Trending) in Radio Browser search.
+- Polished empty and loading states with inline retry handlers.
+
+#### ⚙️ Preferences & macOS System Integrations
+- **Agent Mode**: Added "Hide from Dock" toggle utilizing native `NSApplicationActivationPolicy` for a distraction-free menu-bar-only experience.
+- **Deep Drag Header**: Enabled native window dragging across the entire header bar with `core:window:allow-start-dragging`.
+- **Granular Reset**: Factory reset defaults with selective data purging (stations, schedules, analytics, or all storage).
+- **Diagnostics**: One-click system diagnostics copy button for instant troubleshooting reports.
+
+#### ⚡ Architecture & Performance
+- Split monolithic backend `commands.rs` into modular Rust domain handlers (`audio`, `radio_browser`, `backup_restore`, `updater`, `sleep_timer`).
+- Refactored frontend with domain hooks (`useAppCoreData`, `useStationManagement`, `useDiscoverStations`, `useTrayStateMachine`) and modular hosts (`TabContentHost`, `AppModalsHost`).
+- Lazy loaded heavy analytics libraries (`Recharts`) and stats views.
+- Replaced polling layout loops with event-driven tray status updates.
+
+#### 📦 Packaging & CI/CD
+- Retina-ready installer DMG background (`1320x800`).
+- Hardened DMG builder script (`scripts/build-dmg.sh`) with `hdiutil makehybrid` and `UDZO` compression for 100% reliable builds in both local and headless environments.
+- Automated distribution packaging with `SHA256SUMS.txt` and standalone ZIP archive.
+
+#### 📄 Governance & Community
+- Added `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `SECURITY.md`, and `ACCESSIBILITY.md`.
+- Added GitHub Issue and Pull Request templates.
+- Added `FUNDING.yml` sponsorship links.
 
 ---
 

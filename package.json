@@ -20,7 +20,7 @@
         "generate:dmg-bg": "tsx scripts/generate-dmg-background.ts",
         "build:dmg": "bash scripts/build-dmg.sh",
         "tauri:build": "npm run build:ui && tauri build --bundles app",
-        "tauri:dist": "npm run build:ui && npm run build:dmg",
+        "tauri:dist": "npm run tauri:build && npm run build:dmg",
         "test": "vitest run",
         "test:watch": "vitest",
         "lint": "eslint \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\"",

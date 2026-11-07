@@ -18,9 +18,14 @@ if [ ! -f "$BG_IMAGE" ]; then
 fi
 
 # 2. Ensure Squelch.app exists
-if [ ! -d "$SRC_APP" ]; then
-    echo "Squelch.app not found. Building release bundle first..."
+if [ ! -d "$SRC_APP" ] || [ "${FORCE_BUILD:-0}" = "1" ]; then
+    echo "Building release bundle first..."
     npm run tauri:build
+fi
+
+# 2.5 Clean obsolete LSRequiresCarbon from Info.plist if present
+if [ -f "$SRC_APP/Contents/Info.plist" ]; then
+    plutil -remove LSRequiresCarbon "$SRC_APP/Contents/Info.plist" 2>/dev/null || true
 fi
 
 # 3. Code-sign Squelch.app ad-hoc

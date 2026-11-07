@@ -31,35 +31,154 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({
                 <span>{t.prefAppearanceSection}</span>
             </h2>
             <div className="mac-settings-card mac-inset-list">
-                <div className="px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <div className="text-[13px] font-medium">
-                            {t.prefThemeLabel}
+                {/* Theme Selector: macOS Native & Cukup Theme Suite */}
+                <div className="px-4 py-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <div className="text-[13px] font-medium">
+                                {t.prefThemeLabel}
+                            </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <ThemePreviewCard
-                            mode="system"
-                            active={(settings.theme ?? 'system') === 'system'}
-                            label={t.prefThemeSystem}
-                            onSelect={() =>
-                                onUpdateSettings({ theme: 'system' })
-                            }
-                        />
-                        <ThemePreviewCard
-                            mode="light"
-                            active={settings.theme === 'light'}
-                            label={t.prefThemeLight}
-                            onSelect={() =>
-                                onUpdateSettings({ theme: 'light' })
-                            }
-                        />
-                        <ThemePreviewCard
-                            mode="dark"
-                            active={settings.theme === 'dark'}
-                            label={t.prefThemeDark}
-                            onSelect={() => onUpdateSettings({ theme: 'dark' })}
-                        />
+
+                    {/* Standard macOS Group */}
+                    <div className="space-y-2">
+                        <div className="text-[11px] font-semibold text-secondary uppercase tracking-wider">
+                            {t.prefThemeStandardGroup}
+                        </div>
+                        <div className="grid grid-cols-3 sm:grid-cols-3 gap-3 max-w-sm">
+                            <ThemePreviewCard
+                                mode="system"
+                                active={
+                                    (settings.theme ?? 'system') === 'system'
+                                }
+                                label={t.prefThemeSystem}
+                                customAccent={settings.accentColor}
+                                onSelect={() => {
+                                    const next = { theme: 'system' as const };
+                                    applyAppearanceVariables({
+                                        ...settings,
+                                        ...next
+                                    });
+                                    onUpdateSettings(next);
+                                }}
+                            />
+                            <ThemePreviewCard
+                                mode="light"
+                                active={settings.theme === 'light'}
+                                label={t.prefThemeLight}
+                                customAccent={settings.accentColor}
+                                onSelect={() => {
+                                    const next = { theme: 'light' as const };
+                                    applyAppearanceVariables({
+                                        ...settings,
+                                        ...next
+                                    });
+                                    onUpdateSettings(next);
+                                }}
+                            />
+                            <ThemePreviewCard
+                                mode="dark"
+                                active={settings.theme === 'dark'}
+                                label={t.prefThemeDark}
+                                customAccent={settings.accentColor}
+                                onSelect={() => {
+                                    const next = { theme: 'dark' as const };
+                                    applyAppearanceVariables({
+                                        ...settings,
+                                        ...next
+                                    });
+                                    onUpdateSettings(next);
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Cukup Theme Suite */}
+                    <div className="space-y-2 pt-3 border-t border-hairline">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[11px] font-semibold text-secondary uppercase tracking-wider">
+                                    {t.prefThemeCukupGroup}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-accent/15 text-accent">
+                                    by Hasan Suryaman
+                                </span>
+                            </div>
+                            <span className="text-[11px] text-secondary hidden sm:inline">
+                                {t.prefThemeCukupDesc}
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <ThemePreviewCard
+                                mode="cukup-senja"
+                                active={settings.theme === 'cukup-senja'}
+                                label={t.prefThemeCukupSenja}
+                                subtitle={t.prefThemeCukupSenjaDesc}
+                                onSelect={() => {
+                                    const next = {
+                                        theme: 'cukup-senja' as const,
+                                        accentColor: '#E89058'
+                                    };
+                                    applyAppearanceVariables({
+                                        ...settings,
+                                        ...next
+                                    });
+                                    onUpdateSettings(next);
+                                }}
+                            />
+                            <ThemePreviewCard
+                                mode="cukup-malam"
+                                active={settings.theme === 'cukup-malam'}
+                                label={t.prefThemeCukupMalam}
+                                subtitle={t.prefThemeCukupMalamDesc}
+                                onSelect={() => {
+                                    const next = {
+                                        theme: 'cukup-malam' as const,
+                                        accentColor: '#E6A854'
+                                    };
+                                    applyAppearanceVariables({
+                                        ...settings,
+                                        ...next
+                                    });
+                                    onUpdateSettings(next);
+                                }}
+                            />
+                            <ThemePreviewCard
+                                mode="cukup-kopi"
+                                active={settings.theme === 'cukup-kopi'}
+                                label={t.prefThemeCukupKopi}
+                                subtitle={t.prefThemeCukupKopiDesc}
+                                onSelect={() => {
+                                    const next = {
+                                        theme: 'cukup-kopi' as const,
+                                        accentColor: '#E87D4B'
+                                    };
+                                    applyAppearanceVariables({
+                                        ...settings,
+                                        ...next
+                                    });
+                                    onUpdateSettings(next);
+                                }}
+                            />
+                            <ThemePreviewCard
+                                mode="cukup-terang"
+                                active={settings.theme === 'cukup-terang'}
+                                label={t.prefThemeCukupTerang}
+                                subtitle={t.prefThemeCukupTerangDesc}
+                                onSelect={() => {
+                                    const next = {
+                                        theme: 'cukup-terang' as const,
+                                        accentColor: '#D96B27'
+                                    };
+                                    applyAppearanceVariables({
+                                        ...settings,
+                                        ...next
+                                    });
+                                    onUpdateSettings(next);
+                                }}
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -68,7 +187,7 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({
                     <span className="text-[13px] font-medium">
                         {t.prefAccentLabel}
                     </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 max-w-[280px] sm:max-w-none justify-end">
                         {ACCENT_SWATCHES.map((swatch) => {
                             const selected =
                                 (
@@ -125,7 +244,7 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({
                     </div>
                 </div>
 
-                {/* Glass Opacity Slider */}
+                {/* Glass Opacity Slider (Transparency Control) */}
                 <div className="px-4 py-3.5 flex items-center justify-between gap-4">
                     <div>
                         <div className="text-[13px] font-medium">
@@ -145,6 +264,10 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({
                             aria-label={t.prefGlassOpacityLabel}
                             onChange={(e) => {
                                 const val = parseInt(e.target.value, 10) || 90;
+                                applyAppearanceVariables({
+                                    ...settings,
+                                    glassOpacity: val
+                                });
                                 onUpdateSettings({
                                     glassOpacity: val
                                 });

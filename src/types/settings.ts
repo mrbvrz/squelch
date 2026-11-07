@@ -1,4 +1,11 @@
-export type ThemeMode = 'system' | 'light' | 'dark';
+export type ThemeMode =
+    | 'system'
+    | 'light'
+    | 'dark'
+    | 'cukup-senja'
+    | 'cukup-malam'
+    | 'cukup-kopi'
+    | 'cukup-terang';
 
 export type EqualizerPresetId =
     | 'flat'

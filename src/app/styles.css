@@ -43,7 +43,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']) {
+    :root:not([data-theme]) {
         --surface-popover: rgba(30, 30, 32, var(--glass-alpha, 0.9));
         --surface-window: rgba(30, 30, 32, var(--glass-alpha, 0.9));
         --surface-sidebar: rgba(38, 38, 40, var(--glass-alpha, 0.9));
@@ -119,6 +119,162 @@
     --signal-live: #248a3d;
     --signal-warn: #c93400;
     --signal-fault: #d70015;
+}
+
+/* ==============================================================================
+ * Cukup Themes (by Hasan Suryaman) — Supporting Transparent macOS Vibrancy Glass
+ * ============================================================================== */
+
+:root[data-theme='cukup-senja'] {
+    color-scheme: dark;
+    --accent-color: #e89058;
+    --surface-popover: rgba(24, 24, 22, var(--glass-alpha, 0.9));
+    --surface-window: rgba(24, 24, 22, var(--glass-alpha, 0.9));
+    --surface-sidebar: rgba(19, 19, 17, var(--glass-alpha, 0.9));
+    --surface-module: rgba(255, 255, 255, 0.05);
+    --surface-modal: rgba(24, 24, 22, 0.98);
+    --surface-modal-input: rgba(255, 255, 255, 0.08);
+    --surface-control: rgba(255, 255, 255, 0.075);
+    --surface-control-hover: rgba(255, 255, 255, 0.12);
+    --surface-active-row: rgba(232, 144, 88, 0.14);
+
+    --ink-primary: #d8d5cd;
+    --ink-secondary: #c4c1b9;
+    --ink-muted: #78776f;
+
+    --hairline: rgba(255, 255, 255, 0.075);
+    --card-border: rgba(255, 255, 255, 0.085);
+    --modal-border: rgba(255, 255, 255, 0.2);
+    --sidebar-border: rgba(0, 0, 0, 0.55);
+
+    --signal-live: #89ba81;
+    --signal-warn: #dda861;
+    --signal-fault: #de6e75;
+
+    /* Cukup Custom Properties */
+    --cukup-surface-canvas: #181816;
+    --cukup-surface-panel: #131311;
+    --cukup-surface-elevated: #1f1f1c;
+    --cukup-border-subtle: #242420;
+    --cukup-border-default: #2b2b27;
+    --cukup-text-primary: #d8d5cd;
+    --cukup-text-secondary: #c4c1b9;
+    --cukup-text-muted: #78776f;
+    --cukup-text-accent: #e89058;
+}
+
+:root[data-theme='cukup-malam'] {
+    color-scheme: dark;
+    --accent-color: #e6a854;
+    --surface-popover: rgba(19, 23, 24, var(--glass-alpha, 0.9));
+    --surface-window: rgba(19, 23, 24, var(--glass-alpha, 0.9));
+    --surface-sidebar: rgba(14, 18, 19, var(--glass-alpha, 0.9));
+    --surface-module: rgba(255, 255, 255, 0.05);
+    --surface-modal: rgba(19, 23, 24, 0.98);
+    --surface-modal-input: rgba(255, 255, 255, 0.08);
+    --surface-control: rgba(255, 255, 255, 0.075);
+    --surface-control-hover: rgba(255, 255, 255, 0.12);
+    --surface-active-row: rgba(230, 168, 84, 0.14);
+
+    --ink-primary: #d6e0dd;
+    --ink-secondary: #b8c7c3;
+    --ink-muted: #6a7875;
+
+    --hairline: rgba(255, 255, 255, 0.075);
+    --card-border: rgba(255, 255, 255, 0.085);
+    --modal-border: rgba(255, 255, 255, 0.2);
+    --sidebar-border: rgba(0, 0, 0, 0.55);
+
+    --signal-live: #74bba2;
+    --signal-warn: #e6a854;
+    --signal-fault: #d4708a;
+
+    /* Cukup Custom Properties */
+    --cukup-surface-canvas: #131718;
+    --cukup-surface-panel: #0e1213;
+    --cukup-surface-elevated: #1b2123;
+    --cukup-border-subtle: #1b2223;
+    --cukup-border-default: #222b2c;
+    --cukup-text-primary: #d6e0dd;
+    --cukup-text-secondary: #b8c7c3;
+    --cukup-text-muted: #6a7875;
+    --cukup-text-accent: #e6a854;
+}
+
+:root[data-theme='cukup-kopi'] {
+    color-scheme: dark;
+    --accent-color: #e87d4b;
+    --surface-popover: rgba(22, 20, 19, var(--glass-alpha, 0.9));
+    --surface-window: rgba(22, 20, 19, var(--glass-alpha, 0.9));
+    --surface-sidebar: rgba(17, 16, 14, var(--glass-alpha, 0.9));
+    --surface-module: rgba(255, 255, 255, 0.05);
+    --surface-modal: rgba(22, 20, 19, 0.98);
+    --surface-modal-input: rgba(255, 255, 255, 0.08);
+    --surface-control: rgba(255, 255, 255, 0.075);
+    --surface-control-hover: rgba(255, 255, 255, 0.12);
+    --surface-active-row: rgba(232, 125, 75, 0.14);
+
+    --ink-primary: #e0d8d0;
+    --ink-secondary: #c8beb4;
+    --ink-muted: #7a726a;
+
+    --hairline: rgba(255, 255, 255, 0.075);
+    --card-border: rgba(255, 255, 255, 0.085);
+    --modal-border: rgba(255, 255, 255, 0.2);
+    --sidebar-border: rgba(0, 0, 0, 0.55);
+
+    --signal-live: #7dae72;
+    --signal-warn: #cca062;
+    --signal-fault: #d25c54;
+
+    /* Cukup Custom Properties */
+    --cukup-surface-canvas: #161413;
+    --cukup-surface-panel: #11100e;
+    --cukup-surface-elevated: #1e1b19;
+    --cukup-border-subtle: #221e1b;
+    --cukup-border-default: #2a2522;
+    --cukup-text-primary: #e0d8d0;
+    --cukup-text-secondary: #c8beb4;
+    --cukup-text-muted: #7a726a;
+    --cukup-text-accent: #e87d4b;
+}
+
+:root[data-theme='cukup-terang'] {
+    color-scheme: light;
+    --accent-color: #d96b27;
+    --surface-popover: rgba(250, 248, 245, var(--glass-alpha, 0.9));
+    --surface-window: rgba(250, 248, 245, var(--glass-alpha, 0.9));
+    --surface-sidebar: rgba(242, 239, 233, var(--glass-alpha, 0.9));
+    --surface-module: rgba(255, 255, 255, 0.85);
+    --surface-modal: rgba(250, 248, 245, 0.98);
+    --surface-modal-input: rgba(0, 0, 0, 0.055);
+    --surface-control: rgba(0, 0, 0, 0.06);
+    --surface-control-hover: rgba(0, 0, 0, 0.1);
+    --surface-active-row: rgba(217, 107, 39, 0.12);
+
+    --ink-primary: #2c2825;
+    --ink-secondary: #5a524a;
+    --ink-muted: #8a8278;
+
+    --hairline: rgba(0, 0, 0, 0.08);
+    --card-border: rgba(0, 0, 0, 0.09);
+    --modal-border: rgba(0, 0, 0, 0.16);
+    --sidebar-border: rgba(0, 0, 0, 0.12);
+
+    --signal-live: #2e8540;
+    --signal-warn: #c47214;
+    --signal-fault: #d2434a;
+
+    /* Cukup Custom Properties */
+    --cukup-surface-canvas: #faf8f5;
+    --cukup-surface-panel: #f2efe9;
+    --cukup-surface-elevated: #ffffff;
+    --cukup-border-subtle: #ebe7df;
+    --cukup-border-default: #e0ddd5;
+    --cukup-text-primary: #2c2825;
+    --cukup-text-secondary: #5a524a;
+    --cukup-text-muted: #8a8278;
+    --cukup-text-accent: #d96b27;
 }
 
 html,

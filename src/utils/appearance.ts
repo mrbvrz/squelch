@@ -1,4 +1,60 @@
-import type { AppSettings, RadioBrowserCountry } from '../types';
+import type { AppSettings, RadioBrowserCountry, ThemeMode } from '../types';
+
+export interface CukupThemeMeta {
+    id: ThemeMode;
+    name: string;
+    accent: string;
+    canvas: string;
+    panel: string;
+    descriptionId: string;
+    descriptionEn: string;
+}
+
+export const CUKUP_THEMES: CukupThemeMeta[] = [
+    {
+        id: 'cukup-senja',
+        name: 'Cukup Senja',
+        accent: '#E89058',
+        canvas: '#181816',
+        panel: '#131311',
+        descriptionId: 'Obsidian hangat & terakota senja',
+        descriptionEn: 'Warm charcoal obsidian & terracotta'
+    },
+    {
+        id: 'cukup-malam',
+        name: 'Cukup Malam',
+        accent: '#E6A854',
+        canvas: '#131718',
+        panel: '#0E1213',
+        descriptionId: 'Pirus pinus gelap & madu amber',
+        descriptionEn: 'Deep pine slate & wild honey amber'
+    },
+    {
+        id: 'cukup-kopi',
+        name: 'Cukup Kopi',
+        accent: '#E87D4B',
+        canvas: '#161413',
+        panel: '#11100E',
+        descriptionId: 'Espreso sangrai gelap & kesemek',
+        descriptionEn: 'Dark roasted espresso & persimmon'
+    },
+    {
+        id: 'cukup-terang',
+        name: 'Cukup Terang',
+        accent: '#D96B27',
+        canvas: '#FAF8F5',
+        panel: '#F2EFE9',
+        descriptionId: 'Kertas perkamen hangat & terakota',
+        descriptionEn: 'Organic parchment & terracotta'
+    }
+];
+
+export const CUKUP_THEME_ACCENTS: Record<string, string> = {
+    'cukup-senja': '#E89058',
+    'cukup-malam': '#E6A854',
+    'cukup-kopi': '#E87D4B',
+    'cukup-terang': '#D96B27'
+};
 
 export const ACCENT_SWATCHES: Array<{
     id: string;
@@ -13,7 +69,25 @@ export const ACCENT_SWATCHES: Array<{
     { id: 'orange', label: 'Orange', name: 'Orange', hex: '#FF9F0A' },
     { id: 'teal', label: 'Teal', name: 'Teal', hex: '#32ADE6' },
     { id: 'indigo', label: 'Indigo', name: 'Indigo', hex: '#5E5CE6' },
-    { id: 'green', label: 'Green', name: 'Green', hex: '#30D158' }
+    { id: 'green', label: 'Green', name: 'Green', hex: '#30D158' },
+    {
+        id: 'terracotta',
+        label: 'Terracotta (Senja)',
+        name: 'Terracotta',
+        hex: '#E89058'
+    },
+    {
+        id: 'amber',
+        label: 'Honey Amber (Malam)',
+        name: 'Honey Amber',
+        hex: '#E6A854'
+    },
+    {
+        id: 'persimmon',
+        label: 'Persimmon (Kopi)',
+        name: 'Persimmon',
+        hex: '#E87D4B'
+    }
 ];
 
 export function countryCodeToFlag(isoCode: string): string {
@@ -81,16 +155,17 @@ export function applyAppearanceVariables(
     const root = document.documentElement;
     if (!settings) return;
 
-    // 1. Theme ('system' | 'light' | 'dark')
+    // 1. Theme
     const theme = settings.theme || 'system';
-    if (theme === 'light' || theme === 'dark') {
+    if (theme && theme !== 'system') {
         root.setAttribute('data-theme', theme);
     } else {
         root.removeAttribute('data-theme');
     }
 
-    // 2. Accent color
-    const accent = settings.accentColor || '#0A84FF';
+    // 2. Accent color (uses custom accent or theme signature default)
+    const defaultAccent = CUKUP_THEME_ACCENTS[theme] || '#0A84FF';
+    const accent = settings.accentColor || defaultAccent;
     root.style.setProperty('--accent-color', accent);
 
     // 3. Glass opacity (default 90%)

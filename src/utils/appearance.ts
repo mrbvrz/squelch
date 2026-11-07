@@ -168,8 +168,11 @@ export function applyAppearanceVariables(
     const accent = settings.accentColor || defaultAccent;
     root.style.setProperty('--accent-color', accent);
 
-    // 3. Glass opacity (default 90%)
-    const opacityPct = settings.glassOpacity ?? 90;
+    // 3. Glass opacity (default 72%, aligned with Alacritty 0.70 & Zed c4 0.77)
+    let opacityPct = settings.glassOpacity ?? 72;
+    if (opacityPct > 0 && opacityPct <= 1) {
+        opacityPct = Math.round(opacityPct * 100);
+    }
     root.style.setProperty(
         '--glass-alpha',
         String(Math.max(0.2, Math.min(1, opacityPct / 100)))

@@ -266,7 +266,7 @@ pub fn get_settings(store: State<Arc<AppStore>>) -> Value {
             "theme": "system",
             "accentColor": "#0A84FF",
             "fontFamily": "system",
-            "glassOpacity": 90,
+            "glassOpacity": 72,
             "networkTimeoutMs": 12000,
             "userAgent": format!("Squelch/{} (macOS; InternetRadio)", env!("CARGO_PKG_VERSION")),
             "shortcuts": {

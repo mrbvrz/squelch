@@ -8,8 +8,8 @@
         -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
         'Segoe UI Variable Text', 'Helvetica Neue', sans-serif;
     --accent-color: #0a84ff;
-    --glass-alpha: 0.9;
-    --glass-blur: 14px;
+    --glass-alpha: 0.72;
+    --glass-blur: 20px;
 
     font-family: var(--app-font-family);
     -webkit-font-smoothing: antialiased;
@@ -18,11 +18,11 @@
         'kern' 1,
         'liga' 1;
 
-    --surface-popover: rgba(242, 242, 247, var(--glass-alpha, 0.9));
-    --surface-window: rgba(242, 242, 247, var(--glass-alpha, 0.9));
-    --surface-sidebar: rgba(232, 232, 237, var(--glass-alpha, 0.9));
-    --surface-module: rgba(255, 255, 255, 0.82);
-    --surface-modal: rgba(255, 255, 255, 0.98);
+    --surface-popover: rgba(242, 242, 247, var(--glass-alpha, 0.72));
+    --surface-window: rgba(242, 242, 247, var(--glass-alpha, 0.72));
+    --surface-sidebar: rgba(0, 0, 0, 0.035);
+    --surface-module: rgba(255, 255, 255, 0.72);
+    --surface-modal: #ffffff;
     --surface-modal-input: rgba(0, 0, 0, 0.055);
     --surface-control: rgba(0, 0, 0, 0.06);
     --surface-control-hover: rgba(0, 0, 0, 0.1);
@@ -44,11 +44,11 @@
 
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) {
-        --surface-popover: rgba(30, 30, 32, var(--glass-alpha, 0.9));
-        --surface-window: rgba(30, 30, 32, var(--glass-alpha, 0.9));
-        --surface-sidebar: rgba(38, 38, 40, var(--glass-alpha, 0.9));
-        --surface-module: rgba(255, 255, 255, 0.05);
-        --surface-modal: rgba(30, 30, 32, 0.98);
+        --surface-popover: rgba(30, 30, 32, var(--glass-alpha, 0.72));
+        --surface-window: rgba(30, 30, 32, var(--glass-alpha, 0.72));
+        --surface-sidebar: rgba(0, 0, 0, 0.16);
+        --surface-module: rgba(255, 255, 255, 0.045);
+        --surface-modal: #252528;
         --surface-modal-input: rgba(255, 255, 255, 0.08);
         --surface-control: rgba(255, 255, 255, 0.075);
         --surface-control-hover: rgba(255, 255, 255, 0.12);
@@ -61,7 +61,7 @@
         --hairline: rgba(255, 255, 255, 0.075);
         --card-border: rgba(255, 255, 255, 0.085);
         --modal-border: rgba(255, 255, 255, 0.22);
-        --sidebar-border: rgba(0, 0, 0, 0.55);
+        --sidebar-border: rgba(0, 0, 0, 0.45);
 
         --signal-live: #30d158;
         --signal-warn: #ff9f0a;
@@ -71,11 +71,11 @@
 
 :root[data-theme='dark'] {
     color-scheme: dark;
-    --surface-popover: rgba(30, 30, 32, var(--glass-alpha, 0.9));
-    --surface-window: rgba(30, 30, 32, var(--glass-alpha, 0.9));
-    --surface-sidebar: rgba(38, 38, 40, var(--glass-alpha, 0.9));
-    --surface-module: rgba(255, 255, 255, 0.05);
-    --surface-modal: rgba(30, 30, 32, 0.98);
+    --surface-popover: rgba(30, 30, 32, var(--glass-alpha, 0.72));
+    --surface-window: rgba(30, 30, 32, var(--glass-alpha, 0.72));
+    --surface-sidebar: rgba(0, 0, 0, 0.16);
+    --surface-module: rgba(255, 255, 255, 0.045);
+    --surface-modal: #252528;
     --surface-modal-input: rgba(255, 255, 255, 0.08);
     --surface-control: rgba(255, 255, 255, 0.075);
     --surface-control-hover: rgba(255, 255, 255, 0.12);
@@ -88,7 +88,7 @@
     --hairline: rgba(255, 255, 255, 0.075);
     --card-border: rgba(255, 255, 255, 0.085);
     --modal-border: rgba(255, 255, 255, 0.22);
-    --sidebar-border: rgba(0, 0, 0, 0.55);
+    --sidebar-border: rgba(0, 0, 0, 0.45);
 
     --signal-live: #30d158;
     --signal-warn: #ff9f0a;
@@ -97,11 +97,11 @@
 
 :root[data-theme='light'] {
     color-scheme: light;
-    --surface-popover: rgba(242, 242, 247, var(--glass-alpha, 0.9));
-    --surface-window: rgba(242, 242, 247, var(--glass-alpha, 0.9));
-    --surface-sidebar: rgba(232, 232, 237, var(--glass-alpha, 0.9));
-    --surface-module: rgba(255, 255, 255, 0.84);
-    --surface-modal: rgba(255, 255, 255, 0.98);
+    --surface-popover: rgba(242, 242, 247, var(--glass-alpha, 0.72));
+    --surface-window: rgba(242, 242, 247, var(--glass-alpha, 0.72));
+    --surface-sidebar: rgba(0, 0, 0, 0.035);
+    --surface-module: rgba(255, 255, 255, 0.72);
+    --surface-modal: #ffffff;
     --surface-modal-input: rgba(0, 0, 0, 0.055);
     --surface-control: rgba(0, 0, 0, 0.06);
     --surface-control-hover: rgba(0, 0, 0, 0.1);
@@ -128,11 +128,11 @@
 :root[data-theme='cukup-senja'] {
     color-scheme: dark;
     --accent-color: #e89058;
-    --surface-popover: rgba(24, 24, 22, var(--glass-alpha, 0.9));
-    --surface-window: rgba(24, 24, 22, var(--glass-alpha, 0.9));
-    --surface-sidebar: rgba(19, 19, 17, var(--glass-alpha, 0.9));
-    --surface-module: rgba(255, 255, 255, 0.05);
-    --surface-modal: rgba(24, 24, 22, 0.98);
+    --surface-popover: rgba(24, 24, 22, var(--glass-alpha, 0.72));
+    --surface-window: rgba(24, 24, 22, var(--glass-alpha, 0.72));
+    --surface-sidebar: rgba(0, 0, 0, 0.16);
+    --surface-module: rgba(255, 255, 255, 0.045);
+    --surface-modal: #1f1f1c;
     --surface-modal-input: rgba(255, 255, 255, 0.08);
     --surface-control: rgba(255, 255, 255, 0.075);
     --surface-control-hover: rgba(255, 255, 255, 0.12);
@@ -144,8 +144,8 @@
 
     --hairline: rgba(255, 255, 255, 0.075);
     --card-border: rgba(255, 255, 255, 0.085);
-    --modal-border: rgba(255, 255, 255, 0.2);
-    --sidebar-border: rgba(0, 0, 0, 0.55);
+    --modal-border: #2b2b27;
+    --sidebar-border: rgba(0, 0, 0, 0.45);
 
     --signal-live: #89ba81;
     --signal-warn: #dda861;
@@ -166,11 +166,11 @@
 :root[data-theme='cukup-malam'] {
     color-scheme: dark;
     --accent-color: #e6a854;
-    --surface-popover: rgba(19, 23, 24, var(--glass-alpha, 0.9));
-    --surface-window: rgba(19, 23, 24, var(--glass-alpha, 0.9));
-    --surface-sidebar: rgba(14, 18, 19, var(--glass-alpha, 0.9));
-    --surface-module: rgba(255, 255, 255, 0.05);
-    --surface-modal: rgba(19, 23, 24, 0.98);
+    --surface-popover: rgba(19, 23, 24, var(--glass-alpha, 0.72));
+    --surface-window: rgba(19, 23, 24, var(--glass-alpha, 0.72));
+    --surface-sidebar: rgba(0, 0, 0, 0.16);
+    --surface-module: rgba(255, 255, 255, 0.045);
+    --surface-modal: #1b2123;
     --surface-modal-input: rgba(255, 255, 255, 0.08);
     --surface-control: rgba(255, 255, 255, 0.075);
     --surface-control-hover: rgba(255, 255, 255, 0.12);
@@ -182,8 +182,8 @@
 
     --hairline: rgba(255, 255, 255, 0.075);
     --card-border: rgba(255, 255, 255, 0.085);
-    --modal-border: rgba(255, 255, 255, 0.2);
-    --sidebar-border: rgba(0, 0, 0, 0.55);
+    --modal-border: #222b2c;
+    --sidebar-border: rgba(0, 0, 0, 0.45);
 
     --signal-live: #74bba2;
     --signal-warn: #e6a854;
@@ -204,11 +204,11 @@
 :root[data-theme='cukup-kopi'] {
     color-scheme: dark;
     --accent-color: #e87d4b;
-    --surface-popover: rgba(22, 20, 19, var(--glass-alpha, 0.9));
-    --surface-window: rgba(22, 20, 19, var(--glass-alpha, 0.9));
-    --surface-sidebar: rgba(17, 16, 14, var(--glass-alpha, 0.9));
-    --surface-module: rgba(255, 255, 255, 0.05);
-    --surface-modal: rgba(22, 20, 19, 0.98);
+    --surface-popover: rgba(22, 20, 19, var(--glass-alpha, 0.72));
+    --surface-window: rgba(22, 20, 19, var(--glass-alpha, 0.72));
+    --surface-sidebar: rgba(0, 0, 0, 0.16);
+    --surface-module: rgba(255, 255, 255, 0.045);
+    --surface-modal: #1e1b19;
     --surface-modal-input: rgba(255, 255, 255, 0.08);
     --surface-control: rgba(255, 255, 255, 0.075);
     --surface-control-hover: rgba(255, 255, 255, 0.12);
@@ -220,8 +220,8 @@
 
     --hairline: rgba(255, 255, 255, 0.075);
     --card-border: rgba(255, 255, 255, 0.085);
-    --modal-border: rgba(255, 255, 255, 0.2);
-    --sidebar-border: rgba(0, 0, 0, 0.55);
+    --modal-border: #2a2522;
+    --sidebar-border: rgba(0, 0, 0, 0.45);
 
     --signal-live: #7dae72;
     --signal-warn: #cca062;
@@ -242,11 +242,11 @@
 :root[data-theme='cukup-terang'] {
     color-scheme: light;
     --accent-color: #d96b27;
-    --surface-popover: rgba(250, 248, 245, var(--glass-alpha, 0.9));
-    --surface-window: rgba(250, 248, 245, var(--glass-alpha, 0.9));
-    --surface-sidebar: rgba(242, 239, 233, var(--glass-alpha, 0.9));
-    --surface-module: rgba(255, 255, 255, 0.85);
-    --surface-modal: rgba(250, 248, 245, 0.98);
+    --surface-popover: rgba(250, 248, 245, var(--glass-alpha, 0.72));
+    --surface-window: rgba(250, 248, 245, var(--glass-alpha, 0.72));
+    --surface-sidebar: rgba(0, 0, 0, 0.035);
+    --surface-module: rgba(255, 255, 255, 0.72);
+    --surface-modal: #ffffff;
     --surface-modal-input: rgba(0, 0, 0, 0.055);
     --surface-control: rgba(0, 0, 0, 0.06);
     --surface-control-hover: rgba(0, 0, 0, 0.1);
@@ -258,7 +258,7 @@
 
     --hairline: rgba(0, 0, 0, 0.08);
     --card-border: rgba(0, 0, 0, 0.09);
-    --modal-border: rgba(0, 0, 0, 0.16);
+    --modal-border: #e0ddd5;
     --sidebar-border: rgba(0, 0, 0, 0.12);
 
     --signal-live: #2e8540;
@@ -350,12 +350,14 @@ input[type='checkbox'] {
 .mac-window-shell {
     background: var(--surface-window);
     color: var(--ink-primary);
+    backdrop-filter: blur(var(--glass-blur, 20px));
+    -webkit-backdrop-filter: blur(var(--glass-blur, 20px));
 }
 
 .mac-settings-sidebar {
     background: var(--surface-sidebar);
     border-right: 1px solid var(--sidebar-border);
-    box-shadow: inset -0.5px 0 0 rgba(255, 255, 255, 0.06);
+    box-shadow: inset -0.5px 0 0 rgba(255, 255, 255, 0.04);
 }
 
 .mac-glass-card,
@@ -364,8 +366,8 @@ input[type='checkbox'] {
     background: var(--surface-module);
     border: 1px solid var(--card-border);
     border-radius: 10px;
-    backdrop-filter: blur(var(--glass-blur, 14px)) saturate(140%);
-    -webkit-backdrop-filter: blur(var(--glass-blur, 14px)) saturate(140%);
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
     transition:
         border-color 160ms ease,
         background-color 160ms ease,

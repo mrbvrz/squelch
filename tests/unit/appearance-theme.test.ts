@@ -23,16 +23,16 @@ describe('Appearance & Cukup Themes', () => {
             removeAttribute: (name: string) => attributes.delete(name),
             getAttribute: (name: string) => attributes.get(name) ?? null,
             style: {
-                setProperty: (name: string, val: string) => styles.set(name, val),
+                setProperty: (name: string, val: string) =>
+                    styles.set(name, val),
                 getPropertyValue: (name: string) => styles.get(name) ?? '',
                 removeProperty: (name: string) => styles.delete(name)
             }
         };
 
-        // @ts-expect-error Mock minimal document in Node environment
         globalThis.document = {
             documentElement: fakeElement
-        };
+        } as unknown as Document;
     });
 
     afterEach(() => {
@@ -80,7 +80,9 @@ describe('Appearance & Cukup Themes', () => {
 
     it('applies light and dark themes with matching data-theme attribute', () => {
         applyAppearanceVariables({ theme: 'dark' });
-        expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+        expect(document.documentElement.getAttribute('data-theme')).toBe(
+            'dark'
+        );
 
         applyAppearanceVariables({ theme: 'light' });
         expect(document.documentElement.getAttribute('data-theme')).toBe(
@@ -159,6 +161,18 @@ describe('Appearance & Cukup Themes', () => {
         expect(
             document.documentElement.style.getPropertyValue('--glass-alpha')
         ).toBe('1');
+
+        // Default fallback to 0.72 (aligned with Alacritty 0.70 & Zed c4 0.77)
+        applyAppearanceVariables({});
+        expect(
+            document.documentElement.style.getPropertyValue('--glass-alpha')
+        ).toBe('0.72');
+
+        // Handles legacy decimal 0.0 - 1.0 normalization
+        applyAppearanceVariables({ glassOpacity: 0.75 });
+        expect(
+            document.documentElement.style.getPropertyValue('--glass-alpha')
+        ).toBe('0.75');
     });
 
     it('includes Cukup accents in ACCENT_SWATCHES', () => {

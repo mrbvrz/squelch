@@ -74,14 +74,21 @@ pub(crate) fn show_main_window(app: &tauri::AppHandle) -> Option<tauri::WebviewW
         .min_inner_size(880.0, 560.0)
         .resizable(true)
         .transparent(true)
+        .shadow(true)
         .hidden_title(true)
         .title_bar_style(tauri::TitleBarStyle::Overlay)
         .build()
         {
             #[cfg(target_os = "macos")]
             {
-                use window_vibrancy::{NSVisualEffectMaterial, apply_vibrancy};
-                let _ = apply_vibrancy(&win, NSVisualEffectMaterial::Sidebar, None, Some(18.0));
+                use window_vibrancy::{NSVisualEffectMaterial, NSVisualEffectState, apply_vibrancy};
+                let _ = win.set_shadow(true);
+                let _ = apply_vibrancy(
+                    &win,
+                    NSVisualEffectMaterial::UnderWindowBackground,
+                    Some(NSVisualEffectState::Active),
+                    Some(16.0),
+                );
             }
             let _ = win.show();
             let _ = win.unminimize();
@@ -95,6 +102,17 @@ pub(crate) fn show_main_window(app: &tauri::AppHandle) -> Option<tauri::WebviewW
 
 pub(crate) fn show_tray_popover(app: &tauri::AppHandle) -> Option<tauri::WebviewWindow> {
     if let Some(tray_win) = app.get_webview_window("tray") {
+        #[cfg(target_os = "macos")]
+        {
+            use window_vibrancy::{NSVisualEffectMaterial, NSVisualEffectState, apply_vibrancy};
+            let _ = tray_win.set_shadow(true);
+            let _ = apply_vibrancy(
+                &tray_win,
+                NSVisualEffectMaterial::Popover,
+                Some(NSVisualEffectState::Active),
+                Some(14.0),
+            );
+        }
         let _ = tray_win.as_ref().window().move_window(Position::TrayCenter);
         let _ = tray_win.show();
         let _ = tray_win.set_focus();
@@ -132,12 +150,25 @@ pub(crate) fn show_dialog_window(
         .resizable(false)
         .decorations(false)
         .transparent(true)
+        .shadow(true)
         .always_on_top(true)
         .skip_taskbar(true)
         .center()
         .build()
         .ok()?
     };
+
+    #[cfg(target_os = "macos")]
+    {
+        use window_vibrancy::{NSVisualEffectMaterial, NSVisualEffectState, apply_vibrancy};
+        let _ = win.set_shadow(true);
+        let _ = apply_vibrancy(
+            &win,
+            NSVisualEffectMaterial::UnderWindowBackground,
+            Some(NSVisualEffectState::Active),
+            Some(16.0),
+        );
+    }
 
     let _ = win.eval(&format!(
         "window.dispatchEvent(new CustomEvent('squelch:set-dialog', {{ detail: '{}' }}));",
@@ -298,16 +329,26 @@ pub fn run() {
                 }
             }
 
-            // 3. Configure macOS Vibrancy effects
+            // 3. Configure macOS Vibrancy effects & Window Shadows
             #[cfg(target_os = "macos")]
             {
-                use window_vibrancy::{NSVisualEffectMaterial, apply_vibrancy};
+                use window_vibrancy::{NSVisualEffectMaterial, NSVisualEffectState, apply_vibrancy};
                 if let Some(main_win) = app.get_webview_window("main") {
+                    let _ = main_win.set_shadow(true);
                     let _ = apply_vibrancy(
                         &main_win,
-                        NSVisualEffectMaterial::Sidebar,
-                        None,
-                        Some(18.0),
+                        NSVisualEffectMaterial::UnderWindowBackground,
+                        Some(NSVisualEffectState::Active),
+                        Some(16.0),
+                    );
+                }
+                if let Some(tray_win) = app.get_webview_window("tray") {
+                    let _ = tray_win.set_shadow(true);
+                    let _ = apply_vibrancy(
+                        &tray_win,
+                        NSVisualEffectMaterial::Popover,
+                        Some(NSVisualEffectState::Active),
+                        Some(14.0),
                     );
                 }
             }

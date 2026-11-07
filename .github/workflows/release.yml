@@ -41,50 +41,26 @@ jobs:
       - name: Build Tauri Application
         run: npm run tauri:build
 
-      - name: Install create-dmg
-        run: brew install create-dmg
-
       - name: Package macOS DMG & ZIP
         run: |
           VERSION=$(node -p "require('./package.json').version")
           BUNDLE_DIR="src-tauri/target/release/bundle/macos"
-          APP_PATH="${BUNDLE_DIR}/Squelch.app"
-          BG_IMAGE="src-tauri/icons/dmg-background.png"
-          
-          if [ ! -d "$APP_PATH" ]; then
-            echo "Error: Squelch.app not found in $BUNDLE_DIR"
-            exit 1
-          fi
-          
-          echo "Ad-hoc code signing Squelch.app..."
-          codesign --force --deep --sign - "$APP_PATH"
-          
+          DMG_DIR="src-tauri/target/release/bundle/dmg"
           DMG_NAME="Squelch-${VERSION}-arm64.dmg"
           ZIP_NAME="Squelch-${VERSION}-arm64.zip"
-          
-          echo "Creating styled DMG package: ${DMG_NAME}..."
-          create-dmg \
-            --volname "Squelch" \
-            --volicon "src-tauri/icons/icon.icns" \
-            --background "$BG_IMAGE" \
-            --window-pos 400 200 \
-            --window-size 660 400 \
-            --icon-size 128 \
-            --text-size 12 \
-            --icon "Squelch.app" 180 190 \
-            --app-drop-link 480 190 \
-            --hide-extension "Squelch.app" \
-            --no-strip \
-            "${BUNDLE_DIR}/${DMG_NAME}" \
-            "$APP_PATH" || hdiutil create -volname Squelch -srcfolder "$APP_PATH" -ov -format UDZO "${BUNDLE_DIR}/${DMG_NAME}"
-          
-          echo "Creating ZIP package: ${ZIP_NAME}..."
+
+          echo "Packaging DMG via scripts/build-dmg.sh..."
+          bash scripts/build-dmg.sh
+
+          echo "Packaging ZIP..."
           cd "$BUNDLE_DIR"
           zip -r -9 "${ZIP_NAME}" Squelch.app
-          shasum -a 256 "${DMG_NAME}" "${ZIP_NAME}" > SHA256SUMS.txt
           cd -
-          
-          echo "DMG_PATH=${BUNDLE_DIR}/${DMG_NAME}" >> $GITHUB_ENV
+
+          echo "Generating SHA256 checksums..."
+          shasum -a 256 "${DMG_DIR}/${DMG_NAME}" "${BUNDLE_DIR}/${ZIP_NAME}" > "${BUNDLE_DIR}/SHA256SUMS.txt"
+
+          echo "DMG_PATH=${DMG_DIR}/${DMG_NAME}" >> $GITHUB_ENV
           echo "ZIP_PATH=${BUNDLE_DIR}/${ZIP_NAME}" >> $GITHUB_ENV
           echo "CHECKSUM_PATH=${BUNDLE_DIR}/SHA256SUMS.txt" >> $GITHUB_ENV
           echo "VERSION=${VERSION}" >> $GITHUB_ENV

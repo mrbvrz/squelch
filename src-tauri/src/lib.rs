@@ -102,17 +102,6 @@ pub(crate) fn show_main_window(app: &tauri::AppHandle) -> Option<tauri::WebviewW
 
 pub(crate) fn show_tray_popover(app: &tauri::AppHandle) -> Option<tauri::WebviewWindow> {
     if let Some(tray_win) = app.get_webview_window("tray") {
-        #[cfg(target_os = "macos")]
-        {
-            use window_vibrancy::{NSVisualEffectMaterial, NSVisualEffectState, apply_vibrancy};
-            let _ = tray_win.set_shadow(true);
-            let _ = apply_vibrancy(
-                &tray_win,
-                NSVisualEffectMaterial::Popover,
-                Some(NSVisualEffectState::Active),
-                Some(14.0),
-            );
-        }
         let _ = tray_win.as_ref().window().move_window(Position::TrayCenter);
         let _ = tray_win.show();
         let _ = tray_win.set_focus();
@@ -344,12 +333,6 @@ pub fn run() {
                 }
                 if let Some(tray_win) = app.get_webview_window("tray") {
                     let _ = tray_win.set_shadow(true);
-                    let _ = apply_vibrancy(
-                        &tray_win,
-                        NSVisualEffectMaterial::Popover,
-                        Some(NSVisualEffectState::Active),
-                        Some(14.0),
-                    );
                 }
             }
 

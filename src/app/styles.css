@@ -18,7 +18,7 @@
         'kern' 1,
         'liga' 1;
 
-    --surface-popover: rgba(242, 242, 247, var(--glass-alpha, 0.72));
+    --surface-popover: rgba(248, 248, 250, 0.94);
     --surface-window: rgba(242, 242, 247, var(--glass-alpha, 0.72));
     --surface-sidebar: rgba(0, 0, 0, 0.035);
     --surface-module: rgba(255, 255, 255, 0.72);
@@ -44,7 +44,7 @@
 
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) {
-        --surface-popover: rgba(30, 30, 32, var(--glass-alpha, 0.72));
+        --surface-popover: rgba(26, 26, 28, 0.94);
         --surface-window: rgba(30, 30, 32, var(--glass-alpha, 0.72));
         --surface-sidebar: rgba(0, 0, 0, 0.16);
         --surface-module: rgba(255, 255, 255, 0.045);
@@ -71,7 +71,7 @@
 
 :root[data-theme='dark'] {
     color-scheme: dark;
-    --surface-popover: rgba(30, 30, 32, var(--glass-alpha, 0.72));
+    --surface-popover: rgba(26, 26, 28, 0.94);
     --surface-window: rgba(30, 30, 32, var(--glass-alpha, 0.72));
     --surface-sidebar: rgba(0, 0, 0, 0.16);
     --surface-module: rgba(255, 255, 255, 0.045);
@@ -97,7 +97,7 @@
 
 :root[data-theme='light'] {
     color-scheme: light;
-    --surface-popover: rgba(242, 242, 247, var(--glass-alpha, 0.72));
+    --surface-popover: rgba(248, 248, 250, 0.94);
     --surface-window: rgba(242, 242, 247, var(--glass-alpha, 0.72));
     --surface-sidebar: rgba(0, 0, 0, 0.035);
     --surface-module: rgba(255, 255, 255, 0.72);
@@ -128,7 +128,7 @@
 :root[data-theme='cukup-senja'] {
     color-scheme: dark;
     --accent-color: #e89058;
-    --surface-popover: rgba(24, 24, 22, var(--glass-alpha, 0.72));
+    --surface-popover: rgba(24, 24, 22, 0.94);
     --surface-window: rgba(24, 24, 22, var(--glass-alpha, 0.72));
     --surface-sidebar: rgba(0, 0, 0, 0.16);
     --surface-module: rgba(255, 255, 255, 0.045);
@@ -166,7 +166,7 @@
 :root[data-theme='cukup-malam'] {
     color-scheme: dark;
     --accent-color: #e6a854;
-    --surface-popover: rgba(19, 23, 24, var(--glass-alpha, 0.72));
+    --surface-popover: rgba(19, 23, 24, 0.94);
     --surface-window: rgba(19, 23, 24, var(--glass-alpha, 0.72));
     --surface-sidebar: rgba(0, 0, 0, 0.16);
     --surface-module: rgba(255, 255, 255, 0.045);
@@ -204,7 +204,7 @@
 :root[data-theme='cukup-kopi'] {
     color-scheme: dark;
     --accent-color: #e87d4b;
-    --surface-popover: rgba(22, 20, 19, var(--glass-alpha, 0.72));
+    --surface-popover: rgba(22, 20, 19, 0.94);
     --surface-window: rgba(22, 20, 19, var(--glass-alpha, 0.72));
     --surface-sidebar: rgba(0, 0, 0, 0.16);
     --surface-module: rgba(255, 255, 255, 0.045);
@@ -242,7 +242,7 @@
 :root[data-theme='cukup-terang'] {
     color-scheme: light;
     --accent-color: #d96b27;
-    --surface-popover: rgba(250, 248, 245, var(--glass-alpha, 0.72));
+    --surface-popover: rgba(250, 248, 245, 0.94);
     --surface-window: rgba(250, 248, 245, var(--glass-alpha, 0.72));
     --surface-sidebar: rgba(0, 0, 0, 0.035);
     --surface-module: rgba(255, 255, 255, 0.72);
@@ -337,14 +337,23 @@ input[type='checkbox'] {
     background: var(--surface-popover);
     color: var(--ink-primary);
     border-radius: 14px;
-    border: none;
-    backdrop-filter: blur(var(--glass-blur, 20px)) saturate(140%);
-    -webkit-backdrop-filter: blur(var(--glass-blur, 20px)) saturate(140%);
+    border: 1px solid var(--modal-border);
+    box-shadow:
+        0 16px 48px rgba(0, 0, 0, 0.38),
+        0 4px 16px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
     overflow: hidden;
 }
 
-.mac-popover-shell .mac-settings-card {
-    border: none;
+/* Disable nested backdrop-filter inside popover shell to prevent WebKit compositing alpha glitches */
+.mac-popover-shell .mac-settings-card,
+.mac-popover-shell .mac-glass-card,
+.mac-popover-shell .mac-module {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid var(--card-border);
 }
 
 .mac-window-shell {

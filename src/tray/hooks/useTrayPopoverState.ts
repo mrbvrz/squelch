@@ -138,10 +138,14 @@ export function useTrayPopoverState(api: SquelchTrayPopoverApi) {
                 return;
             }
 
-            if (data?.type === 'settings' && (data as any)?.settings) {
-                const s = (data as any).settings;
-                setSettings(s);
-                applyAppearanceVariables(s);
+            if (data?.type === 'settings') {
+                const s = (data as any)?.settings;
+                if (s) {
+                    setSettings(s);
+                    applyAppearanceVariables(s);
+                } else {
+                    void loadData();
+                }
                 return;
             }
 

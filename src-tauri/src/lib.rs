@@ -358,6 +358,9 @@ pub fn run() {
                 MenuItemBuilder::with_id("play_pause", "Putar / Jeda").build(app)?;
             let menu_stop = MenuItemBuilder::with_id("stop", "Hentikan").build(app)?;
 
+            *store.menu_status.lock().unwrap() = Some(menu_status.clone());
+            *store.menu_play_pause.lock().unwrap() = Some(menu_play_pause.clone());
+
             let menu_open =
                 MenuItemBuilder::with_id("open_squelch", "Buka Jendela Utama").build(app)?;
             let menu_stations =

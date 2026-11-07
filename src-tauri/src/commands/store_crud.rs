@@ -55,7 +55,7 @@ pub fn update_player_status(
             ("playing", Some(station), None) => {
                 format!("▶ Squelch: {}", station)
             }
-            ("buffering" | "connecting", Some(station), _) => {
+            ("buffering" | "connecting" | "reconnecting", Some(station), _) => {
                 format!("⏳ Squelch: Menyambung ke {}...", station)
             }
             ("paused", Some(station), _) => {
@@ -65,6 +65,81 @@ pub fn update_player_status(
         };
 
         let _ = tray.set_tooltip(Some(tooltip));
+
+        // 1. Update Context Menu Subtitle Item (menu_status)
+        if let Ok(guard) = store.menu_status.lock() {
+            if let Some(item) = guard.as_ref() {
+                let status_menu_text = match (state_str, station_name, stream_title) {
+                    ("playing", Some(station), Some(title)) => {
+                        format!("▶ {} — {}", station, title)
+                    }
+                    ("playing", Some(station), None) => {
+                        format!("▶ {}", station)
+                    }
+                    ("buffering" | "connecting" | "reconnecting", Some(station), _) => {
+                        format!("⏳ Menyambung ke {}...", station)
+                    }
+                    ("paused", Some(station), _) => {
+                        format!("⏸ {} (Dijeda)", station)
+                    }
+                    _ => "Squelch Radio (Siap)".to_string(),
+                };
+                let truncated = if status_menu_text.chars().count() > 42 {
+                    let mut s: String = status_menu_text.chars().take(41).collect();
+                    s.push('…');
+                    s
+                } else {
+                    status_menu_text
+                };
+                let _ = item.set_text(truncated);
+            }
+        }
+
+        // 2. Update Play/Pause Menu Item Label
+        if let Ok(guard) = store.menu_play_pause.lock() {
+            if let Some(item) = guard.as_ref() {
+                let play_pause_label = if state_str == "playing" {
+                    "Jeda Siaran"
+                } else {
+                    "Putar Siaran"
+                };
+                let _ = item.set_text(play_pause_label);
+            }
+        }
+
+        // 3. Optional Menu Bar text title next to tray icon
+        let settings = store.read_json("settings.json", serde_json::json!({}));
+        let show_title_in_menu_bar = settings
+            .get("showTitleInMenuBar")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        if show_title_in_menu_bar {
+            let menu_bar_title = match (state_str, station_name, stream_title) {
+                ("playing", Some(station), Some(title)) => {
+                    let full = format!(" {} — {}", station, title);
+                    if full.chars().count() > 30 {
+                        let mut s: String = full.chars().take(29).collect();
+                        s.push('…');
+                        s
+                    } else {
+                        full
+                    }
+                }
+                ("playing", Some(station), None) => format!(" {}", station),
+                ("buffering" | "connecting" | "reconnecting", Some(station), _) => {
+                    format!(" {}", station)
+                }
+                _ => String::new(),
+            };
+            let _ = tray.set_title(if menu_bar_title.is_empty() {
+                None
+            } else {
+                Some(menu_bar_title)
+            });
+        } else {
+            let _ = tray.set_title(None::<String>);
+        }
     }
 
     let _ = app.emit("squelch:player-sync", &status);

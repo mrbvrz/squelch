@@ -710,6 +710,9 @@ export function initTauriBridge() {
                     isMuted: isAudioMuted,
                     volume: currentAudioVolume
                 });
+                void invoke('update_settings', {
+                    partial: { isMuted: isAudioMuted }
+                });
                 return isAudioMuted;
             },
 
@@ -732,6 +735,9 @@ export function initTauriBridge() {
                     volume: currentAudioVolume,
                     isMuted: false
                 });
+                void invoke('update_settings', {
+                    partial: { volume: currentAudioVolume, isMuted: false }
+                });
                 return currentAudioVolume;
             },
 
@@ -752,6 +758,9 @@ export function initTauriBridge() {
                     ...playerStatus,
                     volume: currentAudioVolume,
                     isMuted: false
+                });
+                void invoke('update_settings', {
+                    partial: { volume: currentAudioVolume, isMuted: false }
                 });
                 return currentAudioVolume;
             },

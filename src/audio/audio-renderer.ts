@@ -406,11 +406,21 @@ class AudioEqualizerEngine {
         }
     ).catch(() => {});
 
-    // Read initial audioOutputDeviceId from settings
+    // Read initial audio output device, volume, and mute settings
     void invoke('get_settings')
         .then((res: any) => {
             if (res?.settings?.audioOutputDeviceId) {
                 void applyAudioSink(res.settings.audioOutputDeviceId);
+            }
+            if (typeof res?.settings?.volume === 'number') {
+                const raw = res.settings.volume;
+                const normalized = raw > 1 ? raw / 100 : raw;
+                currentVolume = Math.max(0, Math.min(1, normalized));
+                audioEl.volume = currentVolume;
+            }
+            if (typeof res?.settings?.isMuted === 'boolean') {
+                currentMuted = Boolean(res.settings.isMuted);
+                audioEl.muted = currentMuted;
             }
         })
         .catch(() => {});

@@ -164,6 +164,8 @@ export interface AppSettings {
     autoCheckUpdates?: boolean;
     hideFromDock?: boolean;
     audioOutputDeviceId?: string;
+    volume?: number;
+    isMuted?: boolean;
 }
 
 export interface AppRuntimeState {
@@ -178,6 +180,8 @@ export function createDefaultSettings(): AppSettings {
         autoCheckUpdates: true,
         hideFromDock: false,
         audioOutputDeviceId: 'default',
+        volume: 1.0,
+        isMuted: false,
         launchAtLogin: false,
         autoPlayLastStation: false,
         autoReconnect: true,

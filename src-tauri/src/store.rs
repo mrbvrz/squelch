@@ -9,6 +9,8 @@ pub struct AppStore {
     pub proxy_port: Mutex<u16>,
     pub tray_state: Mutex<String>,
     pub player_state: Mutex<Value>,
+    pub menu_status: Mutex<Option<tauri::menu::MenuItem<tauri::Wry>>>,
+    pub menu_play_pause: Mutex<Option<tauri::menu::MenuItem<tauri::Wry>>>,
 }
 
 impl AppStore {
@@ -19,6 +21,10 @@ impl AppStore {
             .unwrap_or_else(|_| PathBuf::from("./squelch_data"));
         let _ = fs::create_dir_all(&data_dir);
 
+        let settings = Self::read_json_static(&data_dir, "settings.json", serde_json::json!({}));
+        let init_volume = settings.get("volume").and_then(|v| v.as_f64()).unwrap_or(1.0);
+        let init_muted = settings.get("isMuted").and_then(|v| v.as_bool()).unwrap_or(false);
+
         Self {
             data_dir,
             proxy_port: Mutex::new(proxy_port),
@@ -26,15 +32,27 @@ impl AppStore {
             player_state: Mutex::new(serde_json::json!({
                 "state": "idle",
                 "currentStation": null,
-                "volume": 1.0,
-                "isMuted": false,
+                "volume": init_volume,
+                "isMuted": init_muted,
                 "metadata": null,
                 "streamTitle": null,
                 "sleepTimerMinutes": null,
                 "sleepTimerRemainingSec": null,
                 "error": null
             })),
+            menu_status: Mutex::new(None),
+            menu_play_pause: Mutex::new(None),
         }
+    }
+
+    pub fn read_json_static(data_dir: &std::path::Path, filename: &str, default_val: Value) -> Value {
+        let file_path = data_dir.join(filename);
+        if let Ok(content) = fs::read_to_string(&file_path) {
+            if let Ok(parsed) = serde_json::from_str::<Value>(&content) {
+                return parsed;
+            }
+        }
+        default_val
     }
 
     pub fn read_json(&self, filename: &str, default_val: Value) -> Value {

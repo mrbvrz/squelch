@@ -57,14 +57,18 @@ fi
 
 # 5. Fallback if create-dmg was not available or had issue
 if [ ! -f "$FINAL_DMG" ]; then
-    echo "Creating fallback DMG via hdiutil..."
+    echo "Creating DMG via hdiutil makehybrid & convert..."
     STAGING_DIR="$(mktemp -d /tmp/squelch-dmg-staging.XXXXXX)"
-    cp -R "$SRC_APP" "$STAGING_DIR/"
-    ln -s /Applications "$STAGING_DIR/Applications"
-    mkdir -p "$STAGING_DIR/.background"
-    cp "$BG_IMAGE" "$STAGING_DIR/.background/background.png"
+    ROOT_DIR="$STAGING_DIR/root"
+    mkdir -p "$ROOT_DIR"
+    cp -R "$SRC_APP" "$ROOT_DIR/"
+    ln -s /Applications "$ROOT_DIR/Applications"
+    mkdir -p "$ROOT_DIR/.background"
+    cp "$BG_IMAGE" "$ROOT_DIR/.background/background.png"
     
-    hdiutil create -volname "Squelch" -srcfolder "$STAGING_DIR" -ov -format UDZO "$FINAL_DMG" || true
+    UNCOMPRESSED_DMG="$STAGING_DIR/uncompressed.dmg"
+    hdiutil makehybrid -hfs -hfs-volume-name "Squelch" -o "$UNCOMPRESSED_DMG" "$ROOT_DIR"
+    hdiutil convert "$UNCOMPRESSED_DMG" -format UDZO -o "$FINAL_DMG"
     rm -rf "$STAGING_DIR"
 fi
 

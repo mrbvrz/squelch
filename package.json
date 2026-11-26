@@ -2,6 +2,7 @@
     "name": "squelch",
     "productName": "Squelch",
     "version": "0.1.3",
+    "type": "module",
     "description": "Lightweight cross-platform menu bar internet radio player (macOS first, powered by Tauri)",
     "homepage": "https://github.com/mrbvrz/squelch",
     "repository": {

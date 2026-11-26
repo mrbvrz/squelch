@@ -200,7 +200,7 @@ export function createDefaultSettings(): AppSettings {
         theme: 'system',
         accentColor: '#0A84FF',
         fontFamily: 'system',
-        glassOpacity: 0.9,
+        glassOpacity: 72,
         networkTimeoutMs: 12000,
         bufferLengthSeconds: 5,
         equalizer: {

@@ -1,4 +1,59 @@
 import type { PlayerAction, PlayerState } from '../types';
+import type { TranslationDictionary } from '../i18n';
+
+export interface PlayerStateHeadline {
+    main: string;
+    sub: string;
+    color: string;
+}
+
+/** Maps a player state and optional reconnect count into a UI badge headline. */
+export function getPlayerStateHeadline(
+    playerState: PlayerState,
+    reconnectAttempt: number | null | undefined,
+    t: Pick<
+        TranslationDictionary,
+        | 'statusLiveSub'
+        | 'statusConnectingSub'
+        | 'statusBufferingSub'
+        | 'statusReconnectingSub'
+        | 'statusPausedSub'
+        | 'statusOfflineSub'
+        | 'statusStandbySub'
+    >
+): PlayerStateHeadline {
+    switch (playerState) {
+        case 'playing':
+            return { main: 'LIVE', sub: t.statusLiveSub, color: '#30D158' };
+        case 'connecting':
+            return {
+                main: 'SYNC',
+                sub: t.statusConnectingSub,
+                color: '#FF9F0A'
+            };
+        case 'buffering':
+            return {
+                main: 'WAIT',
+                sub: t.statusBufferingSub,
+                color: '#FF9F0A'
+            };
+        case 'reconnecting':
+            return {
+                main: 'RETRY',
+                sub: reconnectAttempt
+                    ? `${t.statusReconnectingSub} (${reconnectAttempt})`
+                    : t.statusReconnectingSub,
+                color: '#FF9F0A'
+            };
+        case 'paused':
+            return { main: 'HOLD', sub: t.statusPausedSub, color: '#8E8E93' };
+        case 'error':
+            return { main: 'ERR', sub: t.statusOfflineSub, color: '#FF453A' };
+        case 'idle':
+        default:
+            return { main: 'IDLE', sub: t.statusStandbySub, color: '#8E8E93' };
+    }
+}
 
 const ALLOWED_TRANSITIONS: Record<PlayerState, PlayerState[]> = {
     idle: ['connecting'],

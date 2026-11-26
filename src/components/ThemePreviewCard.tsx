@@ -79,8 +79,7 @@ function getThemePreviewStyle(
         case 'system':
         default:
             return {
-                background:
-                    'linear-gradient(135deg, #F2F3F7 50%, #1C1D22 50%)',
+                background: 'linear-gradient(135deg, #F2F3F7 50%, #1C1D22 50%)',
                 sidebarBg: 'rgba(128,128,128,0.18)',
                 accent: customAccent || 'var(--accent-color, #0A84FF)',
                 line1Bg: 'rgba(128,128,128,0.25)',

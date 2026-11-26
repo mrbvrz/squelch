@@ -12,6 +12,40 @@ export function formatDateKey(d: Date): string {
     return `${year}-${month}-${day}`;
 }
 
+export function normalizeListeningStats(raw: unknown): ListeningStatsSchema {
+    const obj =
+        raw && typeof raw === 'object' ? (raw as Record<string, any>) : {};
+    return {
+        schemaVersion: 1,
+        dailySeconds:
+            obj.dailySeconds && typeof obj.dailySeconds === 'object'
+                ? obj.dailySeconds
+                : {},
+        hourlySeconds:
+            obj.hourlySeconds && typeof obj.hourlySeconds === 'object'
+                ? obj.hourlySeconds
+                : {},
+        monthlySeconds:
+            obj.monthlySeconds && typeof obj.monthlySeconds === 'object'
+                ? obj.monthlySeconds
+                : {},
+        stationSeconds:
+            obj.stationSeconds && typeof obj.stationSeconds === 'object'
+                ? obj.stationSeconds
+                : {},
+        stationNames:
+            obj.stationNames && typeof obj.stationNames === 'object'
+                ? obj.stationNames
+                : {},
+        stationLogos:
+            obj.stationLogos && typeof obj.stationLogos === 'object'
+                ? obj.stationLogos
+                : {},
+        totalSeconds:
+            typeof obj.totalSeconds === 'number' ? obj.totalSeconds : 0
+    };
+}
+
 export function formatMonthKey(d: Date): string {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');

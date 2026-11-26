@@ -509,6 +509,7 @@ class AudioEqualizerEngine {
     let reconnectAttempts = 0;
     let isHandlingIssue = false;
     let currentPlayCmd: AudioCommand | null = null;
+    let playGeneration = 0;
 
     const clearStallTimer = () => {
         if (stallTimer) {
@@ -592,6 +593,7 @@ class AudioEqualizerEngine {
         clearStallTimer();
         if (isHandlingIssue) return;
         isHandlingIssue = true;
+        const myGen = playGeneration;
 
         let autoReconnect = true;
         let maxAttempts = 8;
@@ -606,6 +608,11 @@ class AudioEqualizerEngine {
             }
         } catch {
             // keep defaults
+        }
+
+        if (myGen !== playGeneration || !currentPlayCmd) {
+            isHandlingIssue = false;
+            return;
         }
 
         const stationName =
@@ -631,7 +638,7 @@ class AudioEqualizerEngine {
         clearReconnectTimer();
         reconnectTimer = setTimeout(async () => {
             reconnectTimer = null;
-            if (!currentPlayCmd) {
+            if (myGen !== playGeneration || !currentPlayCmd) {
                 isHandlingIssue = false;
                 return;
             }
@@ -643,15 +650,16 @@ class AudioEqualizerEngine {
 
             void startStallTimer();
             isHandlingIssue = false;
-            await executePlay(currentPlayCmd, true);
+            await executePlay(currentPlayCmd, true, myGen);
         }, 2500);
     };
 
     const executePlay = async (
         cmd: typeof currentPlayCmd,
-        isReconnect = false
+        isReconnect = false,
+        expectedGen = playGeneration
     ) => {
-        if (!cmd || !cmd.url) return;
+        if (!cmd || !cmd.url || expectedGen !== playGeneration) return;
 
         destroyHls();
         audioEl.volume = currentVolume;
@@ -689,6 +697,7 @@ class AudioEqualizerEngine {
         if (isHlsStream) {
             try {
                 const { default: HlsClass } = await import('hls.js');
+                if (expectedGen !== playGeneration) return;
                 if (HlsClass.isSupported()) {
                     isHlsInitialized = true;
                     hlsInstance = new HlsClass({
@@ -702,15 +711,18 @@ class AudioEqualizerEngine {
                     });
 
                     hlsInstance.on(HlsClass.Events.MANIFEST_PARSED, () => {
+                        if (expectedGen !== playGeneration) return;
                         audioEl.muted = true;
                         void audioEl
                             .play()
                             .then(() => {
+                                if (expectedGen !== playGeneration) return;
                                 audioEl.muted = currentMuted;
                                 audioEl.volume = currentVolume;
                                 eqEngine.resume();
                             })
                             .catch((err: unknown) => {
+                                if (expectedGen !== playGeneration) return;
                                 const msg =
                                     err instanceof Error
                                         ? err.message
@@ -720,6 +732,7 @@ class AudioEqualizerEngine {
                     });
 
                     hlsInstance.on(HlsClass.Events.ERROR, (_event, data) => {
+                        if (expectedGen !== playGeneration) return;
                         if (data.fatal) {
                             void handleNetworkIssue(
                                 `HLS ${data.type}: ${data.details}`
@@ -735,6 +748,8 @@ class AudioEqualizerEngine {
             }
         }
 
+        if (expectedGen !== playGeneration) return;
+
         if (!isHlsInitialized) {
             audioEl.pause();
             audioEl.src = streamUrl;
@@ -742,10 +757,12 @@ class AudioEqualizerEngine {
             try {
                 audioEl.muted = true;
                 await audioEl.play();
+                if (expectedGen !== playGeneration) return;
                 audioEl.muted = currentMuted;
                 audioEl.volume = currentVolume;
                 eqEngine.resume();
             } catch (err) {
+                if (expectedGen !== playGeneration) return;
                 const msg =
                     err instanceof Error ? err.message : 'Play interrupted';
                 void handleNetworkIssue(msg);
@@ -797,6 +814,7 @@ class AudioEqualizerEngine {
     bridge.onCommand(async (cmd) => {
         switch (cmd.type) {
             case 'play': {
+                const myGen = ++playGeneration;
                 clearStallTimer();
                 clearReconnectTimer();
                 isHandlingIssue = false;
@@ -805,10 +823,11 @@ class AudioEqualizerEngine {
                 }
                 currentPlayCmd = cmd;
                 void startStallTimer();
-                await executePlay(cmd, Boolean(cmd.isReconnect));
+                await executePlay(cmd, Boolean(cmd.isReconnect), myGen);
                 break;
             }
             case 'pause': {
+                const myGen = ++playGeneration;
                 clearStallTimer();
                 clearReconnectTimer();
                 isHandlingIssue = false;
@@ -817,6 +836,7 @@ class AudioEqualizerEngine {
 
                 // Smoothly fade to 0dB in 30ms to avoid any sharp transient pop/crack
                 await eqEngine.fadeToZero(30);
+                if (myGen !== playGeneration) break;
                 destroyHls();
                 audioEl.pause();
                 audioEl.removeAttribute('src');
@@ -830,6 +850,7 @@ class AudioEqualizerEngine {
                 break;
             }
             case 'stop': {
+                const myGen = ++playGeneration;
                 clearStallTimer();
                 clearReconnectTimer();
                 isHandlingIssue = false;
@@ -838,6 +859,7 @@ class AudioEqualizerEngine {
 
                 // Smoothly fade to 0dB in 30ms to avoid any sharp transient pop/crack
                 await eqEngine.fadeToZero(30);
+                if (myGen !== playGeneration) break;
                 destroyHls();
                 audioEl.pause();
                 audioEl.removeAttribute('src');
@@ -851,6 +873,7 @@ class AudioEqualizerEngine {
                 break;
             }
             case 'teardown': {
+                ++playGeneration;
                 clearStallTimer();
                 clearReconnectTimer();
                 isHandlingIssue = false;

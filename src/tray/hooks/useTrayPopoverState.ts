@@ -6,6 +6,7 @@ import {
     applyAppearanceVariables,
     bindActiveScrollbars
 } from '../../utils/appearance';
+import { getPlayerStateHeadline } from '../../utils/player-state';
 
 export function useTrayPopoverState(api: SquelchTrayPopoverApi) {
     const [playerState, setPlayerState] = useState<PlayerState>('idle');
@@ -138,10 +139,14 @@ export function useTrayPopoverState(api: SquelchTrayPopoverApi) {
                 return;
             }
 
-            if (data?.type === 'settings' && (data as any)?.settings) {
-                const s = (data as any).settings;
-                setSettings(s);
-                applyAppearanceVariables(s);
+            if (data?.type === 'settings') {
+                const s = (data as any)?.settings;
+                if (s) {
+                    setSettings(s);
+                    applyAppearanceVariables(s);
+                } else {
+                    void loadData();
+                }
                 return;
             }
 
@@ -232,51 +237,10 @@ export function useTrayPopoverState(api: SquelchTrayPopoverApi) {
         [stations]
     );
 
-    const stateHeadline = useMemo(() => {
-        switch (playerState) {
-            case 'playing':
-                return { main: 'LIVE', sub: t.statusLiveSub, color: '#30D158' };
-            case 'connecting':
-                return {
-                    main: 'SYNC',
-                    sub: t.statusConnectingSub,
-                    color: '#FF9F0A'
-                };
-            case 'buffering':
-                return {
-                    main: 'WAIT',
-                    sub: t.statusBufferingSub,
-                    color: '#FF9F0A'
-                };
-            case 'reconnecting':
-                return {
-                    main: 'RETRY',
-                    sub: reconnectAttempt
-                        ? `${t.statusReconnectingSub} (${reconnectAttempt})`
-                        : t.statusReconnectingSub,
-                    color: '#FF9F0A'
-                };
-            case 'paused':
-                return {
-                    main: 'HOLD',
-                    sub: t.statusPausedSub,
-                    color: '#8E8E93'
-                };
-            case 'error':
-                return {
-                    main: 'ERR',
-                    sub: t.statusOfflineSub,
-                    color: '#FF453A'
-                };
-            case 'idle':
-            default:
-                return {
-                    main: 'IDLE',
-                    sub: t.statusStandbySub,
-                    color: '#8E8E93'
-                };
-        }
-    }, [playerState, reconnectAttempt, t]);
+    const stateHeadline = useMemo(
+        () => getPlayerStateHeadline(playerState, reconnectAttempt, t),
+        [playerState, reconnectAttempt, t]
+    );
 
     return {
         playerState,

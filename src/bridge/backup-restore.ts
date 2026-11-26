@@ -6,6 +6,7 @@ import {
     parseM3uPlaylist,
     parsePlsPlaylist
 } from '../utils/playlist';
+import { normalizeListeningStats } from '../utils/listening-stats';
 import type { Station } from '../types';
 
 export async function exportStationsData(
@@ -132,10 +133,35 @@ export async function restoreAppDataBundle(): Promise<{
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.json';
+        let settled = false;
+
+        const finish = (res: {
+            ok: boolean;
+            canceled?: boolean;
+            error?: string;
+        }) => {
+            if (settled) return;
+            settled = true;
+            window.removeEventListener('focus', handleWindowFocus);
+            resolve(res);
+        };
+
+        const handleWindowFocus = () => {
+            setTimeout(() => {
+                if (!settled && (!input.files || input.files.length === 0)) {
+                    finish({ ok: false, canceled: true });
+                }
+            }, 400);
+        };
+
+        input.addEventListener('cancel', () => {
+            finish({ ok: false, canceled: true });
+        });
+
         input.onchange = async () => {
             const file = input.files?.[0];
             if (!file) {
-                resolve({ ok: false, canceled: true });
+                finish({ ok: false, canceled: true });
                 return;
             }
             try {
@@ -152,24 +178,64 @@ export async function restoreAppDataBundle(): Promise<{
                     }
                 }
                 if (data.settings?.settings) {
+                    const restoredSettings = data.settings.settings;
                     await invoke('update_settings', {
-                        partial: data.settings.settings
+                        partial: restoredSettings
                     });
+                    if (restoredSettings.hideFromDock !== undefined) {
+                        void invoke('set_dock_visibility', {
+                            visible: !restoredSettings.hideFromDock
+                        });
+                    }
+                    if (restoredSettings.equalizer !== undefined) {
+                        void emit(
+                            'squelch:audio:eq',
+                            restoredSettings.equalizer
+                        );
+                    }
+                    if (restoredSettings.bufferLengthSeconds !== undefined) {
+                        void emit('squelch:audio:buffer', {
+                            bufferLengthSeconds:
+                                restoredSettings.bufferLengthSeconds
+                        });
+                    }
+                    if (restoredSettings.shortcuts !== undefined) {
+                        void emit(
+                            'squelch:shortcuts:sync',
+                            restoredSettings.shortcuts
+                        );
+                    }
+                    if (restoredSettings.audioOutputDeviceId !== undefined) {
+                        void emit('squelch:audio:sink', {
+                            deviceId: restoredSettings.audioOutputDeviceId
+                        });
+                    }
                 }
                 if (Array.isArray(data.schedules)) {
                     for (const sc of data.schedules) {
                         await invoke('save_schedule', { schedule: sc });
                     }
                 }
-                await emit('ui:state-changed', { type: 'settings' });
-                resolve({ ok: true });
+                if (
+                    data.listeningStats &&
+                    typeof data.listeningStats === 'object'
+                ) {
+                    await invoke('save_listening_stats', {
+                        stats: normalizeListeningStats(data.listeningStats)
+                    });
+                    await emit('squelch:stats:reload');
+                }
+                await emit('ui:state-changed', { type: 'all' });
+                finish({ ok: true });
             } catch (err: any) {
-                resolve({
+                finish({
                     ok: false,
                     error: err?.message || 'Invalid backup file'
                 });
             }
         };
+
+        window.addEventListener('focus', handleWindowFocus, { once: true });
         input.click();
     });
 }

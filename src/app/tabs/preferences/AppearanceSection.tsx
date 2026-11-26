@@ -260,10 +260,10 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({
                             min={40}
                             max={100}
                             step={5}
-                            value={settings.glassOpacity ?? 90}
+                            value={settings.glassOpacity ?? 72}
                             aria-label={t.prefGlassOpacityLabel}
                             onChange={(e) => {
-                                const val = parseInt(e.target.value, 10) || 90;
+                                const val = parseInt(e.target.value, 10) || 72;
                                 applyAppearanceVariables({
                                     ...settings,
                                     glassOpacity: val
@@ -278,7 +278,7 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({
                             }}
                         />
                         <span className="text-[12px] font-mono font-medium text-secondary tabular-nums min-w-[36px] text-right">
-                            {settings.glassOpacity ?? 90}%
+                            {settings.glassOpacity ?? 72}%
                         </span>
                     </div>
                 </div>

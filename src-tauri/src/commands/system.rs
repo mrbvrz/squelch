@@ -283,6 +283,36 @@ pub async fn quit_app(app: AppHandle) {
 }
 
 #[tauri::command]
+pub fn open_data_dir(store: State<Arc<AppStore>>) -> Result<(), String> {
+    let dir = &store.data_dir;
+    if !dir.exists() {
+        std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(dir)
+            .spawn()
+            .map_err(|e| format!("Failed to open data directory: {}", e))?;
+    }
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg(dir)
+            .spawn()
+            .map_err(|e| format!("Failed to open data directory: {}", e))?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(dir)
+            .spawn()
+            .map_err(|e| format!("Failed to open data directory: {}", e))?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub fn open_external(url: String) -> Result<(), String> {
     let trimmed = url.trim();
     if !trimmed.starts_with("https://")

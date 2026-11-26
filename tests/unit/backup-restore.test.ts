@@ -1,7 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import {
     exportStationsData,
-    importStationsData
+    importStationsData,
+    restoreAppDataBundle
 } from '../../src/bridge/backup-restore';
 import type { Station } from '../../src/types';
 
@@ -24,6 +25,8 @@ const mockStations: Station[] = [
 ];
 
 let savedStations: Station[] = [];
+let savedStatsPayload: any = null;
+const emittedEvents: Array<{ event: string; payload: any }> = [];
 
 vi.mock('@tauri-apps/api/core', () => ({
     invoke: vi.fn(async (cmd: string, args?: any) => {
@@ -34,13 +37,25 @@ vi.mock('@tauri-apps/api/core', () => ({
             savedStations.push(args.station);
             return true;
         }
+        if (cmd === 'save_listening_stats') {
+            savedStatsPayload = args.stats;
+            return true;
+        }
         return null;
+    })
+}));
+
+vi.mock('@tauri-apps/api/event', () => ({
+    emit: vi.fn(async (event: string, payload?: any) => {
+        emittedEvents.push({ event, payload });
     })
 }));
 
 describe('Backup and Restore Bridge Helpers', () => {
     beforeEach(() => {
         savedStations = [];
+        savedStatsPayload = null;
+        emittedEvents.length = 0;
     });
 
     it('exports stations to json format correctly', async () => {
@@ -112,5 +127,83 @@ describe('Backup and Restore Bridge Helpers', () => {
         expect(res.skippedCount).toBe(0);
         expect(savedStations).toHaveLength(1);
         expect(savedStations[0].genre).toBe('Adult Contemporary');
+    });
+
+    it('restores listeningStats and resolves on cancel when restoring a backup bundle', async () => {
+        const listeners: Record<string, Array<() => void>> = {};
+        const fakeInput: any = {
+            type: '',
+            accept: '',
+            files: null,
+            onchange: null,
+            addEventListener: (evt: string, fn: () => void) => {
+                listeners[evt] = listeners[evt] || [];
+                listeners[evt].push(fn);
+            },
+            click: () => {
+                for (const fn of listeners['cancel'] || []) fn();
+            }
+        };
+
+        const origDocument = globalThis.document;
+        const origWindow = globalThis.window;
+
+        globalThis.document = {
+            createElement: () => fakeInput
+        } as unknown as Document;
+        globalThis.window = {
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn()
+        } as unknown as Window & typeof globalThis;
+
+        try {
+            const canceledRes = await restoreAppDataBundle();
+            expect(canceledRes).toEqual({ ok: false, canceled: true });
+
+            const backupPayload = {
+                stationsData: {
+                    stations: [
+                        {
+                            id: 'st-2',
+                            name: 'RRI',
+                            streamUrl: 'https://rri.example/stream'
+                        }
+                    ],
+                    groups: ['News']
+                },
+                listeningStats: {
+                    dailySeconds: { '2026-11-03': 300 },
+                    hourlySeconds: { '2026-11-03-10': 300 },
+                    stationNames: { 'st-2': 'RRI' },
+                    totalSeconds: 300
+                }
+            };
+
+            fakeInput.click = () => {
+                fakeInput.files = [
+                    { text: async () => JSON.stringify(backupPayload) }
+                ];
+                void fakeInput.onchange?.();
+            };
+
+            const restoredRes = await restoreAppDataBundle();
+            expect(restoredRes).toEqual({ ok: true });
+            expect(savedStations).toHaveLength(1);
+            expect(savedStatsPayload?.hourlySeconds).toEqual({
+                '2026-11-03-10': 300
+            });
+            expect(savedStatsPayload?.stationNames).toEqual({ 'st-2': 'RRI' });
+            expect(emittedEvents).toContainEqual({
+                event: 'squelch:stats:reload',
+                payload: undefined
+            });
+            expect(emittedEvents).toContainEqual({
+                event: 'ui:state-changed',
+                payload: { type: 'all' }
+            });
+        } finally {
+            globalThis.document = origDocument;
+            globalThis.window = origWindow;
+        }
     });
 });

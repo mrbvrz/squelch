@@ -506,3 +506,23 @@ pub fn reveal_update_in_finder(file_path: String) -> Result<(), String> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_version_handles_prefixes_and_prerelease_suffixes() {
+        assert_eq!(parse_version("v0.1.3"), (0, 1, 3));
+        assert_eq!(parse_version("V1.12.4-beta.2"), (1, 12, 4));
+        assert_eq!(parse_version("2.0"), (2, 0, 0));
+    }
+
+    #[test]
+    fn is_version_newer_compares_semver_tuples_correctly() {
+        assert!(is_version_newer("0.1.3", "v0.1.4"));
+        assert!(is_version_newer("0.1.3", "0.2.0"));
+        assert!(!is_version_newer("0.1.3", "0.1.3"));
+        assert!(!is_version_newer("0.2.0", "0.1.9"));
+    }
+}

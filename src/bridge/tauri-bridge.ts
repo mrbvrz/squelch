@@ -4,6 +4,7 @@ import { applyAppearanceVariables } from '../utils/appearance';
 import type { ListeningStatsSchema } from '../types/stats';
 import {
     buildListeningStatsSummary,
+    normalizeListeningStats,
     recordListeningSeconds
 } from '../utils/listening-stats';
 import {
@@ -70,16 +71,7 @@ async function ensureStatsLoaded(): Promise<ListeningStatsSchema> {
         try {
             const raw: any = await invoke('get_listening_stats');
             if (raw && typeof raw === 'object') {
-                statsData = {
-                    schemaVersion: 1,
-                    dailySeconds: raw.dailySeconds || {},
-                    monthlySeconds: raw.monthlySeconds || {},
-                    stationSeconds: raw.stationSeconds || {},
-                    totalSeconds:
-                        typeof raw.totalSeconds === 'number'
-                            ? raw.totalSeconds
-                            : 0
-                };
+                statsData = normalizeListeningStats(raw);
             }
         } catch (e) {
             console.error('Failed to load listening stats:', e);
@@ -87,6 +79,12 @@ async function ensureStatsLoaded(): Promise<ListeningStatsSchema> {
         isStatsLoaded = true;
     }
     return statsData;
+}
+
+function resetInMemoryStats(): void {
+    statsData = normalizeListeningStats(null);
+    statsDirty = false;
+    lastTickTimeMs = null;
 }
 
 async function flushStatsToDisk(): Promise<void> {
@@ -104,7 +102,7 @@ function scheduleStatsSave(): void {
     statsSaveTimeout = setTimeout(() => {
         statsSaveTimeout = null;
         void flushStatsToDisk();
-    }, 5000);
+    }, 3000);
 }
 
 function recordListeningTick(now = new Date()): void {
@@ -136,7 +134,13 @@ export function initTauriBridge() {
     if (typeof window === 'undefined') return;
     if (!('__TAURI_INTERNALS__' in window)) return;
 
-    void ensureStatsLoaded();
+    const isAudioWorker =
+        typeof window !== 'undefined' &&
+        window.location.pathname.includes('audio.html');
+
+    if (isAudioWorker) {
+        void ensureStatsLoaded();
+    }
 
     // Hydrate player status from Rust global store on startup
     void invoke('get_player_status')
@@ -152,6 +156,26 @@ export function initTauriBridge() {
     listen('squelch:player-sync', (event) => {
         const payload = event.payload as any;
         if (payload && typeof payload === 'object') {
+            if (isAudioWorker) {
+                if (
+                    playerStatus.state === 'playing' &&
+                    payload.state &&
+                    payload.state !== 'playing'
+                ) {
+                    recordListeningTick();
+                    lastTickTimeMs = null;
+                    void flushStatsToDisk();
+                } else if (
+                    playerStatus.state === 'playing' &&
+                    payload.state === 'playing' &&
+                    payload.currentStation?.id &&
+                    payload.currentStation.id !==
+                        playerStatus.currentStation?.id
+                ) {
+                    recordListeningTick();
+                    void flushStatsToDisk();
+                }
+            }
             playerStatus = { ...playerStatus, ...payload };
             if (typeof payload.volume === 'number') {
                 currentAudioVolume = payload.volume;
@@ -167,19 +191,60 @@ export function initTauriBridge() {
         }
     });
 
-    setInterval(() => {
-        recordListeningTick();
-    }, 1000);
+    if (isAudioWorker) {
+        setInterval(() => {
+            recordListeningTick();
+        }, 1000);
 
-    window.addEventListener('beforeunload', () => {
-        recordListeningTick();
-        void flushStatsToDisk();
-    });
+        window.addEventListener('beforeunload', () => {
+            recordListeningTick();
+            void flushStatsToDisk();
+        });
+
+        listen('squelch:stats:reset', () => {
+            resetInMemoryStats();
+            isStatsLoaded = true;
+        }).catch(() => {});
+
+        listen('squelch:stats:reload', () => {
+            isStatsLoaded = false;
+            statsDirty = false;
+            lastTickTimeMs = null;
+            void ensureStatsLoaded();
+        }).catch(() => {});
+
+        listen('squelch:stats:flush', () => {
+            recordListeningTick();
+            void flushStatsToDisk();
+        }).catch(() => {});
+    }
 
     // Listen to metadata from Rust ICY proxy
     listen<string>('squelch:metadata', (event) => {
-        playerStatus.streamTitle = event.payload;
-        syncPlayerStatusToRust();
+        const nextTitle = event.payload;
+        const prevTitle = playerStatus.streamTitle;
+        playerStatus.streamTitle = nextTitle;
+        if (isAudioWorker) {
+            syncPlayerStatusToRust();
+            if (
+                nextTitle &&
+                nextTitle.trim() &&
+                nextTitle !== prevTitle &&
+                playerStatus.currentStation?.name
+            ) {
+                const stationName = playerStatus.currentStation.name;
+                void invoke('get_settings')
+                    .then((cfg: any) => {
+                        if (cfg?.settings?.notifyOnSongChange !== false) {
+                            return invoke('send_notification', {
+                                title: stationName,
+                                body: nextTitle
+                            });
+                        }
+                    })
+                    .catch(() => {});
+            }
+        }
         emit('ui:state-changed', { ...playerStatus });
     });
 
@@ -187,13 +252,17 @@ export function initTauriBridge() {
     listen<string>('squelch:audio:state', (event) => {
         const payload = event.payload as any;
         if (payload?.state) {
-            if (payload.state === 'playing') {
-                lastTickTimeMs = Date.now();
+            if (isAudioWorker) {
+                if (payload.state === 'playing') {
+                    lastTickTimeMs = Date.now();
+                    playerStatus.reconnectAttempt = null;
+                } else if (playerStatus.state === 'playing') {
+                    recordListeningTick();
+                    lastTickTimeMs = null;
+                    void flushStatsToDisk();
+                }
+            } else if (payload.state === 'playing') {
                 playerStatus.reconnectAttempt = null;
-            } else if (playerStatus.state === 'playing') {
-                recordListeningTick();
-                lastTickTimeMs = null;
-                void flushStatsToDisk();
             }
             playerStatus.state = payload.state;
             if (payload.state === 'idle') {
@@ -203,7 +272,9 @@ export function initTauriBridge() {
             } else if (payload.state === 'reconnecting') {
                 playerStatus.reconnectAttempt = payload.attempt ?? null;
             }
-            syncPlayerStatusToRust();
+            if (isAudioWorker) {
+                syncPlayerStatusToRust();
+            }
             emit('ui:state-changed', { ...playerStatus });
         }
     });
@@ -233,11 +304,7 @@ export function initTauriBridge() {
         }
     });
 
-    // Global Shortcuts Engine (active in background audio worker)
-    const isAudioWorker =
-        typeof window !== 'undefined' &&
-        window.location.pathname.includes('audio.html');
-
+    // Global Shortcuts & Background Schedule Runner (active only in background audio worker)
     if (isAudioWorker) {
         let currentShortcutsJson = '';
         const syncGlobalShortcuts = async (shortcuts?: any) => {
@@ -284,10 +351,21 @@ export function initTauriBridge() {
             }
         };
 
-        // Initial setup of global shortcuts
+        // Initial setup of global shortcuts & optional autoplay last station
         void invoke('get_settings').then((res: any) => {
-            if (res?.shortcuts) {
-                void syncGlobalShortcuts(res.shortcuts);
+            const settings = res?.settings;
+            const shortcuts = settings?.shortcuts ?? res?.shortcuts;
+            if (shortcuts) {
+                void syncGlobalShortcuts(shortcuts);
+            }
+            if (settings?.autoPlayLastStation && settings?.lastStationId) {
+                setTimeout(() => {
+                    if (playerStatus.state === 'idle') {
+                        void (window as any).squelchApi?.playStation(
+                            settings.lastStationId
+                        );
+                    }
+                }, 400);
             }
         });
 
@@ -295,85 +373,90 @@ export function initTauriBridge() {
         void listen('squelch:shortcuts:sync', (event: any) => {
             void syncGlobalShortcuts(event.payload);
         });
+
+        // Centralized sleep timer handler (owned solely by audio worker)
+        void listen<{ minutes: number | null }>(
+            'squelch:sleep-timer:set',
+            (event) => {
+                void handleSetSleepTimer(
+                    event.payload?.minutes ?? null,
+                    playerStatus,
+                    syncPlayerStatusToRust,
+                    () => (window as any).squelchApi.stopPlayback(),
+                    (title, body) =>
+                        (window as any).squelchApi.sendNotification(title, body)
+                );
+            }
+        );
+
+        // Background Schedule Runner (checks every 20s for reminders and autoplay)
+        const triggeredSlots = new Set<string>();
+        let lastDateStr = '';
+        setInterval(async () => {
+            try {
+                const now = new Date();
+                const dateStr = now.toISOString().slice(0, 10);
+                if (dateStr !== lastDateStr) {
+                    triggeredSlots.clear();
+                    lastDateStr = dateStr;
+                }
+                const currentDay = now.getDay();
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const rawSchedules: unknown = await invoke('get_schedules');
+                const schedules = Array.isArray(rawSchedules)
+                    ? rawSchedules
+                    : [];
+                for (const schedule of schedules) {
+                    if (
+                        !schedule.enabled ||
+                        !schedule.daysOfWeek?.includes(currentDay)
+                    ) {
+                        continue;
+                    }
+                    const [sH, sM] = schedule.startTime
+                        .split(':')
+                        .map((v: string) => parseInt(v, 10));
+                    const startTotalMinutes = sH * 60 + (sM || 0);
+
+                    // Reminder notification
+                    const reminderSlot = `${schedule.id}-remind-${startTotalMinutes}`;
+                    const reminderMinutes = schedule.reminderMinutes ?? 5;
+                    if (
+                        reminderMinutes > 0 &&
+                        currentMinutes ===
+                            startTotalMinutes - reminderMinutes &&
+                        !triggeredSlots.has(reminderSlot)
+                    ) {
+                        triggeredSlots.add(reminderSlot);
+                        void invoke('send_notification', {
+                            title: `Acara Dimulai Dalam ${reminderMinutes} Menit`,
+                            body: `${schedule.showName} akan segera mengudara di radio.`
+                        });
+                    }
+
+                    // Autoplay / Start notification
+                    const startSlot = `${schedule.id}-start-${startTotalMinutes}`;
+                    if (
+                        currentMinutes === startTotalMinutes &&
+                        !triggeredSlots.has(startSlot)
+                    ) {
+                        triggeredSlots.add(startSlot);
+                        if (schedule.autoPlay && schedule.stationId) {
+                            void (window as any).squelchApi?.playStation(
+                                schedule.stationId
+                            );
+                        }
+                        void invoke('send_notification', {
+                            title: `Acara Sedang Berlangsung: ${schedule.showName}`,
+                            body: `Siaran ${schedule.showName} sekarang mengudara.`
+                        });
+                    }
+                }
+            } catch {
+                // Ignore background schedule check errors
+            }
+        }, 20000);
     }
-
-    // Background Schedule Runner (checks every 20s for reminders and autoplay)
-    const triggeredSlots = new Set<string>();
-    let lastDateStr = '';
-    setInterval(async () => {
-        try {
-            const now = new Date();
-            const dateStr = now.toISOString().slice(0, 10);
-            if (dateStr !== lastDateStr) {
-                triggeredSlots.clear();
-                lastDateStr = dateStr;
-            }
-            const currentDay = now.getDay();
-            const currentMinutes = now.getHours() * 60 + now.getMinutes();
-            const schedules: any[] = await invoke('get_schedules');
-            for (const schedule of schedules) {
-                if (
-                    !schedule.enabled ||
-                    !schedule.daysOfWeek?.includes(currentDay)
-                ) {
-                    continue;
-                }
-                const [sH, sM] = schedule.startTime
-                    .split(':')
-                    .map((v: string) => parseInt(v, 10));
-                const startTotalMinutes = sH * 60 + (sM || 0);
-
-                // Reminder notification
-                const reminderSlot = `${schedule.id}-remind-${startTotalMinutes}`;
-                const reminderMinutes = schedule.reminderMinutes ?? 5;
-                if (
-                    reminderMinutes > 0 &&
-                    currentMinutes === startTotalMinutes - reminderMinutes &&
-                    !triggeredSlots.has(reminderSlot)
-                ) {
-                    triggeredSlots.add(reminderSlot);
-                    if (
-                        'Notification' in window &&
-                        Notification.permission === 'granted'
-                    ) {
-                        new Notification(
-                            `Acara Dimulai Dalam ${reminderMinutes} Menit`,
-                            {
-                                body: `${schedule.showName} akan segera mengudara di radio.`
-                            }
-                        );
-                    }
-                }
-
-                // Autoplay / Start notification
-                const startSlot = `${schedule.id}-start-${startTotalMinutes}`;
-                if (
-                    currentMinutes === startTotalMinutes &&
-                    !triggeredSlots.has(startSlot)
-                ) {
-                    triggeredSlots.add(startSlot);
-                    if (schedule.autoPlay && schedule.stationId) {
-                        void (window as any).squelchApi?.playStation(
-                            schedule.stationId
-                        );
-                    }
-                    if (
-                        'Notification' in window &&
-                        Notification.permission === 'granted'
-                    ) {
-                        new Notification(
-                            `Acara Sedang Berlangsung: ${schedule.showName}`,
-                            {
-                                body: `Siaran ${schedule.showName} sekarang mengudara.`
-                            }
-                        );
-                    }
-                }
-            }
-        } catch {
-            // Ignore background schedule check errors
-        }
-    }, 20000);
 
     // Setup squelchAudioBridge for audio.html worker
     if (!(window as any).squelchAudioBridge) {
@@ -550,8 +633,12 @@ export function initTauriBridge() {
                 if (!station || !station.streamUrl) return false;
 
                 if (playerStatus.state === 'playing') {
-                    recordListeningTick();
-                    void flushStatsToDisk();
+                    if (isAudioWorker) {
+                        recordListeningTick();
+                        void flushStatsToDisk();
+                    } else {
+                        await emit('squelch:stats:flush');
+                    }
                 }
 
                 const port: number = await invoke('get_proxy_port');
@@ -574,6 +661,11 @@ export function initTauriBridge() {
 
                 void invoke('set_tray_state', { stateName: 'buffering' });
                 syncPlayerStatusToRust();
+                if (station.id) {
+                    void invoke('update_settings', {
+                        partial: { lastStationId: station.id }
+                    }).catch(() => {});
+                }
 
                 await emit('squelch:audio:command', {
                     type: 'play',
@@ -599,9 +691,13 @@ export function initTauriBridge() {
 
             togglePlayPause: async () => {
                 if (playerStatus.state === 'playing') {
-                    recordListeningTick();
-                    lastTickTimeMs = null;
-                    void flushStatsToDisk();
+                    if (isAudioWorker) {
+                        recordListeningTick();
+                        lastTickTimeMs = null;
+                        void flushStatsToDisk();
+                    } else {
+                        await emit('squelch:stats:flush');
+                    }
                     playerStatus.state = 'paused';
                     playerStatus.reconnectAttempt = null;
                     void invoke('set_tray_state', { stateName: 'idle' });
@@ -643,9 +739,13 @@ export function initTauriBridge() {
 
             stopPlayback: async () => {
                 if (playerStatus.state === 'playing') {
-                    recordListeningTick();
-                    lastTickTimeMs = null;
-                    void flushStatsToDisk();
+                    if (isAudioWorker) {
+                        recordListeningTick();
+                        lastTickTimeMs = null;
+                        void flushStatsToDisk();
+                    } else {
+                        await emit('squelch:stats:flush');
+                    }
                 }
                 playerStatus.state = 'idle';
                 playerStatus.currentStation = null;
@@ -789,14 +889,21 @@ export function initTauriBridge() {
             },
 
             setSleepTimer: async (minutes: number | null) => {
-                return await handleSetSleepTimer(
-                    minutes,
-                    playerStatus,
-                    syncPlayerStatusToRust,
-                    () => (window as any).squelchApi.stopPlayback(),
-                    (title, body) =>
-                        (window as any).squelchApi.sendNotification(title, body)
-                );
+                if (isAudioWorker) {
+                    return await handleSetSleepTimer(
+                        minutes,
+                        playerStatus,
+                        syncPlayerStatusToRust,
+                        () => (window as any).squelchApi.stopPlayback(),
+                        (title, body) =>
+                            (window as any).squelchApi.sendNotification(
+                                title,
+                                body
+                            )
+                    );
+                }
+                await emit('squelch:sleep-timer:set', { minutes });
+                return true;
             },
 
             startDragging: async () => {
@@ -819,12 +926,15 @@ export function initTauriBridge() {
 
             quitApp: async () => {
                 try {
+                    await emit('squelch:stats:flush');
                     await emit('squelch:audio:command', { type: 'teardown' });
                 } catch {
                     // Ignore teardown emit error
                 }
-                recordListeningTick();
-                await flushStatsToDisk();
+                if (isAudioWorker) {
+                    recordListeningTick();
+                    await flushStatsToDisk();
+                }
                 await new Promise((resolve) => setTimeout(resolve, 60));
                 await invoke('quit_app');
             },
@@ -1079,6 +1189,9 @@ export function initTauriBridge() {
                             deviceId: res.settings.audioOutputDeviceId
                         });
                     }
+                    if (partial?.showTitleInMenuBar !== undefined) {
+                        syncPlayerStatusToRust();
+                    }
                 }
                 await emit('ui:state-changed', { type: 'settings', ...res });
                 return res?.settings;
@@ -1131,18 +1244,9 @@ export function initTauriBridge() {
             },
 
             clearListeningStats: async () => {
-                statsData = {
-                    schemaVersion: 1,
-                    dailySeconds: {},
-                    hourlySeconds: {},
-                    monthlySeconds: {},
-                    stationSeconds: {},
-                    stationNames: {},
-                    stationLogos: {},
-                    totalSeconds: 0
-                };
-                statsDirty = false;
+                resetInMemoryStats();
                 await invoke('clear_listening_stats');
+                await emit('squelch:stats:reset');
                 await emit('ui:state-changed', { type: 'stats' });
             },
 
@@ -1157,18 +1261,9 @@ export function initTauriBridge() {
                     void emit('squelch:audio:command', { type: 'stop' });
                     void emit('ui:state-changed', { ...playerStatus });
                 }
-                statsData = {
-                    schemaVersion: 1,
-                    dailySeconds: {},
-                    hourlySeconds: {},
-                    monthlySeconds: {},
-                    stationSeconds: {},
-                    stationNames: {},
-                    stationLogos: {},
-                    totalSeconds: 0
-                };
-                statsDirty = false;
+                resetInMemoryStats();
                 const res: any = await invoke('reset_all_data');
+                await emit('squelch:stats:reset');
                 if (res?.settings) {
                     applyAppearanceVariables(res.settings);
                     void emit('squelch:audio:eq', res.settings.equalizer);
@@ -1197,10 +1292,14 @@ export function initTauriBridge() {
             },
 
             getListeningStats: async () => {
-                await ensureStatsLoaded();
-                recordListeningTick();
-                void flushStatsToDisk();
-                return buildListeningStatsSummary(statsData);
+                if (isAudioWorker) {
+                    await ensureStatsLoaded();
+                    recordListeningTick();
+                    void flushStatsToDisk();
+                    return buildListeningStatsSummary(statsData);
+                }
+                const raw: unknown = await invoke('get_listening_stats');
+                return buildListeningStatsSummary(normalizeListeningStats(raw));
             },
 
             getDiagnostics: async () => {
@@ -1233,7 +1332,7 @@ export function initTauriBridge() {
                     },
                     listeningStats: {
                         totalSeconds: stats?.totalSeconds || 0,
-                        stationCounts: stats?.stationCounts || {}
+                        stationSeconds: stats?.stationSeconds || {}
                     },
                     dataDir:
                         cfg?.dataDir ||
@@ -1248,19 +1347,26 @@ export function initTauriBridge() {
             },
 
             openLogsFolder: async () => {
-                const cfg: any = await invoke('get_settings');
-                if (cfg?.dataDir) {
-                    await invoke('open_external', { url: cfg.dataDir });
-                }
+                await invoke('open_data_dir');
+                return true;
             },
 
             getSchedules: async () => {
-                return await invoke('get_schedules');
+                const list: unknown = await invoke('get_schedules');
+                return Array.isArray(list) ? list : [];
             },
 
             saveSchedule: async (schedule: any) => {
-                await invoke('save_schedule', { schedule });
+                const payload = { ...schedule };
+                if (
+                    typeof payload.id !== 'string' ||
+                    payload.id.trim().length === 0
+                ) {
+                    payload.id = `sched-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+                }
+                await invoke('save_schedule', { schedule: payload });
                 await emit('ui:state-changed', { type: 'schedules' });
+                return payload;
             },
 
             deleteSchedule: async (id: string) => {
@@ -1268,24 +1374,31 @@ export function initTauriBridge() {
                 await emit('ui:state-changed', { type: 'schedules' });
             },
 
-            toggleSchedule: async (id: string) => {
-                const list: any[] = await invoke('get_schedules');
+            toggleSchedule: async (id: string, enabled?: boolean) => {
+                const rawList: unknown = await invoke('get_schedules');
+                const list = Array.isArray(rawList) ? rawList : [];
                 const sched = list.find((s) => s.id === id);
                 if (sched) {
-                    sched.enabled = !sched.enabled;
+                    sched.enabled =
+                        typeof enabled === 'boolean' ? enabled : !sched.enabled;
                     await invoke('save_schedule', { schedule: sched });
                     await emit('ui:state-changed', { type: 'schedules' });
+                    return sched;
                 }
+                return undefined;
             },
 
             toggleScheduleAutoPlay: async (id: string) => {
-                const list: any[] = await invoke('get_schedules');
+                const rawList: unknown = await invoke('get_schedules');
+                const list = Array.isArray(rawList) ? rawList : [];
                 const sched = list.find((s) => s.id === id);
                 if (sched) {
                     sched.autoPlay = !sched.autoPlay;
                     await invoke('save_schedule', { schedule: sched });
                     await emit('ui:state-changed', { type: 'schedules' });
+                    return sched;
                 }
+                return undefined;
             },
 
             onStateChanged: (cb: (data: unknown) => void) => {

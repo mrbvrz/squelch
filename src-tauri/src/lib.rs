@@ -102,7 +102,14 @@ pub(crate) fn show_main_window(app: &tauri::AppHandle) -> Option<tauri::WebviewW
 
 pub(crate) fn show_tray_popover(app: &tauri::AppHandle) -> Option<tauri::WebviewWindow> {
     if let Some(tray_win) = app.get_webview_window("tray") {
-        let _ = tray_win.as_ref().window().move_window(Position::TrayCenter);
+        if tray_win
+            .as_ref()
+            .window()
+            .move_window(Position::TrayCenter)
+            .is_err()
+        {
+            let _ = tray_win.as_ref().window().move_window(Position::TopRight);
+        }
         let _ = tray_win.show();
         let _ = tray_win.set_focus();
         Some(tray_win)
@@ -129,7 +136,7 @@ pub(crate) fn show_dialog_window(
         let _ = w_obj.center();
         w_obj
     } else {
-        tauri::WebviewWindowBuilder::new(
+        let new_win = tauri::WebviewWindowBuilder::new(
             app,
             "dialog",
             tauri::WebviewUrl::App("index.html#dialog".into()),
@@ -144,20 +151,22 @@ pub(crate) fn show_dialog_window(
         .skip_taskbar(true)
         .center()
         .build()
-        .ok()?
-    };
+        .ok()?;
 
-    #[cfg(target_os = "macos")]
-    {
-        use window_vibrancy::{NSVisualEffectMaterial, NSVisualEffectState, apply_vibrancy};
-        let _ = win.set_shadow(true);
-        let _ = apply_vibrancy(
-            &win,
-            NSVisualEffectMaterial::UnderWindowBackground,
-            Some(NSVisualEffectState::Active),
-            Some(16.0),
-        );
-    }
+        #[cfg(target_os = "macos")]
+        {
+            use window_vibrancy::{NSVisualEffectMaterial, NSVisualEffectState, apply_vibrancy};
+            let _ = new_win.set_shadow(true);
+            let _ = apply_vibrancy(
+                &new_win,
+                NSVisualEffectMaterial::UnderWindowBackground,
+                Some(NSVisualEffectState::Active),
+                Some(16.0),
+            );
+        }
+
+        new_win
+    };
 
     let _ = win.eval(&format!(
         "window.dispatchEvent(new CustomEvent('squelch:set-dialog', {{ detail: '{}' }}));",
@@ -589,6 +598,7 @@ pub fn run() {
             commands::hide_dialog_window,
             commands::toggle_tray_popover,
             commands::quit_app,
+            commands::open_data_dir,
             commands::open_external,
             commands::start_window_drag,
             commands::set_dock_visibility,

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     formatDateKey,
     formatMonthKey,
+    normalizeListeningStats,
     recordListeningSeconds,
     buildListeningStatsSummary
 } from '../../src/utils/listening-stats';
@@ -100,5 +101,24 @@ describe('listening-stats utility', () => {
         expect(summary.topStations[0].stationId).toBe('st-1');
         expect(summary.topStations[0].stationName).toBe('Prambors FM');
         expect(summary.topStations[0].seconds).toBe(5000);
+    });
+
+    it('preserves hourlySeconds, stationNames, and stationLogos when normalizing raw stats', () => {
+        const normalized = normalizeListeningStats({
+            dailySeconds: { '2026-11-03': 120 },
+            hourlySeconds: { '2026-11-03-14': 120 },
+            monthlySeconds: { '2026-11': 120 },
+            stationSeconds: { 'st-1': 120 },
+            stationNames: { 'st-1': 'Prambors FM' },
+            stationLogos: { 'st-1': 'https://example.com/logo.png' },
+            totalSeconds: 120
+        });
+
+        expect(normalized.hourlySeconds).toEqual({ '2026-11-03-14': 120 });
+        expect(normalized.stationNames).toEqual({ 'st-1': 'Prambors FM' });
+        expect(normalized.stationLogos).toEqual({
+            'st-1': 'https://example.com/logo.png'
+        });
+        expect(normalized.totalSeconds).toBe(120);
     });
 });

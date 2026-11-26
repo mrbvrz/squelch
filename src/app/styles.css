@@ -363,6 +363,14 @@ input[type='checkbox'] {
     -webkit-backdrop-filter: blur(var(--glass-blur, 20px));
 }
 
+/* Disable nested backdrop-filter inside main window shell; native UnderWindowBackground vibrancy provides the backdrop blur */
+.mac-window-shell .mac-settings-card,
+.mac-window-shell .mac-glass-card,
+.mac-window-shell .mac-module {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
 .mac-settings-sidebar {
     background: var(--surface-sidebar);
     border-right: 1px solid var(--sidebar-border);

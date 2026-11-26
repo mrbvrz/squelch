@@ -210,3 +210,28 @@ pub async fn start_proxy_server(app_handle: AppHandle) -> u16 {
 
     port
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_stream_title_extracts_standard_icy_metadata_and_strips_padding() {
+        let raw = b"StreamTitle='Prambors - Morning Show';StreamUrl='';\0\0\0\0";
+        assert_eq!(
+            parse_stream_title(raw),
+            Some("Prambors - Morning Show".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_stream_title_handles_missing_semicolon_empty_and_non_matching_inputs() {
+        assert_eq!(
+            parse_stream_title(b"StreamTitle='Indie Track'\0\0"),
+            Some("Indie Track".to_string())
+        );
+        assert_eq!(parse_stream_title(b"StreamTitle='';\0\0"), None);
+        assert_eq!(parse_stream_title(b"StreamUrl='https://example.com';"), None);
+        assert_eq!(parse_stream_title(b""), None);
+    }
+}

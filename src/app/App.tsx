@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import { getTranslations } from '../i18n';
 import { applyAppearanceVariables } from '../utils/appearance';
+import { getPlayerStateHeadline } from '../utils/player-state';
 import type { ShowSchedule } from '../types';
 import type { SquelchWindowApi } from './types';
 
@@ -151,19 +152,6 @@ export const App: React.FC = () => {
     const lang: 'id' | 'en' = appCoreData.settings?.language ?? 'id';
     const t = getTranslations(lang);
 
-    // Global Keydown for ⌘F Search
-    useEffect(() => {
-        const handleGlobalKeyDown = (e: KeyboardEvent) => {
-            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
-                e.preventDefault();
-                searchInputRef.current?.focus();
-                searchInputRef.current?.select();
-            }
-        };
-        window.addEventListener('keydown', handleGlobalKeyDown);
-        return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-    }, []);
-
     // Automatically trigger onboarding wizard on first launch
     useEffect(() => {
         if (
@@ -202,51 +190,15 @@ export const App: React.FC = () => {
         api
     });
 
-    const stateHeadline = useMemo(() => {
-        switch (appCoreData.playerState) {
-            case 'playing':
-                return { main: 'LIVE', sub: t.statusLiveSub, color: '#30D158' };
-            case 'connecting':
-                return {
-                    main: 'SYNC',
-                    sub: t.statusConnectingSub,
-                    color: '#FF9F0A'
-                };
-            case 'buffering':
-                return {
-                    main: 'WAIT',
-                    sub: t.statusBufferingSub,
-                    color: '#FF9F0A'
-                };
-            case 'reconnecting':
-                return {
-                    main: 'RETRY',
-                    sub: appCoreData.reconnectAttempt
-                        ? `${t.statusReconnectingSub} (${appCoreData.reconnectAttempt})`
-                        : t.statusReconnectingSub,
-                    color: '#FF9F0A'
-                };
-            case 'paused':
-                return {
-                    main: 'HOLD',
-                    sub: t.statusPausedSub,
-                    color: '#8E8E93'
-                };
-            case 'error':
-                return {
-                    main: 'ERR',
-                    sub: t.statusOfflineSub,
-                    color: '#FF453A'
-                };
-            case 'idle':
-            default:
-                return {
-                    main: 'IDLE',
-                    sub: t.statusStandbySub,
-                    color: '#8E8E93'
-                };
-        }
-    }, [appCoreData.playerState, appCoreData.reconnectAttempt, t]);
+    const stateHeadline = useMemo(
+        () =>
+            getPlayerStateHeadline(
+                appCoreData.playerState,
+                appCoreData.reconnectAttempt,
+                t
+            ),
+        [appCoreData.playerState, appCoreData.reconnectAttempt, t]
+    );
 
     const currentHeadingTitle = useMemo(() => {
         if (activeTab === 'schedules') return t.tabSchedules;
